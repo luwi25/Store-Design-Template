@@ -19,7 +19,7 @@ html=html.replace('</head>','''<link rel="manifest" href="manifest.webmanifest">
 <meta name="apple-mobile-web-app-title" content="Store Design">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="stylesheet" href="mobile.css">
-<style>@media print{.published-default-actions{display:none!important}}</style>
+<style>#usePublishedProject[hidden]{display:none!important}@media print{.published-default-actions{display:none!important}}</style>
 <script src="mobile.js" defer></script>
 <script src="install-app.js" defer></script>
 </head>''')
@@ -44,10 +44,10 @@ html=html.replace(startup, ' if(!parsed){parsed=await loadPublishedDefault();awa
 # Existing installations need an explicit way to adopt the published project.
 anchor='<div class="top-actions">'
 assert html.count(anchor)==1
-html=html.replace(anchor, anchor+'<button type="button" class="btn" id="usePublishedProject" title="Load the owner\'s published products, images and settings; back up this browser project first.">Load published project</button>')
+html=html.replace(anchor, anchor+'<button type="button" class="btn" id="usePublishedProject" hidden title="Load the owner\'s published products, images and settings; back up this browser project first.">Load published project</button>')
 anchor="$('downloadDatabaseBackup').addEventListener('click',()=>downloadStateBackup(state));"
 assert html.count(anchor)==1
-html=html.replace(anchor, anchor+'\n'+(ROOT/'published-project-action.js').read_text(encoding='utf-8'))
+html=html.replace(anchor, anchor+'\n'+(ROOT/'published-project-action.js').read_text(encoding='utf-8').replace('PUBLISHED_PROJECT_REVISION',str(json.loads((ROOT/'defaults/project.json').read_text(encoding='utf-8'))['sourceRevision'])))
 # Keep large reference images outside the HTML so the browser can cache them.
 def external_image(match):
     mime,encoded=match.groups();raw=base64.b64decode(encoded)

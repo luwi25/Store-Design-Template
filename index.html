@@ -93,6 +93,9 @@
 @media print{.database-panel,.database-startup{display:none!important}}
 .background-tools{margin:10px 0 14px}.cutout-preview{display:block;width:100%;height:180px;object-fit:contain;border:1px solid #d6dce5;border-radius:8px;background-color:#fff;background-image:linear-gradient(45deg,#e7eaf0 25%,transparent 25%),linear-gradient(-45deg,#e7eaf0 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#e7eaf0 75%),linear-gradient(-45deg,transparent 75%,#e7eaf0 75%);background-size:20px 20px;background-position:0 0,0 10px,10px -10px,-10px 0}.cutout-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.background-tools [hidden]{display:none}
 
+
+.cutout-photo{position:relative}.cutout-loading{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:16px;text-align:center;background:#f2f6f7ee;color:#163b65;border-radius:8px}.cutout-loading span:last-child{font-size:12px;max-width:280px}.cutout-spinner{width:30px;height:30px;border:3px solid #d8e4e3;border-top-color:#18a999;border-radius:50%;animation:cutout-spin .8s linear infinite}@keyframes cutout-spin{to{transform:rotate(360deg)}}@media(prefers-reduced-motion:reduce){.cutout-spinner{animation:none}}
+
 /* Editor chrome only. Keep artwork tokens and print styles unchanged. */
 @media screen {
   :root {
@@ -366,18 +369,24 @@ $('templateFile').addEventListener('change',async()=>{const file=$('templateFile
 function createBackgroundTools({container,getImage,getOriginal,setOriginal,applyImage,isCurrent,setBusy=()=>{}}){
  const wrap=document.createElement('div');wrap.className='background-tools';
  const preview=document.createElement('img');preview.className='cutout-preview';preview.alt='Product image; checkerboard shows transparent areas';
+ const photo=document.createElement('div');photo.className='cutout-photo';
+ const loading=document.createElement('div');loading.className='cutout-loading';loading.hidden=true;loading.setAttribute('role','status');loading.setAttribute('aria-live','polite');
+ const spinner=document.createElement('span');spinner.className='cutout-spinner';spinner.setAttribute('aria-hidden','true');
+ const loadingText=document.createElement('strong');loadingText.textContent='Removing background...';
+ const loadingHelp=document.createElement('span');loadingHelp.textContent='Please keep this window open. The first image may take longer.';
+ loading.append(spinner,loadingText,loadingHelp);photo.append(preview,loading);
  const actions=document.createElement('div');actions.className='cutout-actions';
  const remove=document.createElement('button');remove.type='button';remove.className='btn btn-sm';remove.textContent='Remove background';remove.dataset.action='remove-background';
  const restore=document.createElement('button');restore.type='button';restore.className='btn btn-sm';restore.textContent='Restore original';restore.dataset.action='restore-background';
  const download=document.createElement('button');download.type='button';download.className='btn btn-sm';download.textContent='Download PNG';
  const status=document.createElement('p');status.className='helper';status.setAttribute('role','status');status.setAttribute('aria-live','polite');
  let busy=false;
- const refresh=()=>{const source=getImage();preview.hidden=!source;if(source)preview.src=source;remove.disabled=busy||!source;restore.hidden=!getOriginal();restore.disabled=busy;download.disabled=busy||!source;remove.textContent=busy?'Removing background...':'Remove background';wrap.setAttribute('aria-busy',String(busy))};
+ const refresh=()=>{const source=getImage();preview.hidden=!source;if(source)preview.src=source;remove.disabled=busy||!source;restore.hidden=!getOriginal();restore.disabled=busy;download.disabled=busy||!source;remove.textContent=busy?'Removing background...':'Remove background';loading.hidden=!busy;wrap.setAttribute('aria-busy',String(busy))};
  async function png(source){const im=await loadCanvasImage(source),canvas=document.createElement('canvas');canvas.width=im.naturalWidth||im.width;canvas.height=im.naturalHeight||im.height;canvas.getContext('2d').drawImage(im,0,0);return canvas.toDataURL('image/png')}
  remove.addEventListener('click',async()=>{const source=getImage();if(!source||busy)return;busy=true;setBusy(true);status.textContent='Removing the background on this computer. Please wait...';refresh();try{const result=await StoreDatabase.removeBackground(await png(source));if(!wrap.isConnected||!isCurrent()||getImage()!==source)return;await loadCanvasImage(result.image);if(!getOriginal())setOriginal(source);applyImage(result.image);status.textContent='Background removed. Transparent PNG is ready. Restore original if you prefer the previous photo.'}catch(error){if(wrap.isConnected&&isCurrent())status.textContent=error.message||'Could not remove the background. Your original image is unchanged.'}finally{busy=false;if(wrap.isConnected&&isCurrent()){setBusy(false);refresh()}}});
  restore.addEventListener('click',()=>{if(busy||!getOriginal())return;const original=getOriginal();setOriginal(null);applyImage(original);status.textContent='Original photo restored.';refresh()});
  download.addEventListener('click',async()=>{try{const source=getImage();if(!source)return;const a=document.createElement('a');a.href=await png(source);a.download='product-transparent.png';a.click()}catch{status.textContent='Could not download this photo.'}});
- actions.append(remove,restore,download);wrap.append(preview,actions,status);container.append(wrap);refresh();return {refresh};
+ actions.append(remove,restore,download);wrap.append(photo,actions,status);container.append(wrap);refresh();return {refresh};
 }
 let catalogPhotoTools=null,catalogOriginalImage=null;
 function mountCatalogPhotoTools(){const holder=$('catalogPhotoTools');holder.replaceChildren();form.querySelector('button[type="submit"]').disabled=false;catalogPhotoTools=createBackgroundTools({container:holder,getImage:()=>editingImage,getOriginal:()=>catalogOriginalImage,setOriginal:value=>catalogOriginalImage=value,applyImage:value=>{editingImage=value},isCurrent:()=>dlg.open,setBusy:value=>{form.querySelector('button[type="submit"]').disabled=value}})}

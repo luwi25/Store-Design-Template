@@ -39,5 +39,7 @@ window.loadPublishedDefault = async function () {
     if (Array.isArray(value)) return value.map(hydrate);
     return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, hydrate(item)]));
   }
-  return hydrate(project.state);
+  const state = hydrate(project.state);
+  state.publishedProjectRevision = project.sourceRevision;
+  return state;
 };
