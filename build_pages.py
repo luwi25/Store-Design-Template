@@ -42,9 +42,9 @@ startup = ' if(parsed){hasStoredState=true;'
 assert html.count(startup) == 1
 html=html.replace(startup, ' if(!parsed){parsed=await loadPublishedDefault();await StoreDatabase.save(parsed)}\n'+startup)
 # Existing installations need an explicit way to adopt the published project.
-anchor='<div class="stage-top">'
+anchor='<div class="top-actions">'
 assert html.count(anchor)==1
-html=html.replace(anchor, '<div class="published-default-actions" style="padding:8px 12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button type="button" class="btn btn-sm" id="usePublishedProject">Load published project</button><span class="helper">Use the owner\'s saved products, images and settings. Your current project is backed up first.</span></div>'+anchor)
+html=html.replace(anchor, anchor+'<button type="button" class="btn" id="usePublishedProject" title="Load the owner\'s published products, images and settings; back up this browser project first.">Load published project</button>')
 anchor="$('downloadDatabaseBackup').addEventListener('click',()=>downloadStateBackup(state));"
 assert html.count(anchor)==1
 html=html.replace(anchor, anchor+'\n'+(ROOT/'published-project-action.js').read_text(encoding='utf-8'))
