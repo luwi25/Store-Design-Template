@@ -1,0 +1,10 @@
+data/
+db-config.js
+.venv/
+__pycache__/
+*.pyc
+.env
+.env.*
+!.env.example
+*.sqlite3*
+*.log
