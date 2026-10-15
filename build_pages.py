@@ -19,6 +19,7 @@ html=html.replace('</head>','''<link rel="manifest" href="manifest.webmanifest">
 <meta name="apple-mobile-web-app-title" content="Store Design">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="stylesheet" href="mobile.css">
+<style>@media print{.published-default-actions{display:none!important}}</style>
 <script src="mobile.js" defer></script>
 <script src="install-app.js" defer></script>
 </head>''')
@@ -40,6 +41,13 @@ html=html.replace(needle,needle+'<p class="helper">Images and edits stay in this
 startup = ' if(parsed){hasStoredState=true;'
 assert html.count(startup) == 1
 html=html.replace(startup, ' if(!parsed){parsed=await loadPublishedDefault();await StoreDatabase.save(parsed)}\n'+startup)
+# Existing installations need an explicit way to adopt the published project.
+anchor='<div class="stage-top">'
+assert html.count(anchor)==1
+html=html.replace(anchor, '<div class="published-default-actions" style="padding:8px 12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button type="button" class="btn btn-sm" id="usePublishedProject">Load published project</button><span class="helper">Use the owner\'s saved products, images and settings. Your current project is backed up first.</span></div>'+anchor)
+anchor="$('downloadDatabaseBackup').addEventListener('click',()=>downloadStateBackup(state));"
+assert html.count(anchor)==1
+html=html.replace(anchor, anchor+'\n'+(ROOT/'published-project-action.js').read_text(encoding='utf-8'))
 # Keep large reference images outside the HTML so the browser can cache them.
 def external_image(match):
     mime,encoded=match.groups();raw=base64.b64decode(encoded)
