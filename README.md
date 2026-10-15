@@ -20,7 +20,7 @@ The root `index.html` preserves the existing Python/SQLite workflow. Install Pyt
 
 ## Deployment
 
-The `.github/workflows/pages.yml` workflow publishes only `public/`. On GitHub, enable Settings > Pages > GitHub Actions. This repository is currently private; the current account plan requires either an eligible paid plan or making this repository public before Pages can be enabled. Changing visibility exposes source and bundled default artwork, not device-only user edits. Visibility must be decided by the repository owner.
+The `.github/workflows/pages.yml` workflow publishes only `public/`. On GitHub, enable Settings > Pages > GitHub Actions. This repository is public and GitHub Pages publishes the browser-only build. Repository source and default artwork are public; device-only user edits are not included.
 
 Expected site URL once deployment succeeds: https://luwi25.github.io/Store-Design-Template/
 
@@ -32,3 +32,11 @@ Expected site URL once deployment succeeds: https://luwi25.github.io/Store-Desig
 
 ONNX Runtime Web: https://github.com/microsoft/onnxruntime (MIT, bundled license in vendor/ONNX-RUNTIME-LICENSE).
 U2Netp: https://github.com/xuebinqin/U-2-Net (Apache-2.0, bundled license in vendor/U2NET-LICENSE); ONNX model distribution: https://github.com/danielgatis/rembg/releases/tag/v0.0.0.
+
+
+## Install on a phone
+Android: open the site in Chrome and tap Install app (or use the browser menu). iPhone/iPad: open in Safari, tap Share, Add to Home Screen, then Add. This is a home-screen web app; no APK or app-store download is required.
+
+The first online visit downloads approximately 71 MB of app files, templates and background-removal files. Offline use is ready after that download completes; the installation help shows readiness. Changes stay in IndexedDB. Export a backup before installing if you already have edits: some platforms use separate storage for the installed app. Updates wait until old app windows close, avoiding interruption of edits.
+
+Phones have Preview, Templates, Products and Settings navigation, larger touch controls, safe-area spacing, mobile dialogs and a product picker for small poster cards. Desktop layout and print output use the original templates. Run node mobile-review.cjs after building to check mobile navigation, installation wiring, icons and offline resource coverage. These automated checks do not replace a physical-device visual review.
