@@ -1,4 +1,4 @@
-"""Build the browser-only site without copying local saves or credentials."""
+"""Build the browser-only site with an explicitly published starter project, never database files or credentials."""
 from pathlib import Path
 import base64
 import hashlib
@@ -23,7 +23,7 @@ html=html.replace('</head>','''<link rel="manifest" href="manifest.webmanifest">
 <script src="install-app.js" defer></script>
 </head>''')
 html=html.replace('<script src="db-config.js"></script>','<script src="browser-background.js"></script>')
-html=html.replace('<script src="local-db.js"></script>','<script src="browser-db.js"></script>')
+html=html.replace('<script src="local-db.js"></script>','<script src="browser-db.js"></script><script src="default-project.js"></script>')
 html=html.replace('Local database','Device storage').replace('local database','device storage')
 html=html.replace('Connecting to your device storage...','Opening your browser’s device storage...')
 html=html.replace('The device storage files are missing. Open Start Store Design Template.cmd from the project folder.','Device storage could not load. Refresh this page and try again.')
@@ -36,6 +36,10 @@ html=html.replace('Print quality: 300 DPI. PNG: 1650 × 2550 pixels at 5.5 × 8.
 html=html.replace('<h2>Device storage</h2>','<h2>Device storage</h2>')
 needle='<div class="panel-head"><h2>Device storage</h2></div>'
 html=html.replace(needle,needle+'<p class="helper">Images and edits stay in this browser only. They are never uploaded or shared. Download a backup before clearing browser data or changing devices.</p>')
+# Seed only an empty device; local and legacy projects always take precedence.
+startup = ' if(parsed){hasStoredState=true;'
+assert html.count(startup) == 1
+html=html.replace(startup, ' if(!parsed){parsed=await loadPublishedDefault();await StoreDatabase.save(parsed)}\n'+startup)
 # Keep large reference images outside the HTML so the browser can cache them.
 def external_image(match):
     mime,encoded=match.groups();raw=base64.b64decode(encoded)
@@ -45,8 +49,9 @@ def external_image(match):
     return 'assets/'+name
 html=re.sub(r'data:image/(png|jpeg|webp|svg\+xml);base64,([A-Za-z0-9+/=]+)',external_image,html)
 (OUT/'index.html').write_text(html,encoding='utf-8')
-for name in ['browser-db.js','browser-background.js','background-worker.js','mobile.css','mobile.js','install-app.js','manifest.webmanifest']:
+for name in ['default-project.js','browser-db.js','browser-background.js','background-worker.js','mobile.css','mobile.js','install-app.js','manifest.webmanifest']:
     shutil.copy2(ROOT/name,OUT/name)
+shutil.copytree(ROOT/'defaults',OUT/'defaults',dirs_exist_ok=True)
 shutil.copytree(ROOT/'vendor',OUT/'vendor',dirs_exist_ok=True)
 shutil.copytree(ROOT/'icons',OUT/'icons',dirs_exist_ok=True)
 (OUT/'.nojekyll').touch()

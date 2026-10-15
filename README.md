@@ -40,3 +40,8 @@ Android: open the site in Chrome and tap Install app (or use the browser menu). 
 The first online visit downloads approximately 71 MB of app files, templates and background-removal files. Offline use is ready after that download completes; the installation help shows readiness. Changes stay in IndexedDB. Export a backup before installing if you already have edits: some platforms use separate storage for the installed app. Updates wait until old app windows close, avoiding interruption of edits.
 
 Phones have Preview, Templates, Products and Settings navigation, larger touch controls, safe-area spacing, mobile dialogs and a product picker for small poster cards. Desktop layout and print output use the original templates. Run node mobile-review.cjs after building to check mobile navigation, installation wiring, icons and offline resource coverage. These automated checks do not replace a physical-device visual review.
+
+
+### Published starting project
+
+New browser installations start with the owner-published local project (revision 358): 181 products, product images, template names and settings. The public snapshot is in `defaults/`; it contains no database credentials or database backup history. Existing browser saves and legacy imports take precedence and are never overwritten by this snapshot. Subsequent changes remain in that browser only. Clearing site data removes personal edits; download a backup first.
