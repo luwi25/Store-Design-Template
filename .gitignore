@@ -8,3 +8,6 @@ __pycache__/
 !.env.example
 *.sqlite3*
 *.log
+
+public/
+node_modules/

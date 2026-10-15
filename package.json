@@ -1,0 +1,9 @@
+{
+  "private": true,
+  "scripts": {
+    "test": "node browser-storage-review.cjs && node browser-model-review.cjs"
+  },
+  "devDependencies": {
+    "fake-indexeddb": "6.2.5"
+  }
+}
