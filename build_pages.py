@@ -41,13 +41,6 @@ html=html.replace(needle,needle+'<p class="helper">Images and edits stay in this
 startup = ' if(parsed){hasStoredState=true;'
 assert html.count(startup) == 1
 html=html.replace(startup, ' if(!parsed){parsed=await loadPublishedDefault();await StoreDatabase.save(parsed)}\n'+startup)
-# Existing installations need an explicit way to adopt the published project.
-anchor='<div class="top-actions">'
-assert html.count(anchor)==1
-html=html.replace(anchor, anchor+'<button type="button" class="btn" id="usePublishedProject" hidden title="Load the owner\'s published products, images and settings; back up this browser project first.">Load published project</button>')
-anchor="$('downloadDatabaseBackup').addEventListener('click',()=>downloadStateBackup(state));"
-assert html.count(anchor)==1
-html=html.replace(anchor, anchor+'\n'+(ROOT/'published-project-action.js').read_text(encoding='utf-8').replace('PUBLISHED_PROJECT_REVISION',str(json.loads((ROOT/'defaults/project.json').read_text(encoding='utf-8'))['sourceRevision'])))
 # Keep large reference images outside the HTML so the browser can cache them.
 def external_image(match):
     mime,encoded=match.groups();raw=base64.b64decode(encoded)
