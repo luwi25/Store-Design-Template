@@ -24,7 +24,7 @@ function syncStudioInspector(){
  const copy=document.createElement('div'),title=document.createElement('strong'),subtitle=document.createElement('small');
  title.textContent=p?.name||'Choose a product';subtitle.textContent='Slot '+(state.selectedSlot+1)+' · changes apply only here';copy.append(title,subtitle);summary.append(copy);
  if(p){
-  const advanced=document.createElement('details');advanced.className='product-advanced';
+  const advanced=document.createElement('details');advanced.className='product-advanced';advanced.open=true;
   const heading=document.createElement('summary');heading.textContent='Product image & catalog';advanced.append(heading);
   for(const id of ['slotProduct','slotCategory','slotPhoto']){const field=$(id)?.closest('.field');if(field)advanced.append(field)}
   const tools=slotEditor.querySelector('.background-tools');if(tools)advanced.append(tools);
