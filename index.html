@@ -460,7 +460,7 @@ async function exportPDF(){
   const ctx=sheet.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,sheet.width,sheet.height);ctx.imageSmoothingQuality='high';
   ctx.scale(sheet.width/paper[0],sheet.height/paper[1]);
   for(let i=0;i<2;i++){
-   const top=i*paper[1]/2+(paper[1]/2-artWidth)/2;
+   const top=half?(i===0?0:paper[1]-artWidth):i*paper[1]/2+(paper[1]/2-artWidth)/2;
    ctx.save();ctx.translate(half?0:5,top+artWidth);ctx.rotate(-Math.PI/2);ctx.drawImage(artwork,0,0,artWidth,rotatedWidth);ctx.restore();
   }
   ctx.strokeStyle='#888';ctx.lineWidth=.2;ctx.setLineDash([1.4,1.4]);ctx.beginPath();ctx.moveTo(0,paper[1]/2);ctx.lineTo(paper[0],paper[1]/2);ctx.stroke();
@@ -475,14 +475,14 @@ async function exportPDF(){
 
 function printGeometry(){
  const paper={'half-letter':[139.7,215.9],a4:[210,297],a3:[297,420],letter:[215.9,279.4],'long-bond':[215.9,330.2]}[state.poster.paper]||[215.9,279.4];
- const half=state.poster.fit==='half';const available=paper[0]-10;const rotatedWidth=half?paper[0]:state.poster.fit==='size'?Math.min(215.9,available):available;const artWidth=Math.min(half?paper[1]/2:rotatedWidth*139.7/215.9,paper[1]/2-4);
+ const half=state.poster.fit==='half';const available=paper[0]-10;const rotatedWidth=half?paper[0]:state.poster.fit==='size'?Math.min(215.9,available):available;const artWidth=half?(paper[1]-4)/2:Math.min(rotatedWidth*139.7/215.9,paper[1]/2-4);
  return {paper,half,rotatedWidth,artWidth};
 }
 function preparePrintPages(artworks,startHalf=0){
  const {paper,half,rotatedWidth,artWidth}=printGeometry();
  let style=$('dynamicPageRule');if(!style){style=document.createElement('style');style.id='dynamicPageRule';document.head.append(style)}
  style.textContent=`@page{size:${paper[0]}mm ${paper[1]}mm;margin:0}#printSheet{--print-inset:${half?0:5}mm;--sheet-width:${paper[0]}mm;--sheet-height:${paper[1]}mm;--art-width:${artWidth}mm;--art-height:${rotatedWidth}mm}`;
- const pages=[];artworks.forEach((art,i)=>{const position=i+startHalf,pageIndex=Math.floor(position/2);if(!pages[pageIndex]){const page=document.createElement('div');page.className='top-print-page';const cut=document.createElement('div');cut.className='print-cut-line';cut.setAttribute('aria-hidden','true');page.append(cut);pages[pageIndex]=page}const placement=document.createElement('div');placement.className='top-print-placement';placement.style.top=`${(position%2)*paper[1]/2+(paper[1]/2-artWidth)/2}mm`;art.classList.add('top-print-art');placement.append(art);pages[pageIndex].append(placement)});
+ const pages=[];artworks.forEach((art,i)=>{const position=i+startHalf,pageIndex=Math.floor(position/2);if(!pages[pageIndex]){const page=document.createElement('div');page.className='top-print-page';const cut=document.createElement('div');cut.className='print-cut-line';cut.setAttribute('aria-hidden','true');page.append(cut);pages[pageIndex]=page}const placement=document.createElement('div');placement.className='top-print-placement';placement.style.top=`${half?(position%2===0?0:paper[1]-artWidth):(position%2)*paper[1]/2+(paper[1]/2-artWidth)/2}mm`;art.classList.add('top-print-art');placement.append(art);pages[pageIndex].append(placement)});
  $('printSheet').replaceChildren(...pages);document.body.classList.add('printing-top');return pages;
 }
 function printPoster(){if(usesCanvasTemplate()&&!activeSlots().length){showNotice('Add a product before printing.');return}if($('printBtn').disabled)return;if(usesCanvasTemplate())return printDuplex();const clone=poster.cloneNode(true);clone.removeAttribute('id');clone.querySelectorAll('[id]').forEach(el=>el.removeAttribute('id'));preparePrintPages([clone,clone.cloneNode(true)]);window.print()}

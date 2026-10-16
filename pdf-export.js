@@ -39,7 +39,7 @@ async function exportPDF(){
   const ctx=sheet.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,sheet.width,sheet.height);ctx.imageSmoothingQuality='high';
   ctx.scale(sheet.width/paper[0],sheet.height/paper[1]);
   for(let i=0;i<2;i++){
-   const top=i*paper[1]/2+(paper[1]/2-artWidth)/2;
+   const top=half?(i===0?0:paper[1]-artWidth):i*paper[1]/2+(paper[1]/2-artWidth)/2;
    ctx.save();ctx.translate(half?0:5,top+artWidth);ctx.rotate(-Math.PI/2);ctx.drawImage(artwork,0,0,artWidth,rotatedWidth);ctx.restore();
   }
   ctx.strokeStyle='#888';ctx.lineWidth=.2;ctx.setLineDash([1.4,1.4]);ctx.beginPath();ctx.moveTo(0,paper[1]/2);ctx.lineTo(paper[0],paper[1]/2);ctx.stroke();
