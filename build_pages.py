@@ -11,6 +11,10 @@ OUT=ROOT/'public'
 OUT.mkdir(exist_ok=True)
 (OUT/'assets').mkdir(exist_ok=True)
 html=(ROOT/'index.html').read_text(encoding='utf-8')
+# Always publish the maintained UI source, even if the standalone bundle is stale.
+ui_start=html.index('// Runs inside the editor closure;')
+ui_end=html.index('initTemplateSettings();',ui_start)
+html=html[:ui_start]+(ROOT/'studio-ui.js').read_text(encoding='utf-8')+'\n'+html[ui_end:]
 html=html.replace('width=device-width,initial-scale=1','width=device-width,initial-scale=1,viewport-fit=cover')
 html=html.replace('<meta name="theme-color" content="#0b1b43">','<meta name="theme-color" content="#163b65">')
 html=html.replace('</head>','''<link rel="manifest" href="manifest.webmanifest">
