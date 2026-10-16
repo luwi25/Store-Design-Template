@@ -2,7 +2,7 @@
 function addSlotTextControls(slot,container){
  const section=document.createElement('section');section.className='slot-text-controls';
  const heading=document.createElement('h3');heading.textContent='Text size · this product';
- const help=document.createElement('p');help.className='helper';help.textContent='Only this card changes in preview, print and PDF. Controls affect text shown by this template.';
+ const help=document.createElement('p');help.className='helper';help.textContent='Sizes apply only to this product in preview and print.';
  section.append(heading,help);
  for(const [key,label] of [['name','Product name'],['discount','Discount label'],['sale','Sale price'],['original','Original price']]){
   const field=document.createElement('div');field.className='field';

@@ -31,6 +31,27 @@
  .studio-editor .right-rail>.panel>.discount-box{display:none}.studio-editor .studio-inspector .remove-product{font-size:10px}
  .studio-editor .helper{font-size:11px;line-height:1.5}.studio-editor .btn:focus-visible,.studio-product:focus-visible,.studio-tabs button:focus-visible{outline:3px solid #18a999;outline-offset:2px}
 }
+/* Consistent spacing for the shared desktop/mobile product inspector. */
+@media screen{
+ .studio-editor #slotEditor>.field{margin:0 0 14px;gap:6px}
+ .studio-editor #slotEditor .field label{font-size:12px;line-height:1.35;font-weight:600;letter-spacing:0;text-transform:none}
+ .studio-editor #slotEditor .studio-price-fields{align-items:end;gap:12px;margin:0 0 12px}
+ .studio-editor #slotEditor .studio-price-fields>.field{margin:0;gap:6px}
+ .studio-editor #slotEditor .discount-presets{margin:0 0 16px;gap:6px}
+ .studio-editor #slotEditor .discount-presets .btn{min-height:34px;padding:7px 4px}
+ .studio-editor #slotEditor .price-preview{margin:0 0 10px;padding:12px;line-height:1.4}
+ .studio-editor #slotEditor>.helper{margin:0 0 16px;line-height:1.5}
+ .studio-editor #slotEditor .slot-text-controls{margin:0;padding:16px 0;border-top:1px solid #e8edf2}
+ .studio-editor #slotEditor .slot-text-controls h3{margin:0 0 6px;line-height:1.4}
+ .studio-editor #slotEditor .slot-text-controls>.helper{margin:0 0 14px;line-height:1.5}
+ .studio-editor #slotEditor .slot-text-controls .field{margin:0 0 12px;gap:4px}
+ .studio-editor #slotEditor .slot-text-controls label{display:flex;align-items:center;justify-content:space-between;gap:10px}
+ .studio-editor #slotEditor .slot-text-controls output{float:none;flex:none;font-variant-numeric:tabular-nums}
+ .studio-editor #slotEditor .slot-text-controls input[type=range]{height:28px;min-height:28px;margin:0}
+ .studio-editor .studio-selection{margin:12px 0 18px}
+ .studio-editor #slotEditor .product-advanced{margin:0;padding-top:16px}
+}
+@media screen and (max-width:820px){.studio-editor #slotEditor .discount-presets .btn{min-height:44px}.studio-editor #slotEditor .slot-text-controls input[type=range]{height:36px;min-height:36px}}
 @media screen and (min-width:821px){
  .studio-editor .rail{position:sticky;top:0;max-height:100vh;overflow:auto;scrollbar-gutter:stable}
  .left-rail[data-studio-active=products]>[data-studio-panel]:not([data-studio-panel=products]),.left-rail[data-studio-active=templates]>[data-studio-panel]:not([data-studio-panel=templates]),.left-rail[data-studio-active=catalog]>[data-studio-panel]:not([data-studio-panel=catalog]){display:none}

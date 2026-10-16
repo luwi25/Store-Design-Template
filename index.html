@@ -197,6 +197,27 @@
  .studio-editor .right-rail>.panel>.discount-box{display:none}.studio-editor .studio-inspector .remove-product{font-size:10px}
  .studio-editor .helper{font-size:11px;line-height:1.5}.studio-editor .btn:focus-visible,.studio-product:focus-visible,.studio-tabs button:focus-visible{outline:3px solid #18a999;outline-offset:2px}
 }
+/* Consistent spacing for the shared desktop/mobile product inspector. */
+@media screen{
+ .studio-editor #slotEditor>.field{margin:0 0 14px;gap:6px}
+ .studio-editor #slotEditor .field label{font-size:12px;line-height:1.35;font-weight:600;letter-spacing:0;text-transform:none}
+ .studio-editor #slotEditor .studio-price-fields{align-items:end;gap:12px;margin:0 0 12px}
+ .studio-editor #slotEditor .studio-price-fields>.field{margin:0;gap:6px}
+ .studio-editor #slotEditor .discount-presets{margin:0 0 16px;gap:6px}
+ .studio-editor #slotEditor .discount-presets .btn{min-height:34px;padding:7px 4px}
+ .studio-editor #slotEditor .price-preview{margin:0 0 10px;padding:12px;line-height:1.4}
+ .studio-editor #slotEditor>.helper{margin:0 0 16px;line-height:1.5}
+ .studio-editor #slotEditor .slot-text-controls{margin:0;padding:16px 0;border-top:1px solid #e8edf2}
+ .studio-editor #slotEditor .slot-text-controls h3{margin:0 0 6px;line-height:1.4}
+ .studio-editor #slotEditor .slot-text-controls>.helper{margin:0 0 14px;line-height:1.5}
+ .studio-editor #slotEditor .slot-text-controls .field{margin:0 0 12px;gap:4px}
+ .studio-editor #slotEditor .slot-text-controls label{display:flex;align-items:center;justify-content:space-between;gap:10px}
+ .studio-editor #slotEditor .slot-text-controls output{float:none;flex:none;font-variant-numeric:tabular-nums}
+ .studio-editor #slotEditor .slot-text-controls input[type=range]{height:28px;min-height:28px;margin:0}
+ .studio-editor .studio-selection{margin:12px 0 18px}
+ .studio-editor #slotEditor .product-advanced{margin:0;padding-top:16px}
+}
+@media screen and (max-width:820px){.studio-editor #slotEditor .discount-presets .btn{min-height:44px}.studio-editor #slotEditor .slot-text-controls input[type=range]{height:36px;min-height:36px}}
 @media screen and (min-width:821px){
  .studio-editor .rail{position:sticky;top:0;max-height:100vh;overflow:auto;scrollbar-gutter:stable}
  .left-rail[data-studio-active=products]>[data-studio-panel]:not([data-studio-panel=products]),.left-rail[data-studio-active=templates]>[data-studio-panel]:not([data-studio-panel=templates]),.left-rail[data-studio-active=catalog]>[data-studio-panel]:not([data-studio-panel=catalog]){display:none}
@@ -590,12 +611,12 @@ function renderIndependentSlotEditor(){const i=state.selectedSlot,slot=activeSlo
  const select=field('slotProduct','Catalog product','select','');const empty=document.createElement('option');empty.value='';empty.textContent='Choose a product';select.append(empty);groupedCatalog().filter(g=>g.products.length).forEach(g=>{const optgroup=document.createElement('optgroup');optgroup.label=g.name;g.products.forEach(p=>{const o=document.createElement('option');o.value=p.id;o.textContent=p.name+' - '+money(p.price);optgroup.append(o)});select.append(optgroup)});select.value=slot.productId||'';select.addEventListener('change',()=>{slot.productId=select.value||null;slot.details=null;slot.image=null;slot.imageOriginal=null;renderSlotEditor();renderPoster();save()});if(['peso-back','home-back','home-everyday','home-bestsellers','peso-plus'].includes(state.templateId))everydayCategoryField(field,slot);if(usesCanvasTemplate()){const remove=document.createElement('button');remove.type='button';remove.className='btn btn-sm remove-product';remove.textContent='Remove product from design';remove.addEventListener('click',()=>removeProductSlot(i));slotEditor.append(remove);}const p=productFor(slot);if(!p)return;
  const name=field('slotName','Product name','text',p.name);name.maxLength=48;
  const original=field('slotOriginalPrice','Original price','number',p.price);original.min='.01';original.step='.01';
- const discount=field('slotDiscount','Discount for this product (%)','number',independentDiscount(slot));discount.min='0';discount.max='100';discount.step='.1';
- const sale=field('slotSalePrice','Sale price (updates this discount)','number',salePrice(p,slot));sale.min='0';sale.max=p.price;sale.step='.01';
+ const discount=field('slotDiscount','Discount (%)','number',independentDiscount(slot));discount.min='0';discount.max='100';discount.step='.1';
+ const sale=field('slotSalePrice','Sale price','number',salePrice(p,slot));sale.min='0';sale.max=p.price;sale.step='.01';
  const row=document.createElement('div');row.className='price-preview';row.id='slotPricePreview';slotEditor.append(row);const updatePrice=()=>{const product=productFor(slot);sale.max=product.price;if(document.activeElement!==sale)sale.value=salePrice(product,slot);row.textContent=money(product.price)+' original / '+money(salePrice(product,slot))+' sale'};updatePrice();
  const update=()=>{updatePrice();renderPoster();save()};name.addEventListener('input',()=>{if(!name.value.trim()){name.setAttribute('aria-invalid','true');return}name.removeAttribute('aria-invalid');slot.details={...slot.details,name:name.value.trim()};update()});original.addEventListener('input',()=>{const value=Number(original.value);if(!Number.isFinite(value)||value<=0){original.setAttribute('aria-invalid','true');return}original.removeAttribute('aria-invalid');slot.details={...slot.details,price:roundMoney(value)};update()});discount.addEventListener('input',()=>{if(discount.value===''){discount.setAttribute('aria-invalid','true');return}discount.removeAttribute('aria-invalid');slot.discountPercent=Math.max(0,Math.min(100,Number(discount.value)||0));discount.value=slot.discountPercent;slot.override=null;update()});
  sale.addEventListener('input',()=>{const value=Number(sale.value),original=productFor(slot).price;if(sale.value===''||!Number.isFinite(value)||value<0||value>original){sale.setAttribute('aria-invalid','true');return}sale.removeAttribute('aria-invalid');slot.discountPercent=100*(1-value/original);discount.value=Math.round(slot.discountPercent*10000)/10000;slot.override=null;update()});
- const help=document.createElement('p');help.className='helper';help.textContent='Only this product changes. Sale price is calculated from its original price and discount.';slotEditor.append(help);
+ const help=document.createElement('p');help.className='helper';help.textContent='Changing the sale price updates this product?s discount.';slotEditor.append(help);
  addSlotTextControls(slot,slotEditor);
  const photo=field('slotPhoto','Replace product photo','file','');photo.accept='image/png,image/jpeg,image/webp';photo.addEventListener('change',async()=>{const file=photo.files[0];if(!file)return;try{if(!validateImage(file))throw Error('Choose PNG, JPEG, or WebP under 5 MB.');const data=await readImage(file);await loadCanvasImage(data);slot.image=data;slot.imageOriginal=null;update();imageTools.refresh()}catch(e){showNotice(e.message||'Could not read image.')}finally{photo.value=''}});
  const imageTools=createBackgroundTools({container:slotEditor,getImage:()=>slot.image||productFor(slot)?.image,getOriginal:()=>slot.imageOriginal,setOriginal:value=>slot.imageOriginal=value,applyImage:value=>{slot.image=value;update()},isCurrent:()=>($('slotDialog').open||window.matchMedia('(min-width:821px)').matches)&&activeSlots()[state.selectedSlot]===slot});
@@ -839,7 +860,7 @@ function productFreeArtwork(image,width,height,regions){
 function addSlotTextControls(slot,container){
  const section=document.createElement('section');section.className='slot-text-controls';
  const heading=document.createElement('h3');heading.textContent='Text size · this product';
- const help=document.createElement('p');help.className='helper';help.textContent='Only this card changes in preview, print and PDF. Controls affect text shown by this template.';
+ const help=document.createElement('p');help.className='helper';help.textContent='Sizes apply only to this product in preview and print.';
  section.append(heading,help);
  for(const [key,label] of [['name','Product name'],['discount','Discount label'],['sale','Sale price'],['original','Original price']]){
   const field=document.createElement('div');field.className='field';
