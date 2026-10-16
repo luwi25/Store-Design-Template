@@ -75,6 +75,7 @@
  body.printing-top #printSheet{display:block!important;width:var(--sheet-width)!important;height:auto!important;overflow:visible!important}
  .top-print-page{position:relative;width:var(--sheet-width);height:var(--sheet-height);overflow:hidden;break-after:page;page-break-after:always;background:white}
  .top-print-page:last-child{break-after:auto;page-break-after:auto}
+ .top-print-page>.print-cut-line{display:block!important;position:absolute;left:0;right:0;top:50%;height:0;margin:0;border:0;border-top:.2mm dashed #888;transform:translateY(-50%);z-index:2;pointer-events:none;print-color-adjust:exact;-webkit-print-color-adjust:exact}
  .top-print-placement{position:absolute;left:var(--print-inset,5mm);top:var(--print-inset,5mm);width:var(--art-height);height:var(--art-width)}
  body.printing-top #printSheet .top-print-art{display:block!important;position:absolute;left:0;top:0;width:var(--art-width)!important;height:var(--art-height)!important;max-width:none!important;max-height:none!important;transform-origin:top left;transform:translateY(var(--art-width)) rotate(-90deg);margin:0;print-color-adjust:exact;-webkit-print-color-adjust:exact}
 }
