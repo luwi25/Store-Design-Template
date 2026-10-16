@@ -146,3 +146,33 @@
  .studio-editor #productForm>.field{margin-bottom:16px}.studio-editor #productForm label{font-size:12px;text-transform:none;letter-spacing:0}
  .studio-editor #productForm .modal-head p{line-height:1.5}
 }
+
+/* Product inspector: clear sections and precise, touch-friendly controls. */
+@media screen {
+ .studio-editor .studio-selection{padding:12px;background:#f5f8fb;border:1px solid #e5ebf1;border-radius:10px;margin:12px 0 20px;align-items:center}
+ .studio-editor .studio-selection>div{min-width:0}
+ .studio-editor .studio-selection strong{font-size:13px;line-height:1.4;overflow-wrap:anywhere}
+ .studio-editor .studio-selection img{width:48px;height:48px;background:white;border-radius:7px;flex:none}
+ .studio-editor #slotEditor .product-pricing-heading{font-size:13px;line-height:1.4;margin:18px 0 12px;padding-top:16px;border-top:1px solid #e8edf2;color:#243447}
+ .studio-editor #slotEditor #slotCatalogScope{margin:0 0 8px;font-size:11px;line-height:1.5}
+ .studio-editor #slotEditor input:not([type=range]):not([type=file]){width:100%;box-sizing:border-box;min-height:42px;padding:10px 11px}
+ .studio-editor #slotEditor input[type=number]{font-variant-numeric:tabular-nums}
+ .studio-editor #slotEditor #slotSalePrice{font-weight:700;color:#163b65;background:#f0f7f8;border-color:#b9d9d7}
+ .studio-editor #slotEditor .price-preview{font-size:12px;font-variant-numeric:tabular-nums;background:#eef7f5;color:#236a60}
+ .studio-editor #slotEditor .text-size-stepper{display:grid;grid-template-columns:32px minmax(0,1fr) 32px;gap:9px;align-items:center}
+ .studio-editor #slotEditor .text-size-stepper .btn{width:32px;height:32px;padding:0;font-size:18px;line-height:1;background:#f5f7fa;border-color:#e1e7ee;color:#163b65}
+ .studio-editor #slotEditor .slot-text-controls .field{margin-bottom:14px;gap:5px}
+ .studio-editor #slotEditor .slot-text-controls output{padding:2px 6px;background:#f0f4f8;border-radius:5px;min-width:40px;text-align:center;font-size:11px}
+ .studio-editor #slotEditor .product-advanced summary{font-size:13px;min-height:28px}
+ .studio-editor #slotEditor .product-advanced input[type=file]{width:100%;min-width:0;box-sizing:border-box;font-size:11px;padding:8px}
+ .studio-editor #slotEditor .background-tools{max-width:100%;min-width:0}
+ .studio-editor #slotEditor .product-remove-action{margin-top:20px;padding-top:14px;border-top:1px solid #e8edf2}
+ .studio-editor #slotEditor .product-remove-action .remove-product{width:100%;min-height:38px;font-size:12px;color:#a53838;background:white;border:1px solid #ead2d2;border-radius:7px}
+ .studio-editor #slotEditor input:focus-visible,.studio-editor #slotEditor summary:focus-visible{outline:2px solid #18a999;outline-offset:2px}
+}
+@media screen and (max-width:820px){
+ .studio-editor #slotEditor .text-size-stepper{grid-template-columns:44px minmax(0,1fr) 44px}
+ .studio-editor #slotEditor .text-size-stepper .btn{width:44px;height:44px}
+ .studio-editor #slotEditor input:not([type=range]):not([type=file]){min-height:44px;font-size:16px}
+ .studio-editor #slotEditor .product-remove-action .remove-product{min-height:44px}
+}

@@ -20,3 +20,5 @@ Mobile product settings use the same editor in a bottom sheet: compact 56dvh and
 ## UX clarity pass
 
 Product editing explains shared catalog fields versus per-poster discounts/typography. Product-name search opens on typing rather than automatically covering the inspector. The poster list shows filled/total slots, a clear-search action, undo removal and capacity guidance. Disable Add at capacity. The catalog edit form exposes name, original price and image only; retained grouping metadata stays internal.
+
+Product inspector uses a contained selection summary, pricing section, catalog scope note, and separate image/removal sections. Text size sliders include accessible five-percent step buttons (44px on mobile). Product image stays expanded. Reuse existing field listeners and preserve focus while adjusting values.

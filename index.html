@@ -313,6 +313,36 @@
  .studio-editor #productForm .modal-head p{line-height:1.5}
 }
 
+/* Product inspector: clear sections and precise, touch-friendly controls. */
+@media screen {
+ .studio-editor .studio-selection{padding:12px;background:#f5f8fb;border:1px solid #e5ebf1;border-radius:10px;margin:12px 0 20px;align-items:center}
+ .studio-editor .studio-selection>div{min-width:0}
+ .studio-editor .studio-selection strong{font-size:13px;line-height:1.4;overflow-wrap:anywhere}
+ .studio-editor .studio-selection img{width:48px;height:48px;background:white;border-radius:7px;flex:none}
+ .studio-editor #slotEditor .product-pricing-heading{font-size:13px;line-height:1.4;margin:18px 0 12px;padding-top:16px;border-top:1px solid #e8edf2;color:#243447}
+ .studio-editor #slotEditor #slotCatalogScope{margin:0 0 8px;font-size:11px;line-height:1.5}
+ .studio-editor #slotEditor input:not([type=range]):not([type=file]){width:100%;box-sizing:border-box;min-height:42px;padding:10px 11px}
+ .studio-editor #slotEditor input[type=number]{font-variant-numeric:tabular-nums}
+ .studio-editor #slotEditor #slotSalePrice{font-weight:700;color:#163b65;background:#f0f7f8;border-color:#b9d9d7}
+ .studio-editor #slotEditor .price-preview{font-size:12px;font-variant-numeric:tabular-nums;background:#eef7f5;color:#236a60}
+ .studio-editor #slotEditor .text-size-stepper{display:grid;grid-template-columns:32px minmax(0,1fr) 32px;gap:9px;align-items:center}
+ .studio-editor #slotEditor .text-size-stepper .btn{width:32px;height:32px;padding:0;font-size:18px;line-height:1;background:#f5f7fa;border-color:#e1e7ee;color:#163b65}
+ .studio-editor #slotEditor .slot-text-controls .field{margin-bottom:14px;gap:5px}
+ .studio-editor #slotEditor .slot-text-controls output{padding:2px 6px;background:#f0f4f8;border-radius:5px;min-width:40px;text-align:center;font-size:11px}
+ .studio-editor #slotEditor .product-advanced summary{font-size:13px;min-height:28px}
+ .studio-editor #slotEditor .product-advanced input[type=file]{width:100%;min-width:0;box-sizing:border-box;font-size:11px;padding:8px}
+ .studio-editor #slotEditor .background-tools{max-width:100%;min-width:0}
+ .studio-editor #slotEditor .product-remove-action{margin-top:20px;padding-top:14px;border-top:1px solid #e8edf2}
+ .studio-editor #slotEditor .product-remove-action .remove-product{width:100%;min-height:38px;font-size:12px;color:#a53838;background:white;border:1px solid #ead2d2;border-radius:7px}
+ .studio-editor #slotEditor input:focus-visible,.studio-editor #slotEditor summary:focus-visible{outline:2px solid #18a999;outline-offset:2px}
+}
+@media screen and (max-width:820px){
+ .studio-editor #slotEditor .text-size-stepper{grid-template-columns:44px minmax(0,1fr) 44px}
+ .studio-editor #slotEditor .text-size-stepper .btn{width:44px;height:44px}
+ .studio-editor #slotEditor input:not([type=range]):not([type=file]){min-height:44px;font-size:16px}
+ .studio-editor #slotEditor .product-remove-action .remove-product{min-height:44px}
+}
+
 </style>
 </head>
 <body>
@@ -953,7 +983,11 @@ function addSlotTextControls(slot,container){
   const text=document.createElement('label');text.htmlFor='slotText-'+key;text.textContent=label;
   const output=document.createElement('output');output.htmlFor='slotText-'+key;
   const input=document.createElement('input');input.type='range';input.id='slotText-'+key;input.min=70;input.max=140;input.step=5;input.value=Math.round(textScale(key,slot)*100);
-  output.textContent=input.value+'%';text.append(output);field.append(text,input);section.append(field);
+  output.textContent=input.value+'%';text.append(output);
+  const controls=document.createElement('div');controls.className='text-size-stepper';
+  const stepButton=(direction)=>{const button=document.createElement('button');button.type='button';button.className='btn btn-sm';button.textContent=direction<0?'−':'+';button.setAttribute('aria-label',(direction<0?'Decrease ':'Increase ')+label.toLowerCase()+' size');button.onclick=()=>{input.value=Math.max(70,Math.min(140,Number(input.value)+direction*5));input.dispatchEvent(new Event('input',{bubbles:true}))};return button};
+  controls.append(stepButton(-1),input,stepButton(1));field.append(text,controls);section.append(field);
+  input.setAttribute('aria-valuetext',input.value+' percent');
   input.addEventListener('input',()=>{slot.textSizes={...slot.textSizes,[key]:Number(input.value)};output.textContent=input.value+'%';input.setAttribute('aria-valuetext',input.value+' percent');renderPoster();save()});
  }
  const reset=document.createElement('button');reset.type='button';reset.className='btn btn-sm';reset.textContent='Use template text defaults';
@@ -967,16 +1001,23 @@ function syncStudioInspector(){
  if(!slot){summary.textContent='Select a product on the poster or in the list to edit it.';return}
  if(p){const img=document.createElement('img');img.src=slot.image||p.image;img.alt='';summary.append(img)}
  const copy=document.createElement('div'),title=document.createElement('strong'),subtitle=document.createElement('small');
- title.textContent=p?.name||'Choose a product';subtitle.textContent='Slot '+(state.selectedSlot+1)+' · changes apply only here';copy.append(title,subtitle);summary.append(copy);
+ title.textContent=p?.name||'Choose a product';subtitle.textContent='Editing product '+(state.selectedSlot+1);copy.append(title,subtitle);summary.append(copy);
  if(p){
   const advanced=document.createElement('details');advanced.className='product-advanced';advanced.open=true;
   const heading=document.createElement('summary');heading.textContent='Product image';advanced.append(heading);
   for(const id of ['slotPhoto']){const field=$(id)?.closest('.field');if(field)advanced.append(field)}
   const tools=slotEditor.querySelector('.background-tools');if(tools)advanced.append(tools);
-  const remove=slotEditor.querySelector('.remove-product');if(remove)advanced.append(remove);
+  const remove=slotEditor.querySelector('.remove-product');
   slotEditor.append(advanced);
+  if(remove){const actions=document.createElement('div');actions.className='product-remove-action';actions.append(remove);slotEditor.append(actions)}
   const original=$('slotOriginalPrice')?.closest('.field'),discountField=$('slotDiscount')?.closest('.field');
-  if(original&&discountField){const row=document.createElement('div');row.className='two-col studio-price-fields';original.before(row);row.append(original,discountField)}
+  if(original&&discountField){const row=document.createElement('div');row.className='two-col studio-price-fields';original.before(row);row.append(original,discountField);
+   const heading=document.createElement('h3');heading.className='product-pricing-heading';heading.textContent='Pricing & discount';row.before(heading);
+   const scope=$('slotCatalogScope');if(scope){scope.textContent='Name and original price also update your catalog.';heading.before(scope)}
+   for(const id of ['slotOriginalPrice','slotSalePrice','slotDiscount'])$(id)?.setAttribute('inputmode','decimal');
+   const saleLabel=slotEditor.querySelector('label[for="slotSalePrice"]');if(saleLabel)saleLabel.textContent='Sale price on poster (₱)';
+   const originalLabel=slotEditor.querySelector('label[for="slotOriginalPrice"]');if(originalLabel)originalLabel.textContent='Original price (₱)';
+  }
  }
  const discount=$('slotDiscount');if(discount){
   const presets=document.createElement('div');presets.className='discount-presets';presets.setAttribute('role','group');presets.setAttribute('aria-label','Discount for selected product');

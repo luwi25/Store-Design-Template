@@ -9,7 +9,11 @@ function addSlotTextControls(slot,container){
   const text=document.createElement('label');text.htmlFor='slotText-'+key;text.textContent=label;
   const output=document.createElement('output');output.htmlFor='slotText-'+key;
   const input=document.createElement('input');input.type='range';input.id='slotText-'+key;input.min=70;input.max=140;input.step=5;input.value=Math.round(textScale(key,slot)*100);
-  output.textContent=input.value+'%';text.append(output);field.append(text,input);section.append(field);
+  output.textContent=input.value+'%';text.append(output);
+  const controls=document.createElement('div');controls.className='text-size-stepper';
+  const stepButton=(direction)=>{const button=document.createElement('button');button.type='button';button.className='btn btn-sm';button.textContent=direction<0?'−':'+';button.setAttribute('aria-label',(direction<0?'Decrease ':'Increase ')+label.toLowerCase()+' size');button.onclick=()=>{input.value=Math.max(70,Math.min(140,Number(input.value)+direction*5));input.dispatchEvent(new Event('input',{bubbles:true}))};return button};
+  controls.append(stepButton(-1),input,stepButton(1));field.append(text,controls);section.append(field);
+  input.setAttribute('aria-valuetext',input.value+' percent');
   input.addEventListener('input',()=>{slot.textSizes={...slot.textSizes,[key]:Number(input.value)};output.textContent=input.value+'%';input.setAttribute('aria-valuetext',input.value+' percent');renderPoster();save()});
  }
  const reset=document.createElement('button');reset.type='button';reset.className='btn btn-sm';reset.textContent='Use template text defaults';
@@ -23,16 +27,23 @@ function syncStudioInspector(){
  if(!slot){summary.textContent='Select a product on the poster or in the list to edit it.';return}
  if(p){const img=document.createElement('img');img.src=slot.image||p.image;img.alt='';summary.append(img)}
  const copy=document.createElement('div'),title=document.createElement('strong'),subtitle=document.createElement('small');
- title.textContent=p?.name||'Choose a product';subtitle.textContent='Slot '+(state.selectedSlot+1)+' · changes apply only here';copy.append(title,subtitle);summary.append(copy);
+ title.textContent=p?.name||'Choose a product';subtitle.textContent='Editing product '+(state.selectedSlot+1);copy.append(title,subtitle);summary.append(copy);
  if(p){
   const advanced=document.createElement('details');advanced.className='product-advanced';advanced.open=true;
   const heading=document.createElement('summary');heading.textContent='Product image';advanced.append(heading);
   for(const id of ['slotPhoto']){const field=$(id)?.closest('.field');if(field)advanced.append(field)}
   const tools=slotEditor.querySelector('.background-tools');if(tools)advanced.append(tools);
-  const remove=slotEditor.querySelector('.remove-product');if(remove)advanced.append(remove);
+  const remove=slotEditor.querySelector('.remove-product');
   slotEditor.append(advanced);
+  if(remove){const actions=document.createElement('div');actions.className='product-remove-action';actions.append(remove);slotEditor.append(actions)}
   const original=$('slotOriginalPrice')?.closest('.field'),discountField=$('slotDiscount')?.closest('.field');
-  if(original&&discountField){const row=document.createElement('div');row.className='two-col studio-price-fields';original.before(row);row.append(original,discountField)}
+  if(original&&discountField){const row=document.createElement('div');row.className='two-col studio-price-fields';original.before(row);row.append(original,discountField);
+   const heading=document.createElement('h3');heading.className='product-pricing-heading';heading.textContent='Pricing & discount';row.before(heading);
+   const scope=$('slotCatalogScope');if(scope){scope.textContent='Name and original price also update your catalog.';heading.before(scope)}
+   for(const id of ['slotOriginalPrice','slotSalePrice','slotDiscount'])$(id)?.setAttribute('inputmode','decimal');
+   const saleLabel=slotEditor.querySelector('label[for="slotSalePrice"]');if(saleLabel)saleLabel.textContent='Sale price on poster (₱)';
+   const originalLabel=slotEditor.querySelector('label[for="slotOriginalPrice"]');if(originalLabel)originalLabel.textContent='Original price (₱)';
+  }
  }
  const discount=$('slotDiscount');if(discount){
   const presets=document.createElement('div');presets.className='discount-presets';presets.setAttribute('role','group');presets.setAttribute('aria-label','Discount for selected product');
