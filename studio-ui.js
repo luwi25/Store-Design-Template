@@ -26,8 +26,8 @@ function syncStudioInspector(){
  title.textContent=p?.name||'Choose a product';subtitle.textContent='Slot '+(state.selectedSlot+1)+' · changes apply only here';copy.append(title,subtitle);summary.append(copy);
  if(p){
   const advanced=document.createElement('details');advanced.className='product-advanced';advanced.open=true;
-  const heading=document.createElement('summary');heading.textContent='Product image & catalog';advanced.append(heading);
-  for(const id of ['slotProduct','slotCategory','slotPhoto']){const field=$(id)?.closest('.field');if(field)advanced.append(field)}
+  const heading=document.createElement('summary');heading.textContent='Product image';advanced.append(heading);
+  for(const id of ['slotPhoto']){const field=$(id)?.closest('.field');if(field)advanced.append(field)}
   const tools=slotEditor.querySelector('.background-tools');if(tools)advanced.append(tools);
   const remove=slotEditor.querySelector('.remove-product');if(remove)advanced.append(remove);
   slotEditor.append(advanced);
@@ -116,4 +116,34 @@ function setupProductSheet(){
  handle.onpointerup=event=>finish(event);handle.onpointercancel=event=>finish(event,true);
  dialog.addEventListener('close',()=>{drag=null;skipClick=false;snap('compact')});
  slotEditor.addEventListener('focusin',event=>{if(!window.matchMedia('(min-width:821px)').matches&&event.target.matches('input:not([type=range]):not([type=file]),select'))snap('expanded')});
+}
+
+function bindProductNameSearch(input,slot){
+ input.autocomplete='off';input.placeholder='Search catalog or type a name';input.setAttribute('role','combobox');input.setAttribute('aria-autocomplete','list');input.setAttribute('aria-expanded','false');input.setAttribute('aria-controls','slotNameResults');
+ const list=document.createElement('div');list.id='slotNameResults';list.className='product-name-results';list.setAttribute('role','listbox');list.hidden=true;input.after(list);
+ const hint=document.createElement('p');hint.className='helper';hint.textContent='Choose a catalog match, or type a name and press Enter.';list.after(hint);
+ let matches=[],active=-1,dirty=false;
+ const close=()=>{list.hidden=true;input.setAttribute('aria-expanded','false');input.removeAttribute('aria-activedescendant');active=-1};
+ const choose=product=>{dirty=false;close();slot.productId=product.id;slot.details=null;slot.image=null;slot.imageOriginal=null;renderSlotEditor();renderPoster();save();$('slotOriginalPrice')?.focus({preventScroll:true})};
+ const highlight=()=>{[...list.querySelectorAll('[role=option]')].forEach((option,i)=>option.setAttribute('aria-selected',String(i===active)));if(active>=0){input.setAttribute('aria-activedescendant','slotNameOption-'+active);list.children[active]?.scrollIntoView?.({block:'nearest'})}else input.removeAttribute('aria-activedescendant')};
+ const show=()=>{
+  const query=input.value.trim().toLowerCase();matches=state.products.filter(p=>(p.name+' '+(p.code||'')).toLowerCase().includes(query)).slice(0,6);active=-1;list.replaceChildren();
+  matches.forEach((product,i)=>{const option=document.createElement('button');option.type='button';option.id='slotNameOption-'+i;option.setAttribute('role','option');option.setAttribute('aria-selected','false');option.tabIndex=-1;
+   const name=document.createElement('span');name.textContent=product.name;const price=document.createElement('small');price.textContent=money(product.price)+(product.code?' ? '+product.code:'');option.append(name,price);option.onpointerdown=event=>event.preventDefault();option.onclick=()=>choose(product);list.append(option)});
+  if(!matches.length){const message=document.createElement('p');message.textContent='No catalog match. Press Enter to use this name.';list.append(message)}
+  list.hidden=false;input.setAttribute('aria-expanded','true');input.removeAttribute('aria-activedescendant');
+ };
+ const commit=()=>{if(!dirty)return;const value=input.value.trim();if(!value){input.setAttribute('aria-invalid','true');return}input.removeAttribute('aria-invalid');dirty=false;
+  let product=state.products.find(p=>p.id===slot.productId);
+  if(!product){product={id:'catalog-'+Date.now()+'-'+Math.random().toString(36).slice(2,7),name:value,price:0,code:'',image:null};state.products.push(product);slot.productId=product.id;slot.discountPercent=0}
+  product.name=value;slot.details={...slot.details,name:value};renderCatalog();renderPoster();save();
+  if(!$('slotOriginalPrice')){renderSlotEditor();$('slotOriginalPrice')?.focus({preventScroll:true})}
+ };
+ input.addEventListener('input',()=>{dirty=true;input.removeAttribute('aria-invalid');show()});input.addEventListener('focus',show);
+ input.addEventListener('blur',()=>{close();commit()});
+ input.addEventListener('keydown',event=>{
+  if(event.key==='ArrowDown'||event.key==='ArrowUp'){event.preventDefault();if(list.hidden)show();if(matches.length){active=(active+(event.key==='ArrowDown'?1:-1)+matches.length)%matches.length;highlight()}}
+  else if(event.key==='Enter'){event.preventDefault();if(!list.hidden&&active>=0)choose(matches[active]);else{commit();close()}}
+  else if(event.key==='Escape'&&!list.hidden){event.preventDefault();event.stopPropagation();dirty=false;input.value=productFor(slot)?.name||'';close()}
+ });
 }

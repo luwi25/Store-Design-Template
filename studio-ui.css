@@ -101,3 +101,13 @@
 @media print{.sheet-handle,.sheet-heading{display:none!important}}
 
 @media screen and (max-width:820px){body.studio-editor:has(#slotDialog[open]){overflow:hidden}}
+
+@media screen{
+ .product-name-results{max-height:240px;overflow:auto;border:1px solid #d8e4e3;border-radius:8px;background:white;box-shadow:0 6px 18px #163b6512;padding:4px}
+ .product-name-results[hidden]{display:none!important}
+ .product-name-results button{display:block;width:100%;text-align:left;border:0;border-radius:5px;background:white;padding:9px;color:#263640;font-family:Outfit,sans-serif;cursor:pointer}
+ .product-name-results button:hover,.product-name-results [aria-selected=true]{background:#eaf5f3;color:#163b65}
+ .product-name-results span{display:block;font-size:12px;font-weight:600}.product-name-results small{display:block;font-size:10px;color:#66767b;margin-top:3px}.product-name-results p{font-size:12px;line-height:1.5;margin:8px}
+ #slotNameResults+.helper{margin:0;font-size:11px;line-height:1.4}
+}
+@media screen and (max-width:820px){.product-name-results button{min-height:48px}.product-name-results span{font-size:14px}}
