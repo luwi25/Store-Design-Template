@@ -16,3 +16,7 @@ Desktop: a compact white header with template selector and save status; left Pro
 `slot.textSizes` holds independent overrides for name, discount, sale and original. `textScale(key, slot)` falls back to the existing template default. All canvas renderers and HTML cards use this resolver. Reset clears only that slot's overrides. Template defaults remain available in a collapsed settings group.
 
 Mobile product settings use the same editor in a bottom sheet: compact 56dvh and expanded 92dvh, limited to the visual viewport. Drag the handle to expand/collapse/dismiss; its button and arrow keys also change size. Settings scroll independently. Keyboard focus expands the sheet; open focuses the handle to avoid showing the keyboard immediately. Close and Escape preserve autosaved edits.
+
+## UX clarity pass
+
+Product editing explains shared catalog fields versus per-poster discounts/typography. Product-name search opens on typing rather than automatically covering the inspector. The poster list shows filled/total slots, a clear-search action, undo removal and capacity guidance. Disable Add at capacity. The catalog edit form exposes name, original price and image only; retained grouping metadata stays internal.

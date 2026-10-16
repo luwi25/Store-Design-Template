@@ -45,7 +45,13 @@ function renderStudioProducts(){
  updateProductSheetHeading();
  const list=$('studioProductList');if(!list)return;
  const search=($('studioProductSearch').value||'').trim().toLowerCase();
- list.replaceChildren();const slots=activeSlots();$('studioProductCount').textContent=slots.length+' slots';
+ list.replaceChildren();const slots=activeSlots(),placed=slots.filter(slot=>productFor(slot)).length;
+ $('studioProductCount').textContent=placed+' / '+slots.length;$('studioProductCount').title='Products placed / available slots';
+ $('studioClearSearch').hidden=!search;
+ const canAdd=usesCanvasTemplate()&&slots.length<designLimit();$('studioAdd').disabled=!canAdd;$('studioAdd').title=canAdd?'Add a product slot':'All product slots are in use. Select a product to replace it.';
+ $('studioCapacity').textContent=!usesCanvasTemplate()?'Select a product to edit it.':canAdd?(designLimit()-slots.length)+' more product slots available.':'All slots are in use. Select a product to replace it.';
+ const canUndo=removedProduct&&removedProduct.templateId===state.templateId&&usesCanvasTemplate();$('studioUndoRemoval').hidden=!canUndo;$('studioUndoRemoval').disabled=!canAdd;
+
  let lastGroup=null,shown=0;
  slots.forEach((slot,index)=>{
   const p=productFor(slot);if(search&&!((p?.name||'Choose product')+' '+(p?.code||'')).toLowerCase().includes(search))return;
@@ -67,8 +73,8 @@ function setupStudioUI(){
  const left=document.querySelector('.left-rail'),right=document.querySelector('.right-rail');
  const oldPanels=[...left.children];oldPanels[0].dataset.studioPanel='templates';oldPanels[1].dataset.studioPanel='catalog';oldPanels[2].dataset.studioPanel='catalog';
  const panel=document.createElement('section');panel.className='panel studio-product-panel';panel.dataset.studioPanel='products';panel.dataset.mobilePanel='products';
- panel.innerHTML='<div class="panel-head"><h2>On this poster</h2><span id="studioProductCount" class="count"></span></div><div class="studio-search"><label class="sr-only" for="studioProductSearch">Search products on this poster</label><input id="studioProductSearch" type="search" placeholder="Search products"><button class="btn btn-primary" type="button" id="studioAdd" aria-label="Add product to poster">+</button></div><div id="studioProductList"></div>';
- left.prepend(panel);$('studioProductSearch').oninput=renderStudioProducts;$('studioAdd').onclick=addProductSlot;
+ panel.innerHTML='<div class="panel-head"><h2>On this poster</h2><span id="studioProductCount" class="count"></span></div><div class="studio-search"><label class="sr-only" for="studioProductSearch">Search products on this poster</label><input id="studioProductSearch" type="search" placeholder="Search products"><button class="btn btn-primary" type="button" id="studioAdd" aria-label="Add product to poster">+</button></div><div class="studio-list-actions"><button type="button" class="btn btn-sm" id="studioClearSearch" hidden>Clear search</button><button type="button" class="btn btn-sm" id="studioUndoRemoval" hidden>Undo removal</button></div><p class="helper" id="studioCapacity"></p><div id="studioProductList"></div>';
+ left.prepend(panel);$('studioProductSearch').oninput=renderStudioProducts;$('studioAdd').onclick=addProductSlot;$('studioClearSearch').onclick=()=>{$('studioProductSearch').value='';renderStudioProducts();$('studioProductSearch').focus()};$('studioUndoRemoval').onclick=undoProductRemoval;
  const tabs=document.createElement('nav');tabs.className='studio-tabs';tabs.setAttribute('aria-label','Editor sidebar');left.prepend(tabs);left.dataset.studioActive='products';
  for(const [id,label] of [['products','Products'],['templates','Templates'],['catalog','Catalog']]){const b=document.createElement('button');b.type='button';b.textContent=label;b.setAttribute('aria-pressed',String(id==='products'));b.onclick=()=>{left.dataset.studioActive=id;for(const other of tabs.children)other.setAttribute('aria-pressed',String(other===b))};tabs.append(b)}
  const inspector=document.createElement('section');inspector.className='panel studio-inspector';inspector.innerHTML='<h2>Selected product</h2><div id="studioSelection" class="studio-selection"></div><div id="studioInspectorBody"></div>';right.prepend(inspector);
@@ -121,7 +127,7 @@ function setupProductSheet(){
 function bindProductNameSearch(input,slot){
  input.autocomplete='off';input.placeholder='Search catalog or type a name';input.setAttribute('role','combobox');input.setAttribute('aria-autocomplete','list');input.setAttribute('aria-expanded','false');input.setAttribute('aria-controls','slotNameResults');
  const list=document.createElement('div');list.id='slotNameResults';list.className='product-name-results';list.setAttribute('role','listbox');list.hidden=true;input.after(list);
- const hint=document.createElement('p');hint.className='helper';hint.textContent='Choose a catalog match, or type a name and press Enter.';list.after(hint);
+ const hint=document.createElement('p');hint.className='helper';hint.textContent='Search to replace this product. A custom name also updates its catalog entry.';list.after(hint);
  let matches=[],active=-1,dirty=false;
  const close=()=>{list.hidden=true;input.setAttribute('aria-expanded','false');input.removeAttribute('aria-activedescendant');active=-1};
  const choose=product=>{dirty=false;close();slot.productId=product.id;slot.details=null;slot.image=null;slot.imageOriginal=null;renderSlotEditor();renderPoster();save();$('slotOriginalPrice')?.focus({preventScroll:true})};
@@ -129,7 +135,7 @@ function bindProductNameSearch(input,slot){
  const show=()=>{
   const query=input.value.trim().toLowerCase();matches=state.products.filter(p=>(p.name+' '+(p.code||'')).toLowerCase().includes(query)).slice(0,6);active=-1;list.replaceChildren();
   matches.forEach((product,i)=>{const option=document.createElement('button');option.type='button';option.id='slotNameOption-'+i;option.setAttribute('role','option');option.setAttribute('aria-selected','false');option.tabIndex=-1;
-   const name=document.createElement('span');name.textContent=product.name;const price=document.createElement('small');price.textContent=money(product.price)+(product.code?' ? '+product.code:'');option.append(name,price);option.onpointerdown=event=>event.preventDefault();option.onclick=()=>choose(product);list.append(option)});
+   const name=document.createElement('span');name.textContent=product.name;const price=document.createElement('small');price.textContent=money(product.price);option.append(name,price);option.onpointerdown=event=>event.preventDefault();option.onclick=()=>choose(product);list.append(option)});
   if(!matches.length){const message=document.createElement('p');message.textContent='No catalog match. Press Enter to use this name.';list.append(message)}
   list.hidden=false;input.setAttribute('aria-expanded','true');input.removeAttribute('aria-activedescendant');
  };
@@ -139,10 +145,10 @@ function bindProductNameSearch(input,slot){
   product.name=value;slot.details={...slot.details,name:value};renderCatalog();renderPoster();save();
   if(!$('slotOriginalPrice')){renderSlotEditor();$('slotOriginalPrice')?.focus({preventScroll:true})}
  };
- input.addEventListener('input',()=>{dirty=true;input.removeAttribute('aria-invalid');show()});input.addEventListener('focus',show);
+ input.addEventListener('input',()=>{dirty=true;input.removeAttribute('aria-invalid');show()});input.addEventListener('focus',()=>{if(!input.value.trim())show()});
  input.addEventListener('blur',()=>{close();commit()});
  input.addEventListener('keydown',event=>{
-  if(event.key==='ArrowDown'||event.key==='ArrowUp'){event.preventDefault();if(list.hidden)show();if(matches.length){active=(active+(event.key==='ArrowDown'?1:-1)+matches.length)%matches.length;highlight()}}
+  if(event.key==='ArrowDown'||event.key==='ArrowUp'){event.preventDefault();if(list.hidden)show();if(matches.length){active=active<0?(event.key==='ArrowDown'?0:matches.length-1):(active+(event.key==='ArrowDown'?1:-1)+matches.length)%matches.length;highlight()}}
   else if(event.key==='Enter'){event.preventDefault();if(!list.hidden&&active>=0)choose(matches[active]);else{commit();close()}}
   else if(event.key==='Escape'&&!list.hidden){event.preventDefault();event.stopPropagation();dirty=false;input.value=productFor(slot)?.name||'';close()}
  });
