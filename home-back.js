@@ -30,7 +30,7 @@ async function homeBackCanvas({width=1650,height=2550}={}){
  const slots=homeBackState().slots,images=await Promise.all(slots.map(async slot=>{try{return await loadCanvasImage(slot.image||productFor(slot)?.image||svgThumb('+','#fffdf6'))}catch{return null}}));
  slots.forEach((slot,index)=>{
   const b=homeBackCard(index),p=productFor(slot),im=images[index];
-  const nameSize=24*textScale('name'),lineHeight=nameSize*1.05,priceSize=49*textScale('sale');
+  const nameSize=24*textScale('name',slot),lineHeight=nameSize*1.05,priceSize=49*textScale('sale',slot);
   const priceBaseline=b.y+b.h-(slot.group===2?30:46);
   ctx.save();ctx.beginPath();ctx.rect(b.x,b.y,b.w,b.h);ctx.clip();ctx.fillStyle='#fffdf3';ctx.fillRect(b.x,b.y,b.w,b.h);
   ctx.font=`700 ${nameSize}px Outfit`;

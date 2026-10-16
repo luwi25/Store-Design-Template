@@ -1,7 +1,7 @@
 (() => {
  const app=document.querySelector('.app'),left=document.querySelector('.left-rail'),stage=document.querySelector('.stage'),settings=document.querySelector('.right-rail');
  stage.dataset.mobilePanel='preview';settings.dataset.mobilePanel='settings';
- [...left.children].forEach((panel,i)=>panel.dataset.mobilePanel=i===0?'templates':'products');
+ [...left.children].filter(panel=>panel.classList.contains('panel')).forEach(panel=>panel.dataset.mobilePanel=panel.querySelector('#templateList')?'templates':'products');
  app.classList.add('mobile-ui');app.dataset.mobileActive='preview';
  const nav=document.createElement('nav');nav.className='mobile-nav';nav.setAttribute('aria-label','Editor sections');
  for(const [id,label] of [['preview','Preview'],['templates','Templates'],['products','Products'],['settings','Settings']]){
