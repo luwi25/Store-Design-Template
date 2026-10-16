@@ -16,6 +16,7 @@ function addSlotTextControls(slot,container){
  reset.onclick=()=>{delete slot.textSizes;renderSlotEditor();renderPoster();save()};section.append(reset);container.append(section);
 }
 function syncStudioInspector(){
+ updateProductSheetHeading();
  const summary=$('studioSelection');if(!summary)return;
  const slot=activeSlots()[state.selectedSlot],p=slot&&productFor(slot);
  summary.replaceChildren();
@@ -41,6 +42,7 @@ function syncStudioInspector(){
  }
 }
 function renderStudioProducts(){
+ updateProductSheetHeading();
  const list=$('studioProductList');if(!list)return;
  const search=($('studioProductSearch').value||'').trim().toLowerCase();
  list.replaceChildren();const slots=activeSlots();$('studioProductCount').textContent=slots.length+' slots';
@@ -61,7 +63,7 @@ function renderStudioProducts(){
  const selection=$('studioSelection strong');const selected=slots[state.selectedSlot];if(selection&&selected)selection.textContent=productFor(selected)?.name||'Choose product';
 }
 function setupStudioUI(){
- document.body.classList.add('studio-editor');
+ document.body.classList.add('studio-editor');setupProductSheet();
  const left=document.querySelector('.left-rail'),right=document.querySelector('.right-rail');
  const oldPanels=[...left.children];oldPanels[0].dataset.studioPanel='templates';oldPanels[1].dataset.studioPanel='catalog';oldPanels[2].dataset.studioPanel='catalog';
  const panel=document.createElement('section');panel.className='panel studio-product-panel';panel.dataset.studioPanel='products';panel.dataset.mobilePanel='products';
@@ -78,4 +80,40 @@ function setupStudioUI(){
  const zoom=document.createElement('div');zoom.className='studio-zoom';zoom.innerHTML='<button type="button" class="btn btn-sm" aria-label="Zoom out">−</button><output aria-live="polite">100%</output><button type="button" class="btn btn-sm" aria-label="Zoom in">+</button><button type="button" class="btn btn-sm">Fit</button>';
  document.querySelector('.stage-top').append(zoom);let scale=1;const buttons=zoom.querySelectorAll('button');const apply=()=>{const stage=document.querySelector('.stage'),width=Math.min(500,stage.clientWidth-48);document.querySelector('.poster-wrap').style.width=Math.max(200,width*scale)+'px';zoom.querySelector('output').textContent=Math.round(scale*100)+'%'};
  buttons[0].onclick=()=>{scale=Math.max(.5,scale-.1);apply()};buttons[1].onclick=()=>{scale=Math.min(2,scale+.1);apply()};buttons[2].onclick=()=>{scale=1;apply()};window.addEventListener('resize',apply);apply();
+}
+
+function updateProductSheetHeading(){
+ const heading=$('productSheetHeading');if(!heading)return;
+ const slot=activeSlots()[state.selectedSlot],p=slot&&productFor(slot);heading.replaceChildren();
+ if(p){const img=document.createElement('img');img.src=slot.image||p.image;img.alt='';heading.append(img)}
+ const copy=document.createElement('div'),name=document.createElement('strong'),code=document.createElement('small');
+ name.textContent=p?.name||'Choose a product';code.textContent=p?.code||'Product settings';copy.append(name,code);
+ const price=document.createElement('b');price.textContent=p?money(salePrice(p,slot)):'';
+ const close=document.createElement('button');close.type='button';close.className='sheet-close';close.textContent='?';close.setAttribute('aria-label','Close product settings');close.onclick=()=>$('slotDialog').close();heading.append(copy,price,close);
+}
+function prepareProductSheet(){
+ const dialog=$('slotDialog');dialog.dataset.sheetSize='compact';dialog.style.removeProperty('--sheet-drag-height');
+ slotEditor.scrollTop=0;updateProductSheetHeading();$('productSheetHandle')?.focus({preventScroll:true});
+}
+function setupProductSheet(){
+ const dialog=$('slotDialog'),inner=dialog.querySelector('.modal-inner');
+ const handle=document.createElement('button');handle.type='button';handle.id='productSheetHandle';handle.className='sheet-handle';handle.setAttribute('aria-label','Expand product settings. Drag up to expand or down to close.');handle.setAttribute('aria-expanded','false');
+ const bar=document.createElement('span');bar.setAttribute('aria-hidden','true');handle.append(bar);
+ const heading=document.createElement('div');heading.id='productSheetHeading';heading.className='sheet-heading';inner.prepend(handle,heading);
+ let drag=null,skipClick=false;
+ const viewport=()=>window.visualViewport?.height||window.innerHeight;
+ const snap=size=>{dialog.dataset.sheetSize=size;dialog.style.removeProperty('--sheet-drag-height');handle.setAttribute('aria-expanded',String(size==='expanded'));handle.setAttribute('aria-label',size==='expanded'?'Collapse product settings. Drag down to collapse.':'Expand product settings. Drag up to expand or down to close.')};
+ const resize=()=>{dialog.style.setProperty('--sheet-viewport',viewport()+'px')};resize();window.visualViewport?.addEventListener('resize',resize);window.addEventListener('resize',resize);
+ handle.onclick=()=>{if(skipClick){skipClick=false;return}snap(dialog.dataset.sheetSize==='expanded'?'compact':'expanded')};
+ handle.onkeydown=event=>{if(event.key==='ArrowUp'||event.key==='ArrowDown'){event.preventDefault();snap(event.key==='ArrowUp'?'expanded':'compact')}};
+ handle.onpointerdown=event=>{if(event.button!==0||!event.isPrimary)return;drag={id:event.pointerId,y:event.clientY,height:dialog.getBoundingClientRect().height,size:dialog.dataset.sheetSize||'compact',moved:false};handle.setPointerCapture(event.pointerId)};
+ handle.onpointermove=event=>{if(!drag||event.pointerId!==drag.id)return;const dy=event.clientY-drag.y;if(Math.abs(dy)>5)drag.moved=true;if(drag.moved){event.preventDefault();dialog.style.setProperty('--sheet-drag-height',Math.max(130,Math.min(viewport()*.92,drag.height-dy))+'px')}};
+ const finish=(event,cancelled=false)=>{if(!drag||event.pointerId!==drag.id)return;const current=drag;drag=null;const dy=event.clientY-current.y;skipClick=current.moved;
+  if(cancelled){snap(current.size);return}
+  if(current.moved&&dy>90&&current.size==='compact'){dialog.close();snap('compact')}
+  else if(dy < -35)snap('expanded');else if(dy>35)snap('compact');else snap(current.size);
+ };
+ handle.onpointerup=event=>finish(event);handle.onpointercancel=event=>finish(event,true);
+ dialog.addEventListener('close',()=>{drag=null;skipClick=false;snap('compact')});
+ slotEditor.addEventListener('focusin',event=>{if(!window.matchMedia('(min-width:821px)').matches&&event.target.matches('input:not([type=range]):not([type=file]),select'))snap('expanded')});
 }

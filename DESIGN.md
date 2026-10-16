@@ -14,3 +14,5 @@ Desktop: a compact white header with template selector and save status; left Pro
 `renderIndependentSlotEditor` remains the shared form owner. Its single DOM form docks in the desktop inspector and returns to the dialog on mobile. Native fields, existing validation, save queue and error notices are reused. The new poster list shows actual slot overrides and searches name/code; the catalog still manages reusable products.
 
 `slot.textSizes` holds independent overrides for name, discount, sale and original. `textScale(key, slot)` falls back to the existing template default. All canvas renderers and HTML cards use this resolver. Reset clears only that slot's overrides. Template defaults remain available in a collapsed settings group.
+
+Mobile product settings use the same editor in a bottom sheet: compact 56dvh and expanded 92dvh, limited to the visual viewport. Drag the handle to expand/collapse/dismiss; its button and arrow keys also change size. Settings scroll independently. Keyboard focus expands the sheet; open focuses the handle to avoid showing the keyboard immediately. Close and Escape preserve autosaved edits.
