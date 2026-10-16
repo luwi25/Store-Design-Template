@@ -15,8 +15,8 @@ const {JSDOM}=require('jsdom');
  const manifest=JSON.parse(fs.readFileSync('public/manifest.webmanifest'));assert.equal(manifest.display,'standalone');assert.equal(manifest.scope,'./');
  for(const icon of manifest.icons){const bytes=fs.readFileSync('public/'+icon.src);assert.equal(bytes.readUInt32BE(16),Number(icon.sizes.split('x')[0]))}
  const events={},scope='https://luwi25.github.io/Store-Design-Template/',stored=new Set();
- const cache={addAll:async urls=>{urls.forEach(url=>{assert(url.startsWith(scope));assert(fs.existsSync('public/'+url.slice(scope.length)));stored.add(url)})},match:async key=>stored.has(key)?{cached:key}:null};
- const context={self:{skipWaiting:async()=>{},registration:{scope},location:{origin:'https://luwi25.github.io'},clients:{claim:async()=>{}},addEventListener:(name,handler)=>events[name]=handler},URL,Set,caches:{open:async()=>cache,keys:async()=>[],delete:async()=>{}},fetch:()=>{throw Error('Offline fetch attempted')}};
+ const cache={put:async()=>{},addAll:async urls=>{urls.forEach(url=>{assert(url.startsWith(scope));assert(fs.existsSync('public/'+url.slice(scope.length)));stored.add(url)})},match:async key=>stored.has(key)?{cached:key}:null};
+ const context={self:{skipWaiting:async()=>{},registration:{scope},location:{origin:'https://luwi25.github.io'},clients:{claim:async()=>{}},addEventListener:(name,handler)=>events[name]=handler},URL,Set,Response,caches:{open:async()=>cache,keys:async()=>[],delete:async()=>{}},fetch:()=>{throw Error('Offline fetch attempted')}};
  vm.createContext(context);vm.runInContext(fs.readFileSync('public/sw.js','utf8'),context);
  let install;events.install({waitUntil:p=>install=p});await install;assert(stored.has(scope+'vendor/u2netp.onnx'));
  let response;events.fetch({request:{method:'GET',url:scope,mode:'navigate'},respondWith:p=>response=p});assert.equal((await response).cached,scope+'index.html');

@@ -56,12 +56,12 @@ shutil.copytree(ROOT/'defaults',OUT/'defaults',dirs_exist_ok=True)
 shutil.copytree(ROOT/'vendor',OUT/'vendor',dirs_exist_ok=True)
 shutil.copytree(ROOT/'icons',OUT/'icons',dirs_exist_ok=True)
 (OUT/'.nojekyll').touch()
-# Content-derived cache version: updates wait until old app windows close.
+# Content hashes allow updates to reuse unchanged offline files.
 files=sorted(path.relative_to(OUT).as_posix() for path in OUT.rglob('*') if path.is_file() and path.name not in ['sw.js','.nojekyll'])
 digest=hashlib.sha256()
 for name in files:
     digest.update(name.encode());digest.update((OUT/name).read_bytes())
-sw=(ROOT/'sw-template.js').read_text(encoding='utf-8').replace('__VERSION__',digest.hexdigest()[:16]).replace('__FILES__',json.dumps(files))
+sw=(ROOT/'sw-template.js').read_text(encoding='utf-8').replace('__VERSION__',digest.hexdigest()[:16]).replace('__FILES__',json.dumps(files)).replace('__HASHES__',json.dumps({name:hashlib.sha256((OUT/name).read_bytes()).hexdigest() for name in files}))
 (OUT/'sw.js').write_text(sw,encoding='utf-8')
 assert 'src="db-config.js"' not in html and 'src="local-db.js"' not in html
 print('Built browser-only site:',OUT)

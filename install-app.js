@@ -21,9 +21,23 @@
   if(navigator.storage?.persist)navigator.storage.persist().catch(()=>{});
  };
  if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('./sw.js').then(registration=>{
+  navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).then(registration=>{
    const showReady=()=>{offline.textContent='App files are ready for offline use. Refresh while online to load the latest version. Your saved products stay on this device.'};
-   registration.update().catch(()=>{});
+   let checking=false,lastCheck=0;
+   const checkUpdate=async()=>{
+    if(checking||navigator.onLine===false||Date.now()-lastCheck<15000)return;
+    checking=true;lastCheck=Date.now();
+    try{await registration.update()}catch{}finally{checking=false}
+   };
+   checkUpdate();
+   window.addEventListener('online',checkUpdate);
+   document.addEventListener('visibilitychange',()=>{if(!document.hidden)checkUpdate()});
+   setInterval(()=>{if(!document.hidden)checkUpdate()},60000);
+   navigator.serviceWorker.addEventListener('controllerchange',()=>{
+    const update=document.getElementById('appUpdateReady')||document.createElement('button');
+    update.id='appUpdateReady';update.type='button';update.className='btn';update.textContent='Update ready — refresh';
+    update.onclick=()=>location.reload();document.querySelector('.top-actions').append(update);
+   });
    if(registration.active)showReady();
    navigator.serviceWorker.ready.then(showReady);
   }).catch(()=>{offline.textContent='Offline download could not finish. You can still use the app online; reconnect and reload to retry.'});
