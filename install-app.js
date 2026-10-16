@@ -22,7 +22,8 @@
  };
  if('serviceWorker' in navigator){
   navigator.serviceWorker.register('./sw.js').then(registration=>{
-   const showReady=()=>{offline.textContent='App files are ready for offline use. To receive updates, open the app online and close all its tabs before reopening.'};
+   const showReady=()=>{offline.textContent='App files are ready for offline use. Refresh while online to load the latest version. Your saved products stay on this device.'};
+   registration.update().catch(()=>{});
    if(registration.active)showReady();
    navigator.serviceWorker.ready.then(showReady);
   }).catch(()=>{offline.textContent='Offline download could not finish. You can still use the app online; reconnect and reload to retry.'});
