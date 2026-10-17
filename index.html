@@ -923,17 +923,32 @@ async function homeBackCanvas({width=1650,height=2550}={}){
   const firstNameBaseline=lastNameBaseline-(lines.length-1)*lineHeight;
   const photoH=Math.max(1,Math.min(b.photo,firstNameBaseline-nameSize-b.y-8));
   if(im){const scale=Math.min((b.w-10)/im.width,photoH/im.height);ctx.drawImage(im,b.x+(b.w-im.width*scale)/2,b.y+(photoH-im.height*scale)/2,im.width*scale,im.height*scale)}
+  const discount=Math.round(independentDiscount(slot)*100)/100;
+  if(p&&discount>0){
+   const badgeR=Math.max(13,Math.min(22,b.w*.13,photoH*.42)),cx=b.x+badgeR+5,cy=b.y+badgeR+5;
+   ctx.save();ctx.fillStyle='#ffdc00';ctx.beginPath();ctx.ellipse(cx,cy,badgeR,badgeR*.86,0,0,Math.PI*2);ctx.fill();
+   ctx.textAlign='center';ctx.fillStyle='#c81414';
+   pesoText(ctx,discount+'%',cx,cy-badgeR*.08,badgeR*1.8,badgeR*.72*textScale('discount',slot),800,.85);
+   pesoText(ctx,'OFF',cx,cy+badgeR*.66,badgeR*1.7,badgeR*.5*textScale('discount',slot),800);
+   ctx.restore();
+  }
   ctx.strokeStyle='#e5e1d0';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(b.x+b.w-1,b.y+5);ctx.lineTo(b.x+b.w-1,b.y+b.h-4);ctx.stroke();
   ctx.textAlign='center';ctx.fillStyle='#111';
   lines.forEach((line,i)=>pesoText(ctx,line,b.x+b.w/2,firstNameBaseline+i*lineHeight,b.w-16,nameSize,700,.9));
-  ctx.fillStyle='#ed0015';
   if(p){
    const number=new Intl.NumberFormat('en-PH',{minimumFractionDigits:2,maximumFractionDigits:2}).format(salePrice(p,slot)),symbolSize=priceSize*.57;
    ctx.font=`800 ${symbolSize}px Arial, sans-serif`;const symbolWidth=ctx.measureText('\u20b1').width;
-   ctx.font=`800 ${priceSize}px Outfit`;const numberWidth=Math.min(b.w-symbolWidth-18,ctx.measureText(number).width),left=b.x+(b.w-numberWidth-symbolWidth-2)/2;
-   ctx.textAlign='left';ctx.font=`800 ${symbolSize}px Arial, sans-serif`;ctx.fillText('\u20b1',left,priceBaseline-4);
+   let originalText='',originalWidth=0;
+   if(discount>0){originalText='\u20b1'+new Intl.NumberFormat('en-PH',{minimumFractionDigits:2,maximumFractionDigits:2}).format(p.price);ctx.font=`700 ${priceSize*.38*textScale('original',slot)}px Outfit`;originalWidth=Math.min(b.w*.36,ctx.measureText(originalText).width)+10}
+   ctx.font=`800 ${priceSize}px Outfit`;const numberWidth=Math.min(b.w-symbolWidth-18-originalWidth,ctx.measureText(number).width),left=b.x+(b.w-numberWidth-symbolWidth-originalWidth-2)/2;
+   ctx.textAlign='left';ctx.fillStyle='#ed0015';ctx.font=`800 ${symbolSize}px Arial, sans-serif`;ctx.fillText('\u20b1',left,priceBaseline-4);
    pesoText(ctx,number,left+symbolWidth+2,priceBaseline,numberWidth,priceSize,800);
-  }else pesoText(ctx,'Add item',b.x+b.w/2,priceBaseline,b.w-20,priceSize,800);
+   if(discount>0){
+    const ox=left+symbolWidth+2+numberWidth+8,osize=priceSize*.38*textScale('original',slot);
+    ctx.fillStyle='#777';const drawnW=pesoText(ctx,originalText,ox,priceBaseline-1,originalWidth-8,osize,700);
+    ctx.fillRect(ox,priceBaseline-osize*.42,drawnW,1.3);
+   }
+  }else{ctx.textAlign='center';ctx.fillStyle='#ed0015';pesoText(ctx,'Add item',b.x+b.w/2,priceBaseline,b.w-20,priceSize,800)}
   ctx.restore();
  });return c;
 }
