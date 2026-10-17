@@ -30,8 +30,10 @@ async function homeBackCanvas({width=1650,height=2550}={}){
  const slots=homeBackState().slots,images=await Promise.all(slots.map(async slot=>{try{return await loadCanvasImage(slot.image||productFor(slot)?.image||svgThumb('+','#fffdf6'))}catch{return null}}));
  slots.forEach((slot,index)=>{
   const b=homeBackCard(index),p=productFor(slot),im=images[index];
-  const nameSize=24*textScale('name',slot),lineHeight=nameSize*1.05,priceSize=49*textScale('sale',slot);
-  const priceBaseline=b.y+b.h-(slot.group===2?30:46);
+  const discount=Math.round(independentDiscount(slot)*100)/100;
+  const nameSize=24*textScale('name',slot),lineHeight=nameSize*1.05,priceSize=49*textScale('sale',slot),originalSize=priceSize*.4*textScale('original',slot);
+  const originalBaseline=b.y+b.h-(slot.group===2?14:18);
+  const priceBaseline=p&&discount>0?originalBaseline-originalSize*1.05-6:b.y+b.h-(slot.group===2?30:46);
   ctx.save();ctx.beginPath();ctx.rect(b.x,b.y,b.w,b.h);ctx.clip();ctx.fillStyle='#fffdf3';ctx.fillRect(b.x,b.y,b.w,b.h);
   ctx.font=`700 ${nameSize}px Outfit`;
   const lines=[''];for(const word of (p?.name||'Choose a product').split(/\s+/)){
@@ -43,7 +45,6 @@ async function homeBackCanvas({width=1650,height=2550}={}){
   const firstNameBaseline=lastNameBaseline-(lines.length-1)*lineHeight;
   const photoH=Math.max(1,Math.min(b.photo,firstNameBaseline-nameSize-b.y-8));
   if(im){const scale=Math.min((b.w-10)/im.width,photoH/im.height);ctx.drawImage(im,b.x+(b.w-im.width*scale)/2,b.y+(photoH-im.height*scale)/2,im.width*scale,im.height*scale)}
-  const discount=Math.round(independentDiscount(slot)*100)/100;
   if(p&&discount>0){
    const badgeR=Math.max(13,Math.min(22,b.w*.13,photoH*.42)),cx=b.x+badgeR+5,cy=b.y+badgeR+5;
    ctx.save();ctx.fillStyle='#ffdc00';ctx.beginPath();ctx.ellipse(cx,cy,badgeR,badgeR*.86,0,0,Math.PI*2);ctx.fill();
@@ -58,15 +59,14 @@ async function homeBackCanvas({width=1650,height=2550}={}){
   if(p){
    const number=new Intl.NumberFormat('en-PH',{minimumFractionDigits:2,maximumFractionDigits:2}).format(salePrice(p,slot)),symbolSize=priceSize*.57;
    ctx.font=`800 ${symbolSize}px Arial, sans-serif`;const symbolWidth=ctx.measureText('\u20b1').width;
-   let originalText='',originalWidth=0;
-   if(discount>0){originalText='\u20b1'+new Intl.NumberFormat('en-PH',{minimumFractionDigits:2,maximumFractionDigits:2}).format(p.price);ctx.font=`700 ${priceSize*.38*textScale('original',slot)}px Outfit`;originalWidth=Math.min(b.w*.36,ctx.measureText(originalText).width)+10}
-   ctx.font=`800 ${priceSize}px Outfit`;const numberWidth=Math.min(b.w-symbolWidth-18-originalWidth,ctx.measureText(number).width),left=b.x+(b.w-numberWidth-symbolWidth-originalWidth-2)/2;
+   ctx.font=`800 ${priceSize}px Outfit`;const numberWidth=Math.min(b.w-symbolWidth-18,ctx.measureText(number).width),left=b.x+(b.w-numberWidth-symbolWidth-2)/2;
    ctx.textAlign='left';ctx.fillStyle='#ed0015';ctx.font=`800 ${symbolSize}px Arial, sans-serif`;ctx.fillText('\u20b1',left,priceBaseline-4);
    pesoText(ctx,number,left+symbolWidth+2,priceBaseline,numberWidth,priceSize,800);
    if(discount>0){
-    const ox=left+symbolWidth+2+numberWidth+8,osize=priceSize*.38*textScale('original',slot);
-    ctx.fillStyle='#777';const drawnW=pesoText(ctx,originalText,ox,priceBaseline-1,originalWidth-8,osize,700);
-    ctx.fillRect(ox,priceBaseline-osize*.42,drawnW,1.3);
+    const originalText='\u20b1'+new Intl.NumberFormat('en-PH',{minimumFractionDigits:2,maximumFractionDigits:2}).format(p.price);
+    ctx.textAlign='center';ctx.fillStyle='#777';
+    const drawnW=pesoText(ctx,originalText,b.x+b.w/2,originalBaseline,b.w-20,originalSize,700);
+    ctx.fillRect(b.x+b.w/2-drawnW/2,originalBaseline-originalSize*.42,drawnW,1.3);
    }
   }else{ctx.textAlign='center';ctx.fillStyle='#ed0015';pesoText(ctx,'Add item',b.x+b.w/2,priceBaseline,b.w-20,priceSize,800)}
   ctx.restore();
