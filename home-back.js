@@ -46,11 +46,11 @@ async function homeBackCanvas({width=1650,height=2550}={}){
   const photoH=Math.max(1,Math.min(b.photo,firstNameBaseline-nameSize-b.y-8));
   if(im){const scale=Math.min((b.w-10)/im.width,photoH/im.height);ctx.drawImage(im,b.x+(b.w-im.width*scale)/2,b.y+(photoH-im.height*scale)/2,im.width*scale,im.height*scale)}
   if(p&&discount>0){
-   const badgeR=Math.max(13,Math.min(22,b.w*.13,photoH*.42)),cx=b.x+badgeR+5,cy=b.y+badgeR+5;
+   const badgeR=Math.max(16,Math.min(30,b.w*.17,photoH*.52)),cx=b.x+badgeR+5,cy=b.y+badgeR+5;
    ctx.save();ctx.fillStyle='#ffdc00';ctx.beginPath();ctx.ellipse(cx,cy,badgeR,badgeR*.86,0,0,Math.PI*2);ctx.fill();
    ctx.textAlign='center';ctx.fillStyle='#c81414';
-   pesoText(ctx,discount+'%',cx,cy-badgeR*.08,badgeR*1.8,badgeR*.72*textScale('discount',slot),800,.85);
-   pesoText(ctx,'OFF',cx,cy+badgeR*.66,badgeR*1.7,badgeR*.5*textScale('discount',slot),800);
+   pesoText(ctx,discount+'%',cx,cy-badgeR*.08,badgeR*1.85,badgeR*.86*textScale('discount',slot),800,.9);
+   pesoText(ctx,'OFF',cx,cy+badgeR*.68,badgeR*1.75,badgeR*.58*textScale('discount',slot),800);
    ctx.restore();
   }
   ctx.strokeStyle='#e5e1d0';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(b.x+b.w-1,b.y+5);ctx.lineTo(b.x+b.w-1,b.y+b.h-4);ctx.stroke();
