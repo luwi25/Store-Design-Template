@@ -10,7 +10,7 @@ function homeBackCard(index){const slot=homeBackState().slots[index],g=homeBackG
 async function initHomeBack(){try{
  const original=await loadCanvasImage(HOME_BACK_ORIGINAL_ART);homeBackImage=await loadCanvasImage(HOME_BACK_ART);homeBackLogo=await loadCanvasImage(HOME_BACK_LOGO);
  // Preserve the approved layout and QR from the original; enhance only the product photo layers.
- homeBackBackground=productFreeArtwork(original,1280,1924,[...homeBackGroups.map(g=>[g.x,g.y,g.w,g.h]),[66,0,617,178],[800,780,184,23],[1025,786,225,17],[802,1107,170,56],[1020,1120,228,42],[1083,1483,106,31],[799,1500,153,14]]);
+ homeBackBackground=productFreeArtwork(original,1280,1924,[...homeBackGroups.map(g=>[g.x,g.y,g.w,g.h]),[78,6,573,171],[650,6,17,161],[667,6,16,145],[683,6,16,118],[800,780,184,23],[1025,786,225,17],[802,1107,170,56],[1020,1120,228,42],[1083,1483,106,31],[799,1500,153,14]]);
  const crops=[[[46,804,201,137],[270,788,183,160],[545,787,185,161],[807,786,161,160],[1037,790,208,139]],[[47,1161,178,135],[270,1171,240,99],[536,1160,201,116],[817,1110,130,187],[1025,1123,220,171]],[[28,1515,198,127],[273,1525,234,101],[532,1509,219,127],[803,1501,147,136],[1086,1486,94,145]]];
  homeBackGroups.forEach((g,group)=>g.items.forEach(([name,price],i)=>{
   const id=`home-back1-${group}-${i}`,existing=state.products.find(p=>p.id===id);
@@ -26,7 +26,7 @@ async function initHomeBack(){try{
  }catch(e){console.error(e);showNotice('Could not load Home Express-Back. Reload to try again.')}}
 async function homeBackCanvas({width=1650,height=2550}={}){
  await document.fonts.load('800 20px Outfit');if(!homeBackBackground)throw Error('Home Express-Back artwork is loading');const c=document.createElement('canvas');c.width=width;c.height=height;const ctx=c.getContext('2d');ctx.imageSmoothingQuality='high';ctx.scale(width/1280,height/1924);ctx.drawImage(homeBackBackground,0,0,1280,1924);
- if(homeBackLogo){const area={x:66,y:0,w:617,h:178},s=Math.min(area.w/homeBackLogo.naturalWidth,area.h/homeBackLogo.naturalHeight),lw=homeBackLogo.naturalWidth*s,lh=homeBackLogo.naturalHeight*s;ctx.drawImage(homeBackLogo,area.x+(area.w-lw)/2,area.y+(area.h-lh)/2,lw,lh)}
+ if(homeBackLogo){const area={x:93,y:16,w:543,h:132},s=Math.min(area.w/homeBackLogo.naturalWidth,area.h/homeBackLogo.naturalHeight),lw=homeBackLogo.naturalWidth*s,lh=homeBackLogo.naturalHeight*s;ctx.drawImage(homeBackLogo,area.x+(area.w-lw)/2,area.y+(area.h-lh)/2,lw,lh)}
  const store=state.poster.store||'HOMEEXPRESS';if(store.replace(/\s/g,'').toUpperCase()!=='HOMEEXPRESS'){ctx.fillStyle='#ffffff';ctx.fillRect(205,22,475,85);ctx.fillStyle='#063373';ctx.textAlign='left';pesoText(ctx,store,212,91,460,64,800)}
  const slots=homeBackState().slots,images=await Promise.all(slots.map(async slot=>{try{return await loadCanvasImage(slot.image||productFor(slot)?.image||svgThumb('+','#fffdf6'))}catch{return null}}));
  slots.forEach((slot,index)=>{
