@@ -64,7 +64,7 @@ async function homeBackCanvas({width=1650,height=2550}={}){
    pesoText(ctx,number,left+symbolWidth+2,priceBaseline,numberWidth,priceSize,800);
    if(discount>0){
     const originalText='\u20b1'+new Intl.NumberFormat('en-PH',{minimumFractionDigits:2,maximumFractionDigits:2}).format(p.price);
-    ctx.textAlign='center';ctx.fillStyle='#777';
+    ctx.textAlign='center';ctx.fillStyle='#111';
     const drawnW=pesoText(ctx,originalText,b.x+b.w/2,originalBaseline,b.w-20,originalSize,700);
     ctx.fillRect(b.x+b.w/2-drawnW/2,originalBaseline-originalSize*.42,drawnW,1.3);
    }
