@@ -5,7 +5,9 @@ const pesoGroups=[
  {name:'Top Products',x:23,y:909,w:977,h:241,photo:170,lines:1,edges:[23,214,379,605,808,1000],items:[['Storage Box Black',399],['Plain Drawer 5L6D',1350],['Ceiling Fan',699],["Premium Hanger CLA 6’s",65],['Adjustable Helmet PLN',279]]},
  {name:'Small Appliances',x:23,y:1209,w:977,h:213,photo:158,lines:1,edges:[23,172,320,469,662,834,1000],items:[['Clip Fan',249],['STD Butane Gas w/ ICC',69],['Mini Fan',109],['Food Warmer G/C',129],['Dry Iron',459],['Hair Trimmer',229]]}
 ];
-function pesoState(){if(state.peso?.designVersion!==4){if(state.peso&&!state.pesoPreviousDesignV3)state.pesoPreviousDesignV3=structuredClone(state.peso);state.peso={designVersion:4,slots:pesoGroups.flatMap((g,group)=>g.items.map((_,i)=>({productId:`peso-front4-${group}-${i}`,group,image:null,discountPercent:0})))}}return state.peso}
+function pesoState(){if(state.peso?.designVersion!==4){if(state.peso&&!state.pesoPreviousDesignV3)state.pesoPreviousDesignV3=structuredClone(state.peso);state.peso={designVersion:4,slots:pesoGroups.flatMap((g,group)=>g.items.map((_,i)=>({productId:`peso-front4-${group}-${i}`,group,image:null,discountPercent:0})))}}if(!state.peso.groupNames)state.peso.groupNames=pesoGroups.map(g=>g.name);return state.peso}
+pesoGroups.forEach((g,i)=>$('pesoFrontLabel-'+i).addEventListener('input',e=>{pesoState().groupNames[i]=e.target.value.trim()||g.name;renderPoster();save()}));
+const PESO_FRONT_RIBBONS=[[96,540,843,46],[14,850,346,55],[14,1154,386,52]];
 function pesoCard(index){const slot=pesoState().slots[index],g=pesoGroups[slot.group],siblings=pesoState().slots.filter(s=>s.group===slot.group),i=siblings.indexOf(slot);return {...g,x:siblings.length===g.items.length?g.edges[i]:g.x+i*g.w/siblings.length,w:siblings.length===g.items.length?g.edges[i+1]-g.edges[i]:g.w/siblings.length}}
 async function initPeso(){try{
  const original=await loadCanvasImage(PESO_ART);pesoImage=await loadCanvasImage(PESO_ENHANCED_ART);
@@ -18,6 +20,7 @@ async function initPeso(){try{
 function pesoText(ctx,text,x,y,width,size,weight=700,condense=1){ctx.font=`${weight} ${size}px Outfit, Arial, sans-serif`;const measured=ctx.measureText(text).width;if(measured>width)ctx.font=`${weight} ${size*Math.min(1,width/measured/condense)}px Outfit, Arial, sans-serif`;ctx.fillText(text,x,y,width);return Math.min(width,ctx.measureText(text).width)}
 async function pesoCanvas({width=1650,height=2550}={}){
  await document.fonts.load('800 20px Outfit');if(!pesoBackground)throw Error('PesoPlus artwork is loading');const c=document.createElement('canvas');c.width=width;c.height=height;const ctx=c.getContext('2d');ctx.imageSmoothingQuality='high';ctx.scale(width/1023,height/1537);ctx.drawImage(pesoBackground,0,0,1023,1537);
+ pesoGroups.forEach((g,i)=>{const [rx,ry,rw,rh]=PESO_FRONT_RIBBONS[i],label=(pesoState().groupNames[i]||g.name).toUpperCase();ctx.save();ctx.fillStyle='#d11008';ctx.fillRect(rx,ry,rw,rh);ctx.fillStyle='#fff';ctx.textAlign='left';pesoText(ctx,label,rx+8,ry+rh*0.72,rw-16,rh*0.74,900);ctx.restore()});
  const store=state.poster.store||'PESOPLUS';if(store.replace(/\s/g,'').toUpperCase()!=='PESOPLUS'){ctx.fillStyle='#bd0012';ctx.fillRect(136,15,300,68);ctx.fillStyle='#fff';ctx.textAlign='left';pesoText(ctx,store,144,74,282,53,800)}
  const slots=pesoState().slots,images=await Promise.all(slots.map(async slot=>{try{return await loadCanvasImage(slot.image||productFor(slot)?.image||svgThumb('+','#fffdf6'))}catch{return null}}));
  slots.forEach((slot,index)=>{const b=pesoCard(index),p=productFor(slot),im=images[index];

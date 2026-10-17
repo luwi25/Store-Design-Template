@@ -9,7 +9,9 @@ const pesoBackGroups=[
  {name:'Hardware & Tools',x:20,y:1521,w:675,h:242,photo:155,edges:[20,207,367,544,695],items:[['T Torch Original Lighter',15],['Shelf Bracket 6×8',20],['Rope 12mm',19],['Cata LED Bulb 18W',79]]},
  {name:'Toys & Party',x:711,y:1521,w:549,h:242,photo:155,edges:[711,893,1081,1260],items:[['Snake',39],['Squishy Bun',39],['Rubber Ball 60g',29]]}
 ];
-function pesoBackState(){if(!state.pesoBack)state.pesoBack={designVersion:1,slots:pesoBackGroups.flatMap((g,group)=>g.items.map((_,i)=>({productId:`peso-back1-${group}-${i}`,group,discountPercent:0,image:null})))};return state.pesoBack}
+function pesoBackState(){if(!state.pesoBack)state.pesoBack={designVersion:1,slots:pesoBackGroups.flatMap((g,group)=>g.items.map((_,i)=>({productId:`peso-back1-${group}-${i}`,group,discountPercent:0,image:null})))};if(!state.pesoBack.groupNames)state.pesoBack.groupNames=pesoBackGroups.map(g=>g.name);return state.pesoBack}
+pesoBackGroups.forEach((g,i)=>$('pesoBackLabel-'+i).addEventListener('input',e=>{pesoBackState().groupNames[i]=e.target.value.trim()||g.name;renderPoster();save()}));
+const PESO_BACK_RIBBONS=[[19,443,1238,46],[19,805,609,44],[646,805,612,44],[19,1136,616,43],[654,1136,604,43],[19,1473,675,42],[711,1473,548,42]];
 function pesoBackCard(index){const slot=pesoBackState().slots[index],g=pesoBackGroups[slot.group],siblings=pesoBackState().slots.filter(s=>s.group===slot.group),i=siblings.indexOf(slot);return {...g,x:siblings.length===g.items.length?g.edges[i]:g.x+i*g.w/siblings.length,w:siblings.length===g.items.length?g.edges[i+1]-g.edges[i]:g.w/siblings.length}}
 
 async function initPesoBack(){try{
@@ -19,6 +21,7 @@ async function initPesoBack(){try{
  }catch(error){console.error(error);showNotice('Could not load PesoPlus-Back. Reload to try again.')}}
 async function pesoBackCanvas({width=1650,height=2550}={}){
  await document.fonts.load('800 20px Outfit');if(!pesoBackBackground)throw Error('Home Express artwork is loading');const canvas=document.createElement('canvas');canvas.width=width;canvas.height=height;const ctx=canvas.getContext('2d');ctx.imageSmoothingQuality='high';ctx.scale(width/1280,height/1924);ctx.drawImage(pesoBackBackground,0,0,1280,1924);
+ pesoBackGroups.forEach((g,i)=>{const [rx,ry,rw,rh]=PESO_BACK_RIBBONS[i],label=(pesoBackState().groupNames[i]||g.name).toUpperCase();ctx.save();ctx.fillStyle='#ffdc02';ctx.fillRect(rx,ry,rw,rh);ctx.fillStyle='#000';ctx.textAlign='left';everydayText(ctx,label,rx+10,ry+rh*0.72,rw-20,rh*0.74,900);ctx.restore()});
  const store=state.poster.store||'PESOPLUS';if(store.replace(/\s/g,'').toUpperCase()!=='PESOPLUS'){ctx.fillStyle='#bd0012';ctx.fillRect(224,35,440,112);ctx.fillStyle='#fff';ctx.textAlign='left';everydayText(ctx,store,230,128,430,75,800)}
  const slots=pesoBackState().slots,photos=await Promise.all(slots.map(async slot=>{try{return await loadCanvasImage(slot.image||productFor(slot)?.image||svgThumb('+','#fffdf6'))}catch{return null}}));
  slots.forEach((slot,index)=>{const b=pesoBackCard(index),p=productFor(slot),im=photos[index];
