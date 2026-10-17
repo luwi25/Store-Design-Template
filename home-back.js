@@ -26,7 +26,7 @@ async function initHomeBack(){try{
  }catch(e){console.error(e);showNotice('Could not load Home Express-Back. Reload to try again.')}}
 async function homeBackCanvas({width=1650,height=2550}={}){
  await document.fonts.load('800 20px Outfit');if(!homeBackBackground)throw Error('Home Express-Back artwork is loading');const c=document.createElement('canvas');c.width=width;c.height=height;const ctx=c.getContext('2d');ctx.imageSmoothingQuality='high';ctx.scale(width/1280,height/1924);ctx.drawImage(homeBackBackground,0,0,1280,1924);
- if(homeBackLogo){const area={x:93,y:16,w:543,h:132},s=Math.min(area.w/homeBackLogo.naturalWidth,area.h/homeBackLogo.naturalHeight),lw=homeBackLogo.naturalWidth*s,lh=homeBackLogo.naturalHeight*s;ctx.drawImage(homeBackLogo,area.x+(area.w-lw)/2,area.y+(area.h-lh)/2,lw,lh)}
+ if(homeBackLogo){const area={x:81,y:12,w:566,h:159},s=Math.min(area.w/homeBackLogo.naturalWidth,area.h/homeBackLogo.naturalHeight),lw=homeBackLogo.naturalWidth*s,lh=homeBackLogo.naturalHeight*s;ctx.drawImage(homeBackLogo,area.x+(area.w-lw)/2,area.y+(area.h-lh)/2,lw,lh)}
  const store=state.poster.store||'HOMEEXPRESS';if(store.replace(/\s/g,'').toUpperCase()!=='HOMEEXPRESS'){ctx.fillStyle='#ffffff';ctx.fillRect(205,22,475,85);ctx.fillStyle='#063373';ctx.textAlign='left';pesoText(ctx,store,212,91,460,64,800)}
  const slots=homeBackState().slots,images=await Promise.all(slots.map(async slot=>{try{return await loadCanvasImage(slot.image||productFor(slot)?.image||svgThumb('+','#fffdf6'))}catch{return null}}));
  slots.forEach((slot,index)=>{
