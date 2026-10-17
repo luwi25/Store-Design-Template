@@ -23,7 +23,7 @@ function everydayText(ctx,text,x,y,width,size,weight=700,condense=1){ctx.font=`$
 
 async function everydayCanvas({width=1650,height=2550}={}){
  await document.fonts.load('800 20px Outfit');if(!everydayBackground)throw Error('Home Express artwork is loading');const canvas=document.createElement('canvas');canvas.width=width;canvas.height=height;const ctx=canvas.getContext('2d');ctx.imageSmoothingQuality='high';ctx.scale(width/1280,height/1924);ctx.drawImage(everydayBackground,0,0,1280,1924);
- if(everydayLogo){const area={x:65,y:5,w:555,h:120},s=Math.min(area.w/everydayLogo.naturalWidth,area.h/everydayLogo.naturalHeight),lw=everydayLogo.naturalWidth*s,lh=everydayLogo.naturalHeight*s;ctx.drawImage(everydayLogo,area.x+(area.w-lw)/2,area.y+(area.h-lh)/2,lw,lh)}
+ if(everydayLogo){const area={x:66,y:14,w:512,h:144},s=Math.min(area.w/everydayLogo.naturalWidth,area.h/everydayLogo.naturalHeight),lw=everydayLogo.naturalWidth*s,lh=everydayLogo.naturalHeight*s;ctx.drawImage(everydayLogo,area.x+(area.w-lw)/2,area.y+(area.h-lh)/2,lw,lh)}
  const store=state.poster.store||'HOME EXPRESS';if(store.replace(/\s/g,'').toUpperCase()!=='HOMEEXPRESS'){ctx.fillStyle='#fff';ctx.fillRect(180,18,433,82);ctx.fillStyle='#07397e';ctx.textAlign='left';everydayText(ctx,store,185,85,421,60,800)}
  const slots=everydayState().slots,photos=await Promise.all(slots.map(async slot=>{try{return await loadCanvasImage(slot.image||productFor(slot)?.image||svgThumb('+','#fffdf6'))}catch{return null}}));
  slots.forEach((slot,index)=>{const b=everydayCard(index),p=productFor(slot),im=photos[index],nameSize=(b.w<140?19:23)*textScale('name',slot),lineHeight=nameSize*1.08,priceSize=(b.w<140?45:57)*textScale('sale',slot),photoH=Math.min(b.photo,b.h-priceSize-17-lineHeight*2);
