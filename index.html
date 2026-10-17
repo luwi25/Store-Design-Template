@@ -351,6 +351,7 @@
     <div class="brand"><span class="brand-mark">✦</span><span>Store Design Template<small>Design editor</small></span></div>
     <div class="top-note">Build a bold sale poster from your product list.</div>
     <div class="top-actions">
+      <button class="btn" id="pngBtn" type="button" onclick="window.flashSaleActions.exportPNG()">↓ <span>Download PNG</span></button>
       <button class="btn" id="pdfBtn" type="button" onclick="window.flashSaleActions.exportPDF()">↓ <span>Download PDF</span></button>
       <button class="btn btn-primary" id="printBtn" type="button" onclick="window.flashSaleActions.print()">▣ <span>Print poster</span></button>
     </div>
@@ -653,6 +654,21 @@ async function exportPDF(){
  }catch(error){console.error(error);showNotice('Could not create the PDF. Wait for the artwork to load and try again.')}
  finally{btn.disabled=false;btn.removeAttribute('aria-busy');label.textContent=previous;syncProductActions()}
 }
+async function exportPNG(){
+ const btn=$('pngBtn');if(btn.disabled)return;
+ if(usesCanvasTemplate()&&!activeSlots().length){showNotice('Add a product before downloading.');return}
+ const label=btn.querySelector('span'),previous=label.textContent;
+ btn.disabled=true;btn.setAttribute('aria-busy','true');label.textContent='Preparing PNG…';
+ try{
+  const name=templateName(state.templateId,'Store design');
+  const canvas=await exportPosterCanvas({width:1650,height:2550});
+  const blob=await printQualityPNG(canvas),url=URL.createObjectURL(blob),link=document.createElement('a');
+  link.href=url;link.download=(name.replace(/[<>:"/\\|?*\x00-\x1f]/g,'').trim()||'Store design')+'.png';
+  document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);
+  showNotice('PNG downloaded at 1650 × 2550 pixels, 300 DPI.');
+ }catch(error){console.error(error);showNotice('Could not create the PNG. Wait for the artwork to load and try again.')}
+ finally{btn.disabled=false;btn.removeAttribute('aria-busy');label.textContent=previous;syncProductActions()}
+}
 
 
 function printGeometry(){
@@ -739,7 +755,7 @@ function renderIndependentSlotEditor(){const i=state.selectedSlot,slot=activeSlo
 }
 
 let removedProduct=null;
-function syncProductActions(){const active=usesCanvasTemplate(),count=active?designSlots().length:0,limit=designLimit();$('designProducts').hidden=!active;$('addDesignProduct').disabled=count>=limit;$('undoRemove').hidden=!removedProduct||removedProduct.templateId!==state.templateId||!active;$('undoRemove').disabled=count>=limit;$('designProductCount').textContent=count+' / '+limit+' products';$('printBtn').disabled=active&&count===0;$('pdfBtn').disabled=active&&count===0}
+function syncProductActions(){const active=usesCanvasTemplate(),count=active?designSlots().length:0,limit=designLimit();$('designProducts').hidden=!active;$('addDesignProduct').disabled=count>=limit;$('undoRemove').hidden=!removedProduct||removedProduct.templateId!==state.templateId||!active;$('undoRemove').disabled=count>=limit;$('designProductCount').textContent=count+' / '+limit+' products';$('printBtn').disabled=active&&count===0;$('pdfBtn').disabled=active&&count===0;$('pngBtn').disabled=active&&count===0}
 function openProductSlot(i){state.selectedSlot=i;renderSlotEditor();const dialog=$('slotDialog');if(window.matchMedia('(min-width:821px)').matches){renderPoster();$('slotName')?.focus({preventScroll:true})}else{renderPoster();if(!dialog.open)dialog.showModal();prepareProductSheet()}}
 function addProductSlot(){if(!usesCanvasTemplate()||designSlots().length>=designLimit())return;const slot={productId:null,image:null,discountPercent:['peso-back','home-back','home-everyday','peso-plus'].includes(state.templateId)?0:['home-bestsellers','peso-plus'].includes(state.templateId)?10:40};if(['peso-back','home-back','home-everyday','home-bestsellers','peso-plus'].includes(state.templateId))slot.group=categoryGroups().findIndex((g,i)=>designSlots().filter(s=>s.group===i).length<g.items.length);designSlots().push(slot);state.selectedSlot=designSlots().length-1;renderAll();save();openProductSlot(state.selectedSlot)}
 function removeProductSlot(i){const slots=activeSlots();removedProduct={slot:structuredClone(slots[i]),index:i,templateId:state.templateId};slots.splice(i,1);state.selectedSlot=-1;$('slotDialog').close();renderAll();save();showNotice('Product removed from this design. Use Undo removal to restore it.');$('addDesignProduct').focus()}
@@ -1145,7 +1161,7 @@ if(['Home Express Everyday Finds','Home Express-Front','HomeExpress-Back','Home 
 if(['PesoPlus Selected Items','PesoPlus-Front'].includes(state.templateNames?.['peso-plus']))state.templateNames['peso-plus']='PesoPlus-Front';
 if(!state.templateSettings['peso-plus']){const d=starter();state.templateSettings['peso-plus']={poster:{...d.poster,store:'PESOPLUS',badge:'10%'},textSizes:d.textSizes,discount:{mode:'percent',value:10},slots:[]}}
 setupStudioUI();
-window.flashSaleActions={deleteProduct:deleteCatalogProduct,openSlot:openProductSlot,closeSlot:()=>$('slotDialog').close(),addSlot:addProductSlot,undoRemove:undoProductRemoval,resetTextSizes,reset:resetPoster,exportPDF:exportPDF,print:printPoster,uploadTemplate:()=>$('templateFile').click(),addProduct:()=>openProduct(),setMode:setMode,closeDialog:()=>dlg.close()};document.addEventListener('keydown',event=>{if((event.ctrlKey||event.metaKey)&&(event.key?.toLowerCase()==='p'||event.code==='KeyP')){event.preventDefault();event.stopImmediatePropagation();window.flashSaleActions.print()}},true);renderAll();if(!hasStoredState){$('saveStatus').dataset.state='ready';$('saveStatus').textContent='Ready · changes save here'}applyReferenceProductPhotos();initEveryday();initPeso();initHomeBack();initPesoBack();
+window.flashSaleActions={deleteProduct:deleteCatalogProduct,openSlot:openProductSlot,closeSlot:()=>$('slotDialog').close(),addSlot:addProductSlot,undoRemove:undoProductRemoval,resetTextSizes,reset:resetPoster,exportPDF:exportPDF,exportPNG:exportPNG,print:printPoster,uploadTemplate:()=>$('templateFile').click(),addProduct:()=>openProduct(),setMode:setMode,closeDialog:()=>dlg.close()};document.addEventListener('keydown',event=>{if((event.ctrlKey||event.metaKey)&&(event.key?.toLowerCase()==='p'||event.code==='KeyP')){event.preventDefault();event.stopImmediatePropagation();window.flashSaleActions.print()}},true);renderAll();if(!hasStoredState){$('saveStatus').dataset.state='ready';$('saveStatus').textContent='Ready · changes save here'}applyReferenceProductPhotos();initEveryday();initPeso();initHomeBack();initPesoBack();
 })();
 </script>
 </body>

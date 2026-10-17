@@ -50,3 +50,18 @@ async function exportPDF(){
  }catch(error){console.error(error);showNotice('Could not create the PDF. Wait for the artwork to load and try again.')}
  finally{btn.disabled=false;btn.removeAttribute('aria-busy');label.textContent=previous;syncProductActions()}
 }
+async function exportPNG(){
+ const btn=$('pngBtn');if(btn.disabled)return;
+ if(usesCanvasTemplate()&&!activeSlots().length){showNotice('Add a product before downloading.');return}
+ const label=btn.querySelector('span'),previous=label.textContent;
+ btn.disabled=true;btn.setAttribute('aria-busy','true');label.textContent='Preparing PNG…';
+ try{
+  const name=templateName(state.templateId,'Store design');
+  const canvas=await exportPosterCanvas({width:1650,height:2550});
+  const blob=await printQualityPNG(canvas),url=URL.createObjectURL(blob),link=document.createElement('a');
+  link.href=url;link.download=(name.replace(/[<>:"/\\|?*\x00-\x1f]/g,'').trim()||'Store design')+'.png';
+  document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);
+  showNotice('PNG downloaded at 1650 × 2550 pixels, 300 DPI.');
+ }catch(error){console.error(error);showNotice('Could not create the PNG. Wait for the artwork to load and try again.')}
+ finally{btn.disabled=false;btn.removeAttribute('aria-busy');label.textContent=previous;syncProductActions()}
+}
