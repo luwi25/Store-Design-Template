@@ -41,6 +41,11 @@ REPO = Path(__file__).resolve().parent.parent  # store-design-template-github
 DATA = REPO / "data"
 LOG_DIR = DATA / "sync_logs"
 
+# Never consider these departments for any sales-driven group, on either
+# store -- excluded from both the dynamic department assignment and the
+# cross-category showcase pools.
+EXCLUDED_DEPARTMENTS = {"Cleaning & Laundry Supplies", "Grocery", "Hygiene"}
+
 STORES = {
     "home-express-basak": {
         "prefix": "sales-heb", "front_key": "everyday", "back_key": "homeBack",
@@ -365,6 +370,7 @@ def main():
     last_weeks = {}
     for store_id, cfg in STORES.items():
         rows, last_week = fetch_catalog_and_last_week(base_url, api_key, store_id)
+        rows = [r for r in rows if r["department"] not in EXCLUDED_DEPARTMENTS]
         last_weeks[store_id] = last_week
         if len(rows) < 20:
             raise RuntimeError(f"[{store_id}] not enough last-week sales data; aborting without changes.")
