@@ -226,7 +226,113 @@ def select_cross_category_topsellers(rows, count):
     return sorted(best_per_category.values(), key=lambda r: -r["units"])[:count]
 
 
-# ---------- Image placeholder (no network image fetch yet -- UBEST's image CDN is down) ----------
+# ---------- Web image search + enhancement (replaces the UBEST image CDN) ----------
+#
+# Needs data/google_image_search.json = {"api_key": "...", "cx": "..."} --
+# a Google Cloud API key plus a Programmable Search Engine ID with Image
+# Search and "search the entire web" both enabled. Free up to 100 queries/
+# day. Until that file exists, every brand-new product silently falls back
+# to the flat placeholder below, same as before.
+
+_GOOGLE_SEARCH_CREDS = None
+_IMAGE_SEARCH_COUNT = 0
+IMAGE_SEARCH_SOFT_CAP = 80  # stay under the ~100/day free quota with headroom
+
+
+def load_google_search_credentials():
+    global _GOOGLE_SEARCH_CREDS
+    if _GOOGLE_SEARCH_CREDS is None:
+        key_file = DATA / "google_image_search.json"
+        if key_file.exists():
+            cfg = json.loads(key_file.read_text(encoding="utf-8"))
+            _GOOGLE_SEARCH_CREDS = (cfg.get("api_key"), cfg.get("cx"))
+        else:
+            _GOOGLE_SEARCH_CREDS = (None, None)
+    return _GOOGLE_SEARCH_CREDS
+
+
+def search_product_image_url(api_key, cx, query, attempt=0):
+    from urllib.parse import urlencode
+    url = "https://www.googleapis.com/customsearch/v1?" + urlencode({
+        "key": api_key, "cx": cx, "q": query, "searchType": "image",
+        "num": 5, "safe": "active", "imgSize": "large",
+    })
+    try:
+        with urllib.request.urlopen(url, timeout=30) as resp:
+            body = json.load(resp)
+    except urllib.error.HTTPError as e:
+        detail = e.read().decode(errors="replace")[:200]
+        if e.code == 429 and attempt < 2:
+            time.sleep(5)
+            return search_product_image_url(api_key, cx, query, attempt + 1)
+        log(f"  image search failed ({e.code}) for {query!r}: {detail}")
+        return None
+    except (urllib.error.URLError, TimeoutError) as e:
+        log(f"  image search network error for {query!r}: {e}")
+        return None
+    items = body.get("items") or []
+    return items[0]["link"] if items else None
+
+
+def download_and_enhance_image(repo, url, max_dim=560):
+    """Downloads a found photo and enhances it with PIL only (no AI
+    background removal -- rembg/onnxruntime segfaulted in this
+    environment, and a native crash can't be caught and would take down
+    the whole unattended run): composite onto white, pad to a clean
+    square so photos of different source aspect ratios sit consistently
+    on the poster, light autocontrast + sharpen, then thumbnail."""
+    from PIL import Image, ImageOps, ImageEnhance
+    import io
+    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+    with urllib.request.urlopen(req, timeout=30) as resp:
+        raw = resp.read()
+    im = Image.open(io.BytesIO(raw))
+    im = ImageOps.exif_transpose(im)
+    if im.mode in ("P", "RGBA"):
+        im = im.convert("RGBA")
+        bg = Image.new("RGBA", im.size, (255, 255, 255, 255))
+        im = Image.alpha_composite(bg, im).convert("RGB")
+    else:
+        im = im.convert("RGB")
+    side = max(im.size)
+    canvas = Image.new("RGB", (side, side), (255, 255, 255))
+    canvas.paste(im, ((side - im.width) // 2, (side - im.height) // 2))
+    canvas = ImageOps.autocontrast(canvas, cutoff=1)
+    canvas = ImageEnhance.Sharpness(canvas).enhance(1.15)
+    canvas.thumbnail((max_dim, max_dim), Image.LANCZOS)
+    buf = io.BytesIO()
+    canvas.save(buf, "JPEG", quality=90)
+    raw_out = buf.getvalue()
+    digest = hashlib.sha256(raw_out).hexdigest()
+    path = repo / "defaults" / "images" / f"{digest}.jpg"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if not path.exists():
+        path.write_bytes(raw_out)
+    return {"__defaultImage": f"images/{digest}.jpg", "mime": "image/jpeg"}
+
+
+def find_and_enhance_product_image(repo, name, stockno):
+    global _IMAGE_SEARCH_COUNT
+    api_key, cx = load_google_search_credentials()
+    if not api_key or not cx:
+        return None
+    if _IMAGE_SEARCH_COUNT >= IMAGE_SEARCH_SOFT_CAP:
+        log(f"  image search soft cap ({IMAGE_SEARCH_SOFT_CAP}) reached this run -- using placeholder for {name!r}")
+        return None
+    _IMAGE_SEARCH_COUNT += 1
+    query = f"{name} {stockno}".strip()
+    try:
+        image_url = search_product_image_url(api_key, cx, query)
+        if not image_url:
+            log(f"  no image search results for {query!r}")
+            return None
+        return download_and_enhance_image(repo, image_url)
+    except Exception as e:
+        log(f"  image search/enhance failed for {query!r}: {e}")
+        return None
+
+
+# ---------- Image placeholder (fallback when web search is unavailable or finds nothing) ----------
 
 _PLACEHOLDER_HASH = None
 
@@ -254,19 +360,25 @@ def placeholder_image_marker(repo):
 # ---------- Upsert directly against the published (dehydrated) state ----------
 
 def upsert_product(repo, state, products_by_id, prefix, stockno, name, price, template_id):
-    """Returns (pid, photo_status). Returning products (same stockno as a
-    past run) keep their already-published photo untouched. Brand-new
-    products get a flat placeholder -- rerun once UBEST's image CDN is back
-    to backfill the real photo for just those. `prefix` keeps each store's
-    sales-driven ids from colliding ('sales-heb-' vs 'sales-ppm-')."""
+    """Returns (pid, photo_status). Returning products with a real photo
+    already keep it untouched. Brand-new products -- and returning ones
+    that only ever got the flat placeholder -- get a web image search
+    (find_and_enhance_product_image); that falls back to the placeholder
+    itself if no search key is configured or nothing useful is found.
+    `prefix` keeps each store's sales-driven ids from colliding
+    ('sales-heb-' vs 'sales-ppm-')."""
     pid = f"{prefix}-{re.sub(r'[^A-Za-z0-9]+', '-', stockno).strip('-').lower()}"
     existing = products_by_id.get(pid)
-    if existing is not None:
+    placeholder = placeholder_image_marker(repo)
+    has_only_placeholder = existing is not None and existing.get("image") == placeholder
+    if existing is not None and not has_only_placeholder:
         image = existing["image"]
         photo_status = "cached"
     else:
-        image = placeholder_image_marker(repo)
-        photo_status = "placeholder"
+        image = find_and_enhance_product_image(repo, name, stockno)
+        photo_status = "web-sourced" if image is not None else "placeholder"
+        if image is None:
+            image = placeholder
 
     product = {
         "id": pid, "templateId": template_id, "name": title_case(name),
@@ -405,14 +517,17 @@ def main():
         if pruned:
             log(f"[{store_id}] pruned {pruned} orphaned {cfg['prefix']}- product(s)")
 
-    placeholder_count = 0
+    placeholder_count = web_sourced_count = 0
     for store_id, side, label, name, units, photo_status in all_entries:
-        tag = " [placeholder photo]" if photo_status == "placeholder" else ""
+        tag = {"placeholder": " [placeholder photo]", "web-sourced": " [new web photo]"}.get(photo_status, "")
         placeholder_count += photo_status == "placeholder"
+        web_sourced_count += photo_status == "web-sourced"
         log(f"  [{store_id}] {side} [{label}] {name} ({units} units){tag}")
+    if web_sourced_count:
+        log(f"{web_sourced_count} product(s) got a fresh web-searched, enhanced photo.")
     if placeholder_count:
-        log(f"{placeholder_count} product(s) got a generic placeholder photo (new this run, "
-            f"UBEST image CDN unavailable) -- rerun once the CDN is back to backfill real photos.")
+        log(f"{placeholder_count} product(s) got a generic placeholder photo (no image search "
+            f"configured, or nothing useful found) -- rerun later to retry.")
 
     project["sourceRevision"] += 1
     project_path.write_text(json.dumps(project, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
