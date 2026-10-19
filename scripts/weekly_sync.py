@@ -230,26 +230,95 @@ def select_cross_category_topsellers(rows, count):
 #
 # Uses the `ddgs` package (pip install ddgs) to search DuckDuckGo's image
 # results -- no account, no API key, no sign-in. Works today with zero
-# setup.
+# setup. Picking the best of several candidates optionally uses the
+# Claude API (needs data/anthropic_api_key.json = {"api_key": "..."} --
+# a real key from console.anthropic.com, billed per call though cheap at
+# Haiku rates); without that file it just takes DuckDuckGo's first
+# result, same as before.
 
 _IMAGE_SEARCH_COUNT = 0
 IMAGE_SEARCH_SOFT_CAP = 60  # stay well short of anything that looks like abuse
+CLAUDE_PICKER_MODEL = "claude-haiku-4-5-20251001"
+
+_ANTHROPIC_API_KEY = None
 
 
-def search_product_image_url(query, attempt=0):
+def load_anthropic_api_key():
+    global _ANTHROPIC_API_KEY
+    if _ANTHROPIC_API_KEY is None:
+        key_file = DATA / "anthropic_api_key.json"
+        if key_file.exists():
+            _ANTHROPIC_API_KEY = json.loads(key_file.read_text(encoding="utf-8")).get("api_key")
+        else:
+            _ANTHROPIC_API_KEY = False
+    return _ANTHROPIC_API_KEY or None
+
+
+def search_product_image_candidates(query, max_results=5, attempt=0):
     from ddgs import DDGS
     try:
-        results = DDGS().images(query, max_results=5, safesearch="moderate")
+        results = DDGS().images(query, max_results=max_results, safesearch="moderate")
     except Exception as e:
         if attempt < 2:
             time.sleep(3)
-            return search_product_image_url(query, attempt + 1)
+            return search_product_image_candidates(query, max_results, attempt + 1)
         log(f"  image search failed for {query!r}: {e}")
+        return []
+    return [r["image"] for r in results if r.get("image")]
+
+
+def pick_best_image_with_claude(api_key, name, stockno, candidate_urls):
+    """Downloads small previews of each candidate and asks Claude to pick
+    the cleanest, best-matching product photo. Returns the chosen URL, or
+    None to fall through to the first candidate (Claude unavailable, no
+    good match, or every download failed)."""
+    from PIL import Image
+    import io
+    import anthropic
+
+    previews = []
+    for url in candidate_urls:
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                raw = resp.read()
+            im = Image.open(io.BytesIO(raw)).convert("RGB")
+            im.thumbnail((300, 300), Image.LANCZOS)
+            buf = io.BytesIO()
+            im.save(buf, "JPEG", quality=80)
+            previews.append((url, buf.getvalue()))
+        except Exception:
+            continue
+    if not previews:
         return None
-    for r in results:
-        url = r.get("image")
-        if url:
-            return url
+
+    import base64
+    content = [{"type": "text", "text": (
+        f"Product: {name!r} (stock no. {stockno}). Below are {len(previews)} candidate photos "
+        f"found by an image search, in order. Pick the one that is the cleanest, most accurate "
+        f"product photo for a retail promotional poster -- prefer a plain/white background, the "
+        f"actual product clearly visible, no heavy marketplace text or watermark overlays, no "
+        f"unrelated items. Reply with ONLY the candidate number (1-{len(previews)}), or NONE if "
+        f"every candidate is a poor match or too cluttered to use."
+    )}]
+    for i, (url, raw) in enumerate(previews, start=1):
+        content.append({"type": "text", "text": f"Candidate {i}:"})
+        content.append({"type": "image", "source": {
+            "type": "base64", "media_type": "image/jpeg",
+            "data": base64.b64encode(raw).decode("ascii"),
+        }})
+
+    client = anthropic.Anthropic(api_key=api_key)
+    reply = client.messages.create(
+        model=CLAUDE_PICKER_MODEL, max_tokens=10,
+        messages=[{"role": "user", "content": content}],
+    )
+    text = "".join(b.text for b in reply.content if b.type == "text").strip().upper()
+    if text.startswith("NONE"):
+        return None
+    digits = "".join(ch for ch in text if ch.isdigit())
+    if digits and 1 <= int(digits) <= len(previews):
+        return previews[int(digits) - 1][0]
     return None
 
 
@@ -298,11 +367,22 @@ def find_and_enhance_product_image(repo, name, stockno):
     _IMAGE_SEARCH_COUNT += 1
     query = f"{name} {stockno}".strip()
     try:
-        image_url = search_product_image_url(query)
-        if not image_url:
+        candidates = search_product_image_candidates(query)
+        if not candidates:
             log(f"  no image search results for {query!r}")
             return None
-        return download_and_enhance_image(repo, image_url)
+        chosen_url = candidates[0]
+        api_key = load_anthropic_api_key()
+        if api_key:
+            try:
+                picked = pick_best_image_with_claude(api_key, name, stockno, candidates)
+                if picked is None:
+                    log(f"  Claude found no clean match among {len(candidates)} candidates for {query!r}")
+                    return None
+                chosen_url = picked
+            except Exception as e:
+                log(f"  Claude image pick failed for {query!r}, using first search result instead: {e}")
+        return download_and_enhance_image(repo, chosen_url)
     except Exception as e:
         log(f"  image search/enhance failed for {query!r}: {e}")
         return None
