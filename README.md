@@ -1,5 +1,13 @@
 # Store Design Template
 
+The product image skill is maintained in [skills/product-image-finder/SKILL.md](skills/product-image-finder/SKILL.md).
+It finds candidate photos, records identity evidence, creates a local original/enhanced comparison report,
+and applies reviewed images without changing prices or slot settings. Its SQLite library and source photos
+stay under ignored `data/product_images/`; approved display assets enter `defaults/images/` only when applied.
+Weekly syncing and the bulk photo-refresh script preserve products marked `photoSource: approved`.
+The skill's Python helper requires Pillow; optional background removal requires rembg and a suitable model.
+Run `python skills/product-image-finder/scripts/test_images.py` for offline workflow checks using temporary projects.
+
 Home Express and PesoPlus template editor with independent product discounts, image uploads, browser background removal and print-ready PDF downloads.
 
 ## GitHub Pages version: local data only

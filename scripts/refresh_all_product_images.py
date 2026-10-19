@@ -40,6 +40,9 @@ def main():
         p = by_id.get(pid)
         if not p:
             continue
+        if p.get("photoSource") == "approved":
+            ws.log(f"  [kept approved photo] {p['name']} ({p['code']})")
+            continue
         image, source = ws.find_and_enhance_product_image(ws.REPO, p["name"], p["code"])
         if image is not None:
             p["image"] = image

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Product Image Finder & Enhancer"
+  short_description: "Find and review accurate product photos for posters"
+  default_prompt: "Use $product-image-finder to find and enhance missing product photos and prepare a review queue for Store Design Template."

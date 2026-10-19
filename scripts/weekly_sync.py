@@ -415,7 +415,10 @@ def upsert_product(repo, state, products_by_id, prefix, stockno, name, price, im
 
     image = None
     photo_source = None
-    if image_url and current_source != "ubest-api":
+    # Reviewed assets are pinned; only the image-review workflow replaces them.
+    if existing is not None and current_source == "approved":
+        image, photo_source = existing["image"], "approved"
+    elif image_url and current_source != "ubest-api":
         try:
             image = download_and_enhance_image(repo, image_url, timeout=8)
             photo_source = "ubest-api"
@@ -434,7 +437,11 @@ def upsert_product(repo, state, products_by_id, prefix, stockno, name, price, im
             image, photo_source = existing["image"], current_source
 
     if image is None:
-        image, photo_source = placeholder, "placeholder"
+        # A retry that finds nothing must not destroy an existing product photo.
+        if existing is not None and existing.get("image"):
+            image, photo_source = existing["image"], current_source
+        else:
+            image, photo_source = placeholder, "placeholder"
 
     if photo_source == "placeholder":
         photo_status = "placeholder"
