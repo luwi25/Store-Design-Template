@@ -228,50 +228,29 @@ def select_cross_category_topsellers(rows, count):
 
 # ---------- Web image search + enhancement (replaces the UBEST image CDN) ----------
 #
-# Needs data/google_image_search.json = {"api_key": "...", "cx": "..."} --
-# a Google Cloud API key plus a Programmable Search Engine ID with Image
-# Search and "search the entire web" both enabled. Free up to 100 queries/
-# day. Until that file exists, every brand-new product silently falls back
-# to the flat placeholder below, same as before.
+# Uses the `ddgs` package (pip install ddgs) to search DuckDuckGo's image
+# results -- no account, no API key, no sign-in. Works today with zero
+# setup.
 
-_GOOGLE_SEARCH_CREDS = None
 _IMAGE_SEARCH_COUNT = 0
-IMAGE_SEARCH_SOFT_CAP = 80  # stay under the ~100/day free quota with headroom
+IMAGE_SEARCH_SOFT_CAP = 60  # stay well short of anything that looks like abuse
 
 
-def load_google_search_credentials():
-    global _GOOGLE_SEARCH_CREDS
-    if _GOOGLE_SEARCH_CREDS is None:
-        key_file = DATA / "google_image_search.json"
-        if key_file.exists():
-            cfg = json.loads(key_file.read_text(encoding="utf-8"))
-            _GOOGLE_SEARCH_CREDS = (cfg.get("api_key"), cfg.get("cx"))
-        else:
-            _GOOGLE_SEARCH_CREDS = (None, None)
-    return _GOOGLE_SEARCH_CREDS
-
-
-def search_product_image_url(api_key, cx, query, attempt=0):
-    from urllib.parse import urlencode
-    url = "https://www.googleapis.com/customsearch/v1?" + urlencode({
-        "key": api_key, "cx": cx, "q": query, "searchType": "image",
-        "num": 5, "safe": "active", "imgSize": "large",
-    })
+def search_product_image_url(query, attempt=0):
+    from ddgs import DDGS
     try:
-        with urllib.request.urlopen(url, timeout=30) as resp:
-            body = json.load(resp)
-    except urllib.error.HTTPError as e:
-        detail = e.read().decode(errors="replace")[:200]
-        if e.code == 429 and attempt < 2:
-            time.sleep(5)
-            return search_product_image_url(api_key, cx, query, attempt + 1)
-        log(f"  image search failed ({e.code}) for {query!r}: {detail}")
+        results = DDGS().images(query, max_results=5, safesearch="moderate")
+    except Exception as e:
+        if attempt < 2:
+            time.sleep(3)
+            return search_product_image_url(query, attempt + 1)
+        log(f"  image search failed for {query!r}: {e}")
         return None
-    except (urllib.error.URLError, TimeoutError) as e:
-        log(f"  image search network error for {query!r}: {e}")
-        return None
-    items = body.get("items") or []
-    return items[0]["link"] if items else None
+    for r in results:
+        url = r.get("image")
+        if url:
+            return url
+    return None
 
 
 def download_and_enhance_image(repo, url, max_dim=560):
@@ -313,16 +292,13 @@ def download_and_enhance_image(repo, url, max_dim=560):
 
 def find_and_enhance_product_image(repo, name, stockno):
     global _IMAGE_SEARCH_COUNT
-    api_key, cx = load_google_search_credentials()
-    if not api_key or not cx:
-        return None
     if _IMAGE_SEARCH_COUNT >= IMAGE_SEARCH_SOFT_CAP:
         log(f"  image search soft cap ({IMAGE_SEARCH_SOFT_CAP}) reached this run -- using placeholder for {name!r}")
         return None
     _IMAGE_SEARCH_COUNT += 1
     query = f"{name} {stockno}".strip()
     try:
-        image_url = search_product_image_url(api_key, cx, query)
+        image_url = search_product_image_url(query)
         if not image_url:
             log(f"  no image search results for {query!r}")
             return None
