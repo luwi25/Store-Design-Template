@@ -51,7 +51,7 @@ EXCLUDED_DEPARTMENTS = {"Cleaning & Laundry Supplies", "Grocery", "Hygiene"}
 # merchandising section title. Renamed here, by department name, wherever
 # it's dynamically assigned a group on either store/side.
 DEPARTMENT_LABEL_OVERRIDES = {
-    "UBEST Brand": "UBEST Essentials",
+    "UBEST Brand": "Essentials",
 }
 
 STORES = {
