@@ -43,7 +43,11 @@ self.addEventListener('fetch',event=>{
  if(!ALLOWED.has(key))return;
  event.respondWith((async()=>{
   const cache=await caches.open(CACHE);
-  const appCode=event.request.mode==='navigate'||/\.(?:js|css)$/.test(url.pathname);
+  // defaults/project.json drives the published-catalog revision check -- always go to
+  // network for it (like app code) so a slightly-stale installed service worker never
+  // serves an old cached catalog. defaults/images/* stay cache-first: they're large,
+  // content-hashed by sha256, and genuinely immutable for a given hash.
+  const appCode=event.request.mode==='navigate'||/\.(?:js|css)$/.test(url.pathname)||url.pathname.endsWith('/defaults/project.json');
   if(appCode){
    try{
     const response=await fetch(event.request,{cache:'no-cache'});
