@@ -3,10 +3,14 @@
 Pulls last week's sales from the UBEST Store Catalog API and updates
 this repo's defaults/project.json directly -- the GitHub repo is the
 single source of truth; there is no local app/server involved. Front
-(7 "daily necessities" department groups) and Back (15 "student
-supplies and stationery" slots) get refreshed per the Weekly Store
-Promotional Poster Guide, then public/ is rebuilt, the test suite
-runs, and the result is committed and pushed only if everything passes.
+(7 "daily necessities" department groups) gets refreshed per the
+Weekly Store Promotional Poster Guide. Back has three groups: "Back to
+School Essentials" (top 5 Stationery-department sellers) plus "Best
+Seller This Season" and "Top Product" (5 each, one top seller per real
+UBEST category store-wide, excluding Stationery so they showcase
+variety beyond student supplies). Then public/ is rebuilt, the test
+suite runs, and the result is committed and pushed only if everything
+passes.
 
 Exit code 0 = synced and pushed (or nothing to do). Non-zero = aborted
 before committing anything; see the log file in data/sync_logs/.
@@ -130,8 +134,10 @@ def fetch_catalog_and_last_week(base_url, api_key, store_id):
         if not p:
             continue
         dept_en, _ = split_bilingual(p.get("department"))
+        category_en, _ = split_bilingual(p.get("category"))
         rows.append({
             "stockno": s["stockno"], "name": p["name"], "department": dept_en,
+            "category": category_en or "Uncategorized",
             "retail_price": p.get("retail_price"), "image_url": p["image_url"], "units": units,
         })
     log(f"[{store_id}] rows with sales last week: {len(rows)}, week: {last_week['week_start']}..{last_week['week_end']}")
@@ -161,10 +167,27 @@ def select_front(rows):
     return selection
 
 
-def select_back_stationery(rows, count=15):
+def select_back_school_supplies(rows, count=5):
     pool = sorted((r for r in rows if r["department"] == BACK_DEPT), key=lambda r: -r["units"])
     picked = pool[:count]
-    log(f"BACK (stationery): pool={len(pool)} picked={len(picked)}")
+    log(f"BACK school supplies (Stationery): pool={len(pool)} picked={len(picked)}")
+    return picked
+
+
+def select_back_best_sellers(rows, count=10):
+    """One top seller per real UBEST category, store-wide, excluding the
+    Stationery department (that's already covered by 'Back to School
+    Essentials') -- ranked by that item's own units so the strongest
+    category leaders win the 'Best Seller'/'Top Product' slots."""
+    best_per_category = {}
+    for r in rows:
+        if r["department"] == BACK_DEPT:
+            continue
+        cat = r["category"]
+        if cat not in best_per_category or r["units"] > best_per_category[cat]["units"]:
+            best_per_category[cat] = r
+    picked = sorted(best_per_category.values(), key=lambda r: -r["units"])[:count]
+    log(f"BACK best sellers (one per category, excl. Stationery): categories={len(best_per_category)} picked={len(picked)}")
     return picked
 
 
@@ -195,7 +218,7 @@ def placeholder_image_marker(repo):
 
 # ---------- Upsert directly against the published (dehydrated) state ----------
 
-def upsert_product(repo, products_by_id, stockno, name, price, image_url, template_id):
+def upsert_product(repo, state, products_by_id, stockno, name, price, image_url, template_id):
     """Returns (pid, photo_status). Returning products (same stockno as a
     past run) keep their already-published photo untouched. Brand-new
     products get a flat placeholder -- rerun once UBEST's image CDN is back
@@ -217,6 +240,7 @@ def upsert_product(repo, products_by_id, stockno, name, price, image_url, templa
         existing.update(product)
     else:
         products_by_id[pid] = product
+        state["products"].append(product)
     return pid, photo_status
 
 
@@ -232,7 +256,7 @@ def apply_updates(repo, state, front_selection, back_items):
     for grp in front_selection:
         g = grp["group"]
         for idx, item in zip(front_by_group.get(g, []), grp["items"]):
-            pid, photo_status = upsert_product(repo, products_by_id, item["stockno"], item["name"],
+            pid, photo_status = upsert_product(repo, state, products_by_id, item["stockno"], item["name"],
                                                 item["retail_price"], item["image_url"], "home-everyday")
             everyday_slots[idx] = {"productId": pid, "group": g, "discountPercent": 0}
             front_log.append((grp["label"], item["name"], item["units"], photo_status))
@@ -244,7 +268,7 @@ def apply_updates(repo, state, front_selection, back_items):
     for g in (0, 1, 2):
         chunk = back_items[g * 5:(g + 1) * 5]
         for idx, item in zip(back_by_group.get(g, []), chunk):
-            pid, photo_status = upsert_product(repo, products_by_id, item["stockno"], item["name"],
+            pid, photo_status = upsert_product(repo, state, products_by_id, item["stockno"], item["name"],
                                                 item["retail_price"], item["image_url"], "home-back")
             homeback_slots[idx] = {"productId": pid, "group": g, "discountPercent": 0}
             back_log.append((g, item["name"], item["units"], photo_status))
@@ -304,7 +328,9 @@ def main():
 
     rows, last_week = fetch_catalog_and_last_week(base_url, api_key, STORE_ID)
     front_selection = select_front(rows)
-    back_items = select_back_stationery(rows)
+    school_supplies = select_back_school_supplies(rows)
+    best_sellers = select_back_best_sellers(rows)
+    back_items = school_supplies + best_sellers
     if any(len(g["items"]) < 1 for g in front_selection) or len(back_items) < 15:
         raise RuntimeError("Not enough last-week sales data to fill every slot; aborting without changes.")
 
