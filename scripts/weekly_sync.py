@@ -322,7 +322,7 @@ def pick_best_image_with_claude(api_key, name, stockno, candidate_urls):
     return None
 
 
-def download_and_enhance_image(repo, url, max_dim=560):
+def download_and_enhance_image(repo, url, max_dim=560, timeout=30):
     """Downloads a found photo and enhances it with PIL only (no AI
     background removal -- rembg/onnxruntime segfaulted in this
     environment, and a native crash can't be caught and would take down
@@ -332,7 +332,7 @@ def download_and_enhance_image(repo, url, max_dim=560):
     from PIL import Image, ImageOps, ImageEnhance
     import io
     req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
-    with urllib.request.urlopen(req, timeout=30) as resp:
+    with urllib.request.urlopen(req, timeout=timeout) as resp:
         raw = resp.read()
     im = Image.open(io.BytesIO(raw))
     im = ImageOps.exif_transpose(im)
@@ -360,32 +360,38 @@ def download_and_enhance_image(repo, url, max_dim=560):
 
 
 def find_and_enhance_product_image(repo, name, stockno):
+    """Returns (image_marker, source) on success -- source is "claude" when
+    Claude picked the candidate, "ddgs" when it was just DuckDuckGo's first
+    result (no Anthropic key configured, or the Claude call itself failed).
+    Returns (None, None) when nothing usable was found at all."""
     global _IMAGE_SEARCH_COUNT
     if _IMAGE_SEARCH_COUNT >= IMAGE_SEARCH_SOFT_CAP:
         log(f"  image search soft cap ({IMAGE_SEARCH_SOFT_CAP}) reached this run -- using placeholder for {name!r}")
-        return None
+        return None, None
     _IMAGE_SEARCH_COUNT += 1
     query = f"{name} {stockno}".strip()
     try:
         candidates = search_product_image_candidates(query)
         if not candidates:
             log(f"  no image search results for {query!r}")
-            return None
+            return None, None
         chosen_url = candidates[0]
+        source = "ddgs"
         api_key = load_anthropic_api_key()
         if api_key:
             try:
                 picked = pick_best_image_with_claude(api_key, name, stockno, candidates)
                 if picked is None:
                     log(f"  Claude found no clean match among {len(candidates)} candidates for {query!r}")
-                    return None
+                    return None, None
                 chosen_url = picked
+                source = "claude"
             except Exception as e:
                 log(f"  Claude image pick failed for {query!r}, using first search result instead: {e}")
-        return download_and_enhance_image(repo, chosen_url)
+        return download_and_enhance_image(repo, chosen_url), source
     except Exception as e:
         log(f"  image search/enhance failed for {query!r}: {e}")
-        return None
+        return None, None
 
 
 # ---------- Image placeholder (fallback when web search is unavailable or finds nothing) ----------
@@ -415,30 +421,64 @@ def placeholder_image_marker(repo):
 
 # ---------- Upsert directly against the published (dehydrated) state ----------
 
-def upsert_product(repo, state, products_by_id, prefix, stockno, name, price, template_id):
-    """Returns (pid, photo_status). Returning products with a real photo
-    already keep it untouched. Brand-new products -- and returning ones
-    that only ever got the flat placeholder -- get a web image search
-    (find_and_enhance_product_image); that falls back to the placeholder
-    itself if no search key is configured or nothing useful is found.
+def upsert_product(repo, state, products_by_id, prefix, stockno, name, price, image_url, template_id):
+    """Returns (pid, photo_status). Every product carries a `photoSource`
+    status: "ubest-api" (the real catalog photo -- the one true best
+    source, since it's a guaranteed-correct match), "claude" (Claude
+    picked the best of several web search candidates), "ddgs"
+    (DuckDuckGo's first result, no Claude available), or "placeholder".
+
+    Priority each run, cheapest/best first:
+      1. A short-timeout attempt at the UBEST API's own image_url, unless
+         already sourced from there -- so every product auto-upgrades to
+         the authoritative photo the moment that CDN is reachable again,
+         not just brand-new ones. Costs ~8s per product while it's down.
+      2. If that fails: a fresh web search (ddgs, optionally Claude-picked)
+         for anything brand-new, still on the flat placeholder, or
+         currently ddgs-sourced with Claude now available to upgrade it.
+      3. Otherwise keep whatever photo it already has (claude-sourced, or
+         ddgs with no Claude key to improve on it -- no point re-searching
+         for no gain).
+      4. The flat placeholder, if nothing above produced anything.
+
     `prefix` keeps each store's sales-driven ids from colliding
     ('sales-heb-' vs 'sales-ppm-')."""
     pid = f"{prefix}-{re.sub(r'[^A-Za-z0-9]+', '-', stockno).strip('-').lower()}"
     existing = products_by_id.get(pid)
     placeholder = placeholder_image_marker(repo)
-    has_only_placeholder = existing is not None and existing.get("image") == placeholder
-    if existing is not None and not has_only_placeholder:
-        image = existing["image"]
-        photo_status = "cached"
+    current_source = existing.get("photoSource") if existing else None
+
+    image = None
+    photo_source = None
+    if image_url and current_source != "ubest-api":
+        try:
+            image = download_and_enhance_image(repo, image_url, timeout=8)
+            photo_source = "ubest-api"
+        except Exception:
+            image = None
+
+    if image is None:
+        needs_any_photo = existing is None or current_source in (None, "placeholder")
+        needs_claude_upgrade = existing is not None and current_source == "ddgs" and load_anthropic_api_key() is not None
+        if needs_any_photo or needs_claude_upgrade:
+            image, photo_source = find_and_enhance_product_image(repo, name, stockno)
+        elif existing is not None:
+            image, photo_source = existing["image"], current_source
+
+    if image is None:
+        image, photo_source = placeholder, "placeholder"
+
+    if photo_source == "placeholder":
+        photo_status = "placeholder"
+    elif photo_source == "ubest-api":
+        photo_status = "cached" if photo_source == current_source else "api-sourced"
     else:
-        image = find_and_enhance_product_image(repo, name, stockno)
-        photo_status = "web-sourced" if image is not None else "placeholder"
-        if image is None:
-            image = placeholder
+        photo_status = "cached" if photo_source == current_source else f"web-sourced-{photo_source}"
 
     product = {
         "id": pid, "templateId": template_id, "name": title_case(name),
         "price": price if price is not None else 0, "code": stockno, "image": image,
+        "photoSource": photo_source,
     }
     if existing is not None:
         existing.update(product)
@@ -480,7 +520,7 @@ def apply_side(repo, state, products_by_id, prefix, template_key, template_id, r
         group_names[pos] = display_label
         departments_used.add(label)  # raw department name, so exclude_departments matching stays correct
         for idx, item in zip(by_idx.get(pos, []), items):
-            pid, photo_status = upsert_product(repo, state, products_by_id, prefix, item["stockno"], item["name"], item["retail_price"], template_id)
+            pid, photo_status = upsert_product(repo, state, products_by_id, prefix, item["stockno"], item["name"], item["retail_price"], item["image_url"], template_id)
             slots[idx] = {"productId": pid, "group": pos, "discountPercent": 0}
             entries.append((display_label, item["name"], item["units"], photo_status))
 
@@ -492,7 +532,7 @@ def apply_side(repo, state, products_by_id, prefix, template_key, template_id, r
             chunk = picks[cursor:cursor + count]
             cursor += count
             for idx, item in zip(by_idx.get(pos, []), chunk):
-                pid, photo_status = upsert_product(repo, state, products_by_id, prefix, item["stockno"], item["name"], item["retail_price"], template_id)
+                pid, photo_status = upsert_product(repo, state, products_by_id, prefix, item["stockno"], item["name"], item["retail_price"], item["image_url"], template_id)
                 slots[idx] = {"productId": pid, "group": pos, "discountPercent": 0}
                 entries.append((group_names[pos], item["name"], item["units"], photo_status))
 
@@ -573,17 +613,28 @@ def main():
         if pruned:
             log(f"[{store_id}] pruned {pruned} orphaned {cfg['prefix']}- product(s)")
 
-    placeholder_count = web_sourced_count = 0
+    placeholder_count = claude_count = ddgs_count = api_count = 0
+    tags = {"placeholder": " [placeholder photo]", "web-sourced-claude": " [new photo -- Claude-picked]",
+            "web-sourced-ddgs": " [new photo -- DuckDuckGo first result]",
+            "api-sourced": " [new photo -- real UBEST catalog photo]"}
     for store_id, side, label, name, units, photo_status in all_entries:
-        tag = {"placeholder": " [placeholder photo]", "web-sourced": " [new web photo]"}.get(photo_status, "")
         placeholder_count += photo_status == "placeholder"
-        web_sourced_count += photo_status == "web-sourced"
-        log(f"  [{store_id}] {side} [{label}] {name} ({units} units){tag}")
-    if web_sourced_count:
-        log(f"{web_sourced_count} product(s) got a fresh web-searched, enhanced photo.")
+        claude_count += photo_status == "web-sourced-claude"
+        ddgs_count += photo_status == "web-sourced-ddgs"
+        api_count += photo_status == "api-sourced"
+        log(f"  [{store_id}] {side} [{label}] {name} ({units} units){tags.get(photo_status, '')}")
+    if api_count:
+        log(f"{api_count} product(s) got their real photo straight from the UBEST catalog API -- "
+            f"the CDN is reachable for these now.")
+    if claude_count:
+        log(f"{claude_count} product(s) got a fresh photo picked by Claude.")
+    if ddgs_count:
+        log(f"{ddgs_count} product(s) got a fresh photo from DuckDuckGo's first result "
+            f"(no Anthropic key configured, or the Claude call failed) -- will retry via Claude "
+            f"once a key is added, even though they already have a real photo now.")
     if placeholder_count:
-        log(f"{placeholder_count} product(s) got a generic placeholder photo (no image search "
-            f"configured, or nothing useful found) -- rerun later to retry.")
+        log(f"{placeholder_count} product(s) got a generic placeholder photo (nothing useful found) "
+            f"-- rerun later to retry.")
 
     project["sourceRevision"] += 1
     project_path.write_text(json.dumps(project, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
