@@ -51,6 +51,9 @@ STORES = {
     "pesoplus-mambaling": {
         "prefix": "sales-ppm", "front_key": "peso", "back_key": "pesoBack",
         "front_template_id": "peso-plus", "back_template_id": "peso-back",
+        # Position 0 (4 slots) keeps a fixed generic label -- whichever department
+        # dynamically wins that position still fills it, only the displayed name is pinned.
+        "front_label_overrides": {0: "Best Seller"},
     },
 }
 
@@ -258,14 +261,19 @@ def upsert_product(repo, state, products_by_id, prefix, stockno, name, price, te
 
 
 def apply_side(repo, state, products_by_id, prefix, template_key, template_id, rows,
-               fixed_positions=None, cross_category_positions=(), cross_category_total=0):
+               fixed_positions=None, cross_category_positions=(), cross_category_total=0,
+               label_overrides=None):
     """Fills every group in one template side (e.g. everyday, homeBack,
     peso, pesoBack). Positions not in fixed_positions or
     cross_category_positions get dynamically assigned to a department
     per assign_dynamic_departments; cross_category_positions share one
     combined top-category pool split across them in rank order; fixed
-    positions are left completely untouched (slots and label both)."""
+    positions are left completely untouched (slots and label both).
+    label_overrides pins a position's displayed name regardless of
+    which department dynamically wins it -- only the label is fixed,
+    the product selection for that position still follows the ranking."""
     fixed_positions = fixed_positions or {}
+    label_overrides = label_overrides or {}
     tpl = state[template_key]
     slots = tpl["slots"]
     group_names = tpl.get("groupNames") or []
@@ -277,11 +285,12 @@ def apply_side(repo, state, products_by_id, prefix, template_key, template_id, r
     entries = []
     exclude = set(fixed_positions) | set(cross_category_positions)
     for pos, (label, items) in assign_dynamic_departments(rows, slot_counts, exclude).items():
-        group_names[pos] = label
+        display_label = label_overrides.get(pos, label)
+        group_names[pos] = display_label
         for idx, item in zip(by_idx.get(pos, []), items):
             pid, photo_status = upsert_product(repo, state, products_by_id, prefix, item["stockno"], item["name"], item["retail_price"], template_id)
             slots[idx] = {"productId": pid, "group": pos, "discountPercent": 0}
-            entries.append((label, item["name"], item["units"], photo_status))
+            entries.append((display_label, item["name"], item["units"], photo_status))
 
     if cross_category_positions:
         picks = select_cross_category_topsellers(rows, cross_category_total)
@@ -350,7 +359,8 @@ def main():
         if len(rows) < 20:
             raise RuntimeError(f"[{store_id}] not enough last-week sales data; aborting without changes.")
 
-        front_entries = apply_side(REPO, state, products_by_id, cfg["prefix"], cfg["front_key"], cfg["front_template_id"], rows)
+        front_entries = apply_side(REPO, state, products_by_id, cfg["prefix"], cfg["front_key"], cfg["front_template_id"], rows,
+                                    label_overrides=cfg.get("front_label_overrides"))
         all_entries += [(store_id, "FRONT", *e) for e in front_entries]
 
         back_entries = apply_side(REPO, state, products_by_id, cfg["prefix"], cfg["back_key"], cfg["back_template_id"], rows,
