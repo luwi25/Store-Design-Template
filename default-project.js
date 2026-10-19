@@ -1,9 +1,24 @@
 /* Lightweight check for a newer published catalog -- lets a browser that
    already has a saved project notice a new weekly sync without re-fetching
    every product image just to find out. */
+async function fetchFreshPublishedProject(base) {
+  const url = new URL('project.json', base);
+  // Bypass both the HTTP cache and older installed workers' exact-URL caches.
+  url.searchParams.set('check', Date.now().toString());
+  try {
+    const response = await fetch(url, {cache: 'no-store'});
+    if (response.ok) return response;
+    throw new Error('Published project request failed.');
+  } catch (error) {
+    // Preserve offline startup using the worker's previously downloaded project.
+    if (navigator.onLine !== false) throw error;
+    return fetch(new URL('project.json', base));
+  }
+}
+
 window.fetchPublishedRevision = async function () {
   const base = new URL('defaults/', document.baseURI);
-  const response = await fetch(new URL('project.json', base));
+  const response = await fetchFreshPublishedProject(base);
   if (!response.ok) return null;
   const project = await response.json();
   return typeof project.sourceRevision === 'number' ? project.sourceRevision : null;
@@ -13,7 +28,7 @@ window.fetchPublishedRevision = async function () {
    or when a newer one has been published since the last save. */
 window.loadPublishedDefault = async function () {
   const base = new URL('defaults/', document.baseURI);
-  const response = await fetch(new URL('project.json', base));
+  const response = await fetchFreshPublishedProject(base);
   if (!response.ok) throw new Error('The starting project could not load. Please retry.');
   const project = await response.json();
   if (project.version !== 1 || !Array.isArray(project.state?.products)) {
