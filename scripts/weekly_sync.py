@@ -237,7 +237,8 @@ def select_cross_category_topsellers(rows, count):
 # not a vision model -- zero cost, zero setup, zero load on this machine.
 
 _IMAGE_SEARCH_COUNT = 0
-IMAGE_SEARCH_SOFT_CAP = 60  # stay well short of anything that looks like abuse
+IMAGE_SEARCH_SOFT_CAP = 150  # the heuristic is cheap/fast now (no AI calls), so this just needs
+# to comfortably cover every in-template product in one run, not throttle a slow process
 
 # Domains that reliably carry genuine e-commerce product photos for this
 # market -- a small nudge in the heuristic, not a hard filter.
