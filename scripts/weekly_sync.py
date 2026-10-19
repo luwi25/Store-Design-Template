@@ -267,15 +267,15 @@ def search_product_image_candidates(query, max_results=5, attempt=0):
     return [r["image"] for r in results if r.get("image")]
 
 
-def pick_best_image_with_claude(api_key, name, stockno, candidate_urls):
-    """Downloads small previews of each candidate and asks Claude to pick
-    the cleanest, best-matching product photo. Returns the chosen URL, or
-    None to fall through to the first candidate (Claude unavailable, no
-    good match, or every download failed)."""
+OLLAMA_URL = "http://localhost:11434/api/generate"
+OLLAMA_VISION_MODEL = "gemma3:4b"
+
+
+def download_preview_images(candidate_urls, max_dim=300):
+    """Shared by both pickers: downloads a small JPEG preview of each
+    candidate, skipping ones that fail. Returns [(url, jpeg_bytes), ...]."""
     from PIL import Image
     import io
-    import anthropic
-
     previews = []
     for url in candidate_urls:
         try:
@@ -283,24 +283,76 @@ def pick_best_image_with_claude(api_key, name, stockno, candidate_urls):
             with urllib.request.urlopen(req, timeout=15) as resp:
                 raw = resp.read()
             im = Image.open(io.BytesIO(raw)).convert("RGB")
-            im.thumbnail((300, 300), Image.LANCZOS)
+            im.thumbnail((max_dim, max_dim), Image.LANCZOS)
             buf = io.BytesIO()
             im.save(buf, "JPEG", quality=80)
             previews.append((url, buf.getvalue()))
         except Exception:
             continue
+    return previews
+
+
+def _picker_prompt(name, stockno, count):
+    return (
+        f"Product: {name!r} (stock no. {stockno}). Below are {count} candidate photos found by an "
+        f"image search, in order. Pick the one that is the cleanest, most accurate product photo "
+        f"for a retail promotional poster -- prefer a plain/white background, the actual product "
+        f"clearly visible, no heavy marketplace text or watermark overlays, no unrelated items. "
+        f"Reply with ONLY the candidate number (1-{count}), or NONE if every candidate is a poor "
+        f"match or too cluttered to use."
+    )
+
+
+def _parse_picker_reply(text, count):
+    text = (text or "").strip().upper()
+    if text.startswith("NONE"):
+        return None
+    digits = "".join(ch for ch in text if ch.isdigit())
+    if digits and 1 <= int(digits) <= count:
+        return int(digits) - 1
+    return None
+
+
+OLLAMA_CANDIDATE_LIMIT = 3  # local CPU vision inference costs ~20-25s/image; keep calls bounded
+
+
+def pick_best_image_with_ollama(name, stockno, candidate_urls, model=OLLAMA_VISION_MODEL):
+    """Local, free, no account -- uses a vision-capable Ollama model
+    already installed on this machine (gemma3:4b). Returns the chosen
+    URL, or None if Ollama isn't running, the model errors out, or
+    nothing looked clean enough to use. Only looks at the first
+    OLLAMA_CANDIDATE_LIMIT candidates -- measured at ~20-25s per image on
+    this machine's CPU, so more than a few quickly makes each product
+    too slow for a batch run covering dozens of products."""
+    import base64
+    previews = download_preview_images(candidate_urls[:OLLAMA_CANDIDATE_LIMIT])
+    if not previews:
+        return None
+    payload = json.dumps({
+        "model": model,
+        "prompt": _picker_prompt(name, stockno, len(previews)),
+        "images": [base64.b64encode(raw).decode("ascii") for _, raw in previews],
+        "stream": False,
+    }).encode("utf-8")
+    req = urllib.request.Request(OLLAMA_URL, data=payload, headers={"Content-Type": "application/json"})
+    with urllib.request.urlopen(req, timeout=180) as resp:
+        body = json.load(resp)
+    idx = _parse_picker_reply(body.get("response"), len(previews))
+    return previews[idx][0] if idx is not None else None
+
+
+def pick_best_image_with_claude(api_key, name, stockno, candidate_urls):
+    """Downloads small previews of each candidate and asks Claude to pick
+    the cleanest, best-matching product photo. Returns the chosen URL, or
+    None (Claude unavailable, no good match, or every download failed)."""
+    import base64
+    import anthropic
+
+    previews = download_preview_images(candidate_urls)
     if not previews:
         return None
 
-    import base64
-    content = [{"type": "text", "text": (
-        f"Product: {name!r} (stock no. {stockno}). Below are {len(previews)} candidate photos "
-        f"found by an image search, in order. Pick the one that is the cleanest, most accurate "
-        f"product photo for a retail promotional poster -- prefer a plain/white background, the "
-        f"actual product clearly visible, no heavy marketplace text or watermark overlays, no "
-        f"unrelated items. Reply with ONLY the candidate number (1-{len(previews)}), or NONE if "
-        f"every candidate is a poor match or too cluttered to use."
-    )}]
+    content = [{"type": "text", "text": _picker_prompt(name, stockno, len(previews))}]
     for i, (url, raw) in enumerate(previews, start=1):
         content.append({"type": "text", "text": f"Candidate {i}:"})
         content.append({"type": "image", "source": {
@@ -313,13 +365,9 @@ def pick_best_image_with_claude(api_key, name, stockno, candidate_urls):
         model=CLAUDE_PICKER_MODEL, max_tokens=10,
         messages=[{"role": "user", "content": content}],
     )
-    text = "".join(b.text for b in reply.content if b.type == "text").strip().upper()
-    if text.startswith("NONE"):
-        return None
-    digits = "".join(ch for ch in text if ch.isdigit())
-    if digits and 1 <= int(digits) <= len(previews):
-        return previews[int(digits) - 1][0]
-    return None
+    text = "".join(b.text for b in reply.content if b.type == "text")
+    idx = _parse_picker_reply(text, len(previews))
+    return previews[idx][0] if idx is not None else None
 
 
 def download_and_enhance_image(repo, url, max_dim=560, timeout=30):
@@ -360,9 +408,11 @@ def download_and_enhance_image(repo, url, max_dim=560, timeout=30):
 
 
 def find_and_enhance_product_image(repo, name, stockno):
-    """Returns (image_marker, source) on success -- source is "claude" when
-    Claude picked the candidate, "ddgs" when it was just DuckDuckGo's first
-    result (no Anthropic key configured, or the Claude call itself failed).
+    """Returns (image_marker, source) on success. Picking among the search
+    candidates tries, in order: Ollama (local, free, no account -- used
+    whenever it's running, no setup needed beyond what's already
+    installed), then Claude (only if an Anthropic key is configured),
+    then just DuckDuckGo's first result if neither picker is available.
     Returns (None, None) when nothing usable was found at all."""
     global _IMAGE_SEARCH_COUNT
     if _IMAGE_SEARCH_COUNT >= IMAGE_SEARCH_SOFT_CAP:
@@ -375,19 +425,28 @@ def find_and_enhance_product_image(repo, name, stockno):
         if not candidates:
             log(f"  no image search results for {query!r}")
             return None, None
-        chosen_url = candidates[0]
-        source = "ddgs"
-        api_key = load_anthropic_api_key()
-        if api_key:
-            try:
-                picked = pick_best_image_with_claude(api_key, name, stockno, candidates)
-                if picked is None:
-                    log(f"  Claude found no clean match among {len(candidates)} candidates for {query!r}")
-                    return None, None
-                chosen_url = picked
-                source = "claude"
-            except Exception as e:
-                log(f"  Claude image pick failed for {query!r}, using first search result instead: {e}")
+
+        chosen_url, source = None, None
+        try:
+            picked = pick_best_image_with_ollama(name, stockno, candidates)
+            if picked is not None:
+                chosen_url, source = picked, "ollama"
+        except Exception as e:
+            log(f"  Ollama image pick unavailable for {query!r}, trying next option: {e}")
+
+        if chosen_url is None:
+            api_key = load_anthropic_api_key()
+            if api_key:
+                try:
+                    picked = pick_best_image_with_claude(api_key, name, stockno, candidates)
+                    if picked is not None:
+                        chosen_url, source = picked, "claude"
+                except Exception as e:
+                    log(f"  Claude image pick failed for {query!r}, using first search result instead: {e}")
+
+        if chosen_url is None:
+            chosen_url, source = candidates[0], "ddgs"
+
         return download_and_enhance_image(repo, chosen_url), source
     except Exception as e:
         log(f"  image search/enhance failed for {query!r}: {e}")
@@ -459,8 +518,11 @@ def upsert_product(repo, state, products_by_id, prefix, stockno, name, price, im
 
     if image is None:
         needs_any_photo = existing is None or current_source in (None, "placeholder")
-        needs_claude_upgrade = existing is not None and current_source == "ddgs" and load_anthropic_api_key() is not None
-        if needs_any_photo or needs_claude_upgrade:
+        # ddgs (plain first-result, no picker) is always worth retrying -- Ollama needs no
+        # account and may not have been running on an earlier attempt, so give it another shot
+        # every run rather than only when an Anthropic key happens to be configured.
+        needs_picker_upgrade = existing is not None and current_source == "ddgs"
+        if needs_any_photo or needs_picker_upgrade:
             image, photo_source = find_and_enhance_product_image(repo, name, stockno)
         elif existing is not None:
             image, photo_source = existing["image"], current_source
@@ -613,12 +675,15 @@ def main():
         if pruned:
             log(f"[{store_id}] pruned {pruned} orphaned {cfg['prefix']}- product(s)")
 
-    placeholder_count = claude_count = ddgs_count = api_count = 0
-    tags = {"placeholder": " [placeholder photo]", "web-sourced-claude": " [new photo -- Claude-picked]",
+    placeholder_count = ollama_count = claude_count = ddgs_count = api_count = 0
+    tags = {"placeholder": " [placeholder photo]",
+            "web-sourced-ollama": " [new photo -- Ollama-picked, local]",
+            "web-sourced-claude": " [new photo -- Claude-picked]",
             "web-sourced-ddgs": " [new photo -- DuckDuckGo first result]",
             "api-sourced": " [new photo -- real UBEST catalog photo]"}
     for store_id, side, label, name, units, photo_status in all_entries:
         placeholder_count += photo_status == "placeholder"
+        ollama_count += photo_status == "web-sourced-ollama"
         claude_count += photo_status == "web-sourced-claude"
         ddgs_count += photo_status == "web-sourced-ddgs"
         api_count += photo_status == "api-sourced"
@@ -626,12 +691,14 @@ def main():
     if api_count:
         log(f"{api_count} product(s) got their real photo straight from the UBEST catalog API -- "
             f"the CDN is reachable for these now.")
+    if ollama_count:
+        log(f"{ollama_count} product(s) got a fresh photo picked by the local Ollama model.")
     if claude_count:
         log(f"{claude_count} product(s) got a fresh photo picked by Claude.")
     if ddgs_count:
         log(f"{ddgs_count} product(s) got a fresh photo from DuckDuckGo's first result "
-            f"(no Anthropic key configured, or the Claude call failed) -- will retry via Claude "
-            f"once a key is added, even though they already have a real photo now.")
+            f"(Ollama wasn't reachable and no Claude key is configured) -- will retry via a "
+            f"picker next run, even though they already have a real photo now.")
     if placeholder_count:
         log(f"{placeholder_count} product(s) got a generic placeholder photo (nothing useful found) "
             f"-- rerun later to retry.")
