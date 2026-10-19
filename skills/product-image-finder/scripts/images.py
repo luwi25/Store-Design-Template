@@ -138,15 +138,45 @@ def worker(source, target, remove_background=False):
             raise ValueError('Image exceeds the processing limit.')
         image = ImageOps.exif_transpose(image).convert('RGBA')
     if remove_background:
-        from rembg import remove
-        image = remove(image).convert('RGBA')
+        from rembg import remove, new_session
+        import numpy as np
+        from scipy import ndimage
+        before = np.asarray(image)
+        # Restrict automatic cutouts to clean, near-white studio backgrounds.
+        # Busy scenes and existing transparency need individual assessment.
+        if np.mean(before[:, :, 3] < 245) > .02:
+            raise ValueError('Retained: source already contains transparency.')
+        rgb = before[:, :, :3]
+        white = np.min(rgb, axis=2) > 235
+        border = np.concatenate((white[0], white[-1], white[:, 0], white[:, -1]))
+        if np.mean(border) < .95:
+            raise ValueError('Retained: background is not a clean white studio surface.')
+        session = new_session('u2net', providers=['CPUExecutionProvider'])
+        cutout = remove(image, session=session).convert('RGBA')
+        alpha = np.asarray(cutout)[:, :, 3]
+        foreground = np.min(rgb, axis=2) < 220
+        core = ndimage.binary_erosion(foreground, iterations=1)
+        if not core.any() or np.mean(alpha[core] >= 220) < .99:
+            raise ValueError('Retained: cutout removes visible product or packaging detail.')
+        labels, count = ndimage.label(foreground)
+        sizes = np.bincount(labels.ravel())
+        retained = np.bincount(labels.ravel(), weights=(alpha > 128).ravel(), minlength=len(sizes))
+        for label in range(1, count + 1):
+            if sizes[label] >= max(12, foreground.size * .0002) and retained[label] / sizes[label] < .98:
+                raise ValueError('Retained: cutout may remove an accessory or fine component.')
+        coverage = np.mean(alpha > 128)
+        if not .03 < coverage < .95 or np.mean(alpha < 10) < .05:
+            raise ValueError('Retained: cutout foreground coverage is implausible.')
+        image = cutout
     # No enlargement: the canvas follows the available source resolution.
     image.thumbnail((1056, 1056), Image.Resampling.LANCZOS)
-    image = ImageEnhance.Sharpness(image).enhance(1.1)
+    alpha = image.getchannel('A')
+    image = ImageEnhance.Sharpness(image.convert('RGB')).enhance(1.1).convert('RGBA')
+    image.putalpha(alpha)
     side = max(1, round(max(image.size) / .88))
     canvas = Image.new('RGBA', (side, side), (255, 255, 255, 0))
     canvas.alpha_composite(image, ((side-image.width)//2, (side-image.height)//2))
-    canvas.save(target, format='PNG')
+    canvas.save(target, format='PNG', optimize=True, compress_level=9)
 
 
 def enhance(args, repo, root, db):
@@ -175,6 +205,7 @@ def enhance(args, repo, root, db):
               status='needs-review',error=NULL WHERE id=?''',
               (str(target.relative_to(root)), digest,
                json.dumps({'remove_background': args.remove_background, 'max_pixels': 1200,
+                           'cutout_checks': 'white-background/detail-retention/components/coverage-v1' if args.remove_background else None,
                            'sharpen': 1.1, 'upscale': False, 'processed_at': now()}), row['id']))
         return {'candidate': row['id'], 'status': 'needs-review', 'enhanced': str(target)}
     except Exception as exc:
@@ -268,6 +299,13 @@ def publish(args, repo, root, db):
     changes, assets = [], []
     for row in approved:
         if args.store and args.store != row['store']:
+            continue
+        # Historical approvals outside the currently placed products are not in scope.
+        placed = {s.get('productId') for key in STORES[row['store']]
+                  for s in project['state'].get(key, {}).get('slots', [])}
+        excluded = {s.get('productId') for s in project['state'].get('homeBack', {}).get('slots', [])
+                    if s.get('group') == 0}
+        if row['product'] not in placed or row['product'] in excluded:
             continue
         p = product_in_store(project, row['store'], row['product'])
         other_store_uses_product = any(

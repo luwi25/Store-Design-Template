@@ -20,6 +20,18 @@ The skill coordinates search and visual review. Its bundled Python helper mainta
 7. Apply approved image changes with `publish` when the user requests updating the poster/project. This changes image references and photo provenance only. It makes a local project backup, increments the published revision only when something changed, and never commits, pushes, or distributes posters. Use the existing deployment process only when publication is authorized in the session.
 8. Report approved/reused, needs-review, and failed counts and the local report path. State processing limitations and whether any project changes were applied.
 
+## Automatic processing without manual review
+
+When the user requests no manual review, process only unique store/product IDs currently placed in the four templates, excluding Christmas Gift Bundles. Ignore unplaced catalog products and historical approvals. Reuse suitable approved photos first; do not search again merely to replace a good approved photo.
+
+The user may delegate approval of confidently verified matches and intact cutouts. This does not authorize guessing: skip uncertain identities and retain current photos, recording the reason without requesting a review. Prior explicit user approvals remain valid evidence for reuse; preserve their original evidence and uncertainties.
+
+Run `enhance --remove-background` on a new candidate copied from the approved original. Background removal uses local rembg, preserves the original and creates optimized transparent PNGs. Its conservative checks reject non-white backgrounds, existing transparency, lost visible detail/components, and implausible foreground coverage. A failed check keeps the previously approved photo unchanged. These checks are heuristics, not proof that glass, white edges or fine details survived; inspect accepted outputs before automatic approval and reject doubtful cutouts without interrupting the user.
+
+Register each processed version separately; never modify an approved candidate in place. Apply only approved intact results. Report reused, replaced, background-removed, skipped and failed counts, with failures distinguished from intentional quality skips. Processing a placed product once updates all its slots without editing layout or text settings.
+
+If the system ONNX runtime crashes, use an isolated Python environment under ignored `data/product_images/`; do not alter the app environment. Set `U2NET_HOME` there for local model storage and `OMP_NUM_THREADS=2` to limit CPU use. Run the CLI with that environment's Python. Missing models or native crashes retain current photos.
+
 ## Integration boundaries
 
 - Local records and original/candidate images live under `data/product_images/`, already excluded from Git. Approved display assets are copied into `defaults/images/` when applied.

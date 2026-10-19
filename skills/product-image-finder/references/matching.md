@@ -10,4 +10,6 @@ Reject mismatched models, misleading accessory bundles, obstructive overlays, an
 
 If descriptions are generic and no product reference exists, request an actual product photo or present candidates for review. A missing photo is an unresolved task, not permission to substitute a similar item.
 
+In explicitly requested no-manual-review mode, skip such unresolved matches and keep the existing photo instead of asking the user. Do not treat that mode as blanket approval of new uncertain candidates.
+
 Product identity is store + product ID in the library; retain stock code as metadata. Products shared by several slots use the same approved asset without changing slot settings.
