@@ -53,6 +53,7 @@ EXCLUDED_DEPARTMENTS = {"Cleaning & Laundry Supplies", "Grocery", "Hygiene"}
 DEPARTMENT_LABEL_OVERRIDES = {
     "UBEST Brand": "Essentials",
     "Stationery": "School Supplies",
+    "CLOUDNEST Brand": "Tissue and Paper",
 }
 
 STORES = {
