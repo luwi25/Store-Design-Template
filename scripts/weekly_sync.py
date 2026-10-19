@@ -52,6 +52,7 @@ EXCLUDED_DEPARTMENTS = {"Cleaning & Laundry Supplies", "Grocery", "Hygiene"}
 # it's dynamically assigned a group on either store/side.
 DEPARTMENT_LABEL_OVERRIDES = {
     "UBEST Brand": "Essentials",
+    "Stationery": "School Supplies",
 }
 
 STORES = {
