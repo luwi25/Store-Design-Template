@@ -46,6 +46,43 @@ LOG_DIR = DATA / "sync_logs"
 # cross-category showcase pools.
 EXCLUDED_DEPARTMENTS = {"Cleaning & Laundry Supplies", "Grocery", "Hygiene"}
 
+# UBEST-brand catalog names are raw supplier/internal strings (e.g. "TB-XL
+# trashbag 15*15*37", "UB-5018 cotton buds 100's") -- a leading stock code
+# plus abbreviated lowercase description. Overridden here with a proper
+# retail-presentable name, by stock number, across both stores.
+UBEST_BRAND_NAME_OVERRIDES = {
+    "1393-69": "Potato Masher Press",
+    "C5": "Caja Pot (Single Handle)",
+    "S2": "Caldero (Small, Single Handle)",
+    "TB-S": "Trash Bag 9x9x20 (Small)",
+    "TB-M": "Trash Bag 11x11x24 (Medium)",
+    "TB-L": "Trash Bag 13x13x32 (Large)",
+    "TB-XL": "Trash Bag 15x15x37 (X-Large)",
+    "TB-XXL": "Trash Bag 18.5x18.5x40 (XX-Large)",
+    "UB-0001": "Aluminum Foil Tray",
+    "UB-0002": "Aluminum Foil Tray",
+    "UB-0012-": "Aluminum Tray",
+    "UB-0015": "Aluminum Tray",
+    "UB-0016": "Oval Aluminum Tray 48x36cm",
+    "UB-2006": "Aluminum Foil 5m",
+    "UB-5017": "Cotton Buds (100 pcs)",
+    "UB-5018": "Cotton Buds (100 pcs)",
+    "UB-5019": "Cotton Buds (100 pcs)",
+    "UB-5020": "Cotton Buds (100 pcs)",
+    "UB-5021": "Cotton Buds (200 pcs)",
+    "UB-5022": "Cotton Buds (200 pcs)",
+    "Lemon-": "Dishwashing Liquid - Lemon 1000ml",
+    "Lime-": "Dishwashing Liquid - Lime 1000ml",
+    "UO-100": "Bond Paper A4",
+    "UO-L500": "Bond Paper Long (500 Sheets)",
+    "UO-S500": "Bond Paper Short (500 Sheets)",
+    "VP-0220": "Jumbo Crayons (8 pcs)",
+    "WP2025": "Water Pump",
+    "SEB-025GIS": 'Bowl 7"',
+    "UB-T250": "Tissue (5-ply)",
+    "UB-G100": "White Glue 100g",
+}
+
 STORES = {
     "home-express-basak": {
         "prefix": "sales-heb", "front_key": "everyday", "back_key": "homeBack",
@@ -155,8 +192,9 @@ def fetch_catalog_and_last_week(base_url, api_key, store_id):
             continue
         dept_en, _ = split_bilingual(p.get("department"))
         category_en, _ = split_bilingual(p.get("category"))
+        name = UBEST_BRAND_NAME_OVERRIDES.get(s["stockno"], p["name"])
         rows.append({
-            "stockno": s["stockno"], "name": p["name"], "department": dept_en or "Uncategorized",
+            "stockno": s["stockno"], "name": name, "department": dept_en or "Uncategorized",
             "category": category_en or "Uncategorized",
             "retail_price": p.get("retail_price"), "image_url": p["image_url"], "units": units,
         })
