@@ -172,14 +172,19 @@ def title_case(name):
     return " ".join(out)
 
 
-def assign_dynamic_departments(rows, slot_counts, exclude_positions):
+def assign_dynamic_departments(rows, slot_counts, exclude_positions, exclude_departments=()):
     """Ranks all departments by total units sold, then matches the
     biggest-selling department to the open position with the most
     slots, the next-biggest to the next-biggest open position, etc.
+    exclude_departments lets a later side (e.g. Back) skip whatever
+    departments an earlier side (e.g. Front) already claimed, so the
+    same store never shows the same department twice.
     Returns {position: (department_label, items[:that position's slot count])}."""
     dept_totals = defaultdict(float)
     dept_items = defaultdict(list)
     for r in rows:
+        if r["department"] in exclude_departments:
+            continue
         dept_totals[r["department"]] += r["units"]
         dept_items[r["department"]].append(r)
     ranked_depts = sorted(dept_totals.items(), key=lambda kv: -kv[1])
@@ -263,16 +268,20 @@ def upsert_product(repo, state, products_by_id, prefix, stockno, name, price, te
 
 
 def apply_side(repo, state, products_by_id, prefix, template_key, template_id, rows,
-               fixed_positions=None, cross_category_positions=(), cross_category_total=0):
+               fixed_positions=None, cross_category_positions=(), cross_category_total=0,
+               exclude_departments=()):
     """Fills every group in one template side (e.g. everyday, homeBack,
     peso, pesoBack). Positions not in fixed_positions or
     cross_category_positions get dynamically assigned to a department
     per assign_dynamic_departments, with the group's label renamed to
-    match. cross_category_positions share one combined top-category
-    pool split across them in rank order -- their label is never set
-    here, so it stays whatever it already is (a fixed showcase name
-    like "Best Seller This Season"). Fixed positions are left
-    completely untouched (slots and label both)."""
+    match. exclude_departments skips departments an earlier side of the
+    same store already claimed, so e.g. PesoPlus's Front and Back never
+    both show "Grocery". cross_category_positions share one combined
+    top-category pool split across them in rank order -- their label is
+    never set here, so it stays whatever it already is (a fixed
+    showcase name like "Best Seller This Season"). Fixed positions are
+    left completely untouched (slots and label both).
+    Returns (entries, departments_used_by_this_side)."""
     fixed_positions = fixed_positions or {}
     tpl = state[template_key]
     slots = tpl["slots"]
@@ -283,9 +292,11 @@ def apply_side(repo, state, products_by_id, prefix, template_key, template_id, r
     slot_counts = [len(by_idx.get(i, [])) for i in range(len(group_names))]
 
     entries = []
+    departments_used = set()
     exclude = set(fixed_positions) | set(cross_category_positions)
-    for pos, (label, items) in assign_dynamic_departments(rows, slot_counts, exclude).items():
+    for pos, (label, items) in assign_dynamic_departments(rows, slot_counts, exclude, exclude_departments).items():
         group_names[pos] = label
+        departments_used.add(label)
         for idx, item in zip(by_idx.get(pos, []), items):
             pid, photo_status = upsert_product(repo, state, products_by_id, prefix, item["stockno"], item["name"], item["retail_price"], template_id)
             slots[idx] = {"productId": pid, "group": pos, "discountPercent": 0}
@@ -307,7 +318,7 @@ def apply_side(repo, state, products_by_id, prefix, template_key, template_id, r
         group_names[pos] = label
 
     tpl["groupNames"] = group_names
-    return entries
+    return entries, departments_used
 
 
 # ---------- Shell helpers ----------
@@ -358,15 +369,18 @@ def main():
         if len(rows) < 20:
             raise RuntimeError(f"[{store_id}] not enough last-week sales data; aborting without changes.")
 
-        front_entries = apply_side(REPO, state, products_by_id, cfg["prefix"], cfg["front_key"], cfg["front_template_id"], rows,
-                                    cross_category_positions=cfg.get("front_cross_category_positions", ()),
-                                    cross_category_total=cfg.get("front_cross_category_total", 0))
+        front_entries, front_depts = apply_side(REPO, state, products_by_id, cfg["prefix"], cfg["front_key"], cfg["front_template_id"], rows,
+                                                 cross_category_positions=cfg.get("front_cross_category_positions", ()),
+                                                 cross_category_total=cfg.get("front_cross_category_total", 0))
         all_entries += [(store_id, "FRONT", *e) for e in front_entries]
 
-        back_entries = apply_side(REPO, state, products_by_id, cfg["prefix"], cfg["back_key"], cfg["back_template_id"], rows,
-                                   fixed_positions=cfg.get("back_fixed"),
-                                   cross_category_positions=cfg.get("back_cross_category_positions", ()),
-                                   cross_category_total=cfg.get("back_cross_category_total", 0))
+        # Back never repeats a department Front already claimed, so the same
+        # store doesn't show e.g. "Grocery" on both sides.
+        back_entries, _ = apply_side(REPO, state, products_by_id, cfg["prefix"], cfg["back_key"], cfg["back_template_id"], rows,
+                                      fixed_positions=cfg.get("back_fixed"),
+                                      cross_category_positions=cfg.get("back_cross_category_positions", ()),
+                                      cross_category_total=cfg.get("back_cross_category_total", 0),
+                                      exclude_departments=front_depts)
         all_entries += [(store_id, "BACK", *e) for e in back_entries]
 
         referenced = {s["productId"] for s in state[cfg["front_key"]]["slots"]} | {s["productId"] for s in state[cfg["back_key"]]["slots"]}
