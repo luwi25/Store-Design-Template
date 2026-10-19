@@ -1,4 +1,16 @@
-/* Public starter project. Called only when this browser has no saved project. */
+/* Lightweight check for a newer published catalog -- lets a browser that
+   already has a saved project notice a new weekly sync without re-fetching
+   every product image just to find out. */
+window.fetchPublishedRevision = async function () {
+  const base = new URL('defaults/', document.baseURI);
+  const response = await fetch(new URL('project.json', base));
+  if (!response.ok) return null;
+  const project = await response.json();
+  return typeof project.sourceRevision === 'number' ? project.sourceRevision : null;
+};
+
+/* Public starter project. Called when this browser has no saved project,
+   or when a newer one has been published since the last save. */
 window.loadPublishedDefault = async function () {
   const base = new URL('defaults/', document.baseURI);
   const response = await fetch(new URL('project.json', base));

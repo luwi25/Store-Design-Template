@@ -44,7 +44,13 @@ html=html.replace(needle,needle+'<p class="helper">Images and edits stay in this
 # Seed only an empty device; local and legacy projects always take precedence.
 startup = ' if(parsed){hasStoredState=true;'
 assert html.count(startup) == 1
-html=html.replace(startup, ' if(!parsed){parsed=await loadPublishedDefault();await StoreDatabase.save(parsed)}\n'+startup)
+html=html.replace(startup,
+ " if(!parsed){parsed=await loadPublishedDefault();await StoreDatabase.save(parsed)}"
+ " else if(typeof parsed.publishedProjectRevision==='number'){try{const latestRevision=await fetchPublishedRevision();"
+ "if(typeof latestRevision==='number'&&latestRevision>parsed.publishedProjectRevision){parsed=await loadPublishedDefault();"
+ "await StoreDatabase.save(parsed);showNotice('Catalog refreshed with the latest weekly top sellers.')}}"
+ "catch(e){console.warn('Catalog update check failed',e)}}\n"
+ +startup)
 # Keep large reference images outside the HTML so the browser can cache them.
 def external_image(match):
     mime,encoded=match.groups();raw=base64.b64decode(encoded)
