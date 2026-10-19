@@ -1,21 +1,31 @@
-"""Weekly sales-driven product sync for Home Express Basak.
+"""Weekly sales-driven product sync for Home Express Basak and PesoPlus
+Mambaling.
 
 Pulls last week's sales from the UBEST Store Catalog API and updates
 this repo's defaults/project.json directly -- the GitHub repo is the
-single source of truth; there is no local app/server involved. Front
-(7 "daily necessities" department groups) gets refreshed per the
-Weekly Store Promotional Poster Guide. Back has three groups: "Back to
-School Essentials" (top 5 Stationery-department sellers) plus "Best
-Seller This Season" and "Top Product" (5 each, one top seller per real
-UBEST category store-wide, excluding Stationery so they showcase
-variety beyond student supplies). Then public/ is rebuilt, the test
-suite runs, and the result is committed and pushed only if everything
-passes.
+single source of truth; there is no local app/server involved.
+
+Every group in every template side is dynamically assigned to whichever
+real UBEST department actually ranked into it last week (by units
+sold): the biggest-selling open department gets the group with the
+most slots, and so on, with the group's own label renamed to match.
+This applies uniformly to Home Express's Front (everyday) and
+PesoPlus's Front (peso) and Back (pesoBack).
+
+Two exceptions, both on Home Express's Back (homeBack):
+  - "Christmas Gift Bundles" (position 0) is a fixed, hand-curated
+    section unrelated to weekly sales performance -- never touched.
+  - "Best Seller This Season" and "Top Product" (positions 1-2) are a
+    cross-category showcase: one top seller per real category,
+    store-wide, so they stay varied rather than collapsing into a
+    single department like the dynamic groups do.
+
+Then public/ is rebuilt, the test suite runs, and the result is
+committed and pushed only if everything passes.
 
 Exit code 0 = synced and pushed (or nothing to do). Non-zero = aborted
 before committing anything; see the log file in data/sync_logs/.
 """
-import base64
 import hashlib
 import json
 import re
@@ -24,25 +34,25 @@ import sys
 import time
 import urllib.error
 import urllib.request
+from collections import defaultdict
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent  # store-design-template-github
 DATA = REPO / "data"
 LOG_DIR = DATA / "sync_logs"
-STORE_ID = "home-express-basak"
 
-FRONT_GROUP_DEPTS = [
-    ("Kitchen & Dining", 6, ["Kitchenware & Tableware", "Cookware"]),
-    ("Home Organizers", 3, ["Home Storage & Organization", "Kitchen Storage & Organization"]),
-    ("Home Textiles", 6, ["Home Textiles"]),
-    ("Household Cleaning", 4, ["Cleaning & Laundry Supplies"]),
-    ("Personal Care", 3, ["Hygiene", "Beauty & Fragrance"]),
-    ("Hardware & Tools", 4, ["Hardware & Electrical", "Tools"]),
-    ("Toys & Party", 4, ["玩具 Toys", "Seasonal & Party"]),
-]
-BACK_DEPT = "Stationery"
-BACK_FIRST_SECTION_NAME = "Back to School Essentials"
-MIME_EXT = {"image/png": "png", "image/jpeg": "jpg", "image/webp": "webp", "image/svg+xml": "svg"}
+STORES = {
+    "home-express-basak": {
+        "prefix": "sales-heb", "front_key": "everyday", "back_key": "homeBack",
+        "front_template_id": "home-everyday", "back_template_id": "home-back",
+        "back_fixed": {0: "Christmas Gift Bundles"},
+        "back_cross_category_positions": (1, 2), "back_cross_category_total": 10,
+    },
+    "pesoplus-mambaling": {
+        "prefix": "sales-ppm", "front_key": "peso", "back_key": "pesoBack",
+        "front_template_id": "peso-plus", "back_template_id": "peso-back",
+    },
+}
 
 LOG_LINES = []
 
@@ -136,7 +146,7 @@ def fetch_catalog_and_last_week(base_url, api_key, store_id):
         dept_en, _ = split_bilingual(p.get("department"))
         category_en, _ = split_bilingual(p.get("category"))
         rows.append({
-            "stockno": s["stockno"], "name": p["name"], "department": dept_en,
+            "stockno": s["stockno"], "name": p["name"], "department": dept_en or "Uncategorized",
             "category": category_en or "Uncategorized",
             "retail_price": p.get("retail_price"), "image_url": p["image_url"], "units": units,
         })
@@ -157,38 +167,40 @@ def title_case(name):
     return " ".join(out)
 
 
-def select_front(rows):
-    selection = []
-    for group_idx, (label, count, depts) in enumerate(FRONT_GROUP_DEPTS):
-        pool = sorted((r for r in rows if r["department"] in depts), key=lambda r: -r["units"])
-        picked = pool[:count]
-        log(f"FRONT group {group_idx} '{label}': pool={len(pool)} picked={len(picked)}")
-        selection.append({"group": group_idx, "label": label, "items": picked})
-    return selection
+def assign_dynamic_departments(rows, slot_counts, exclude_positions):
+    """Ranks all departments by total units sold, then matches the
+    biggest-selling department to the open position with the most
+    slots, the next-biggest to the next-biggest open position, etc.
+    Returns {position: (department_label, items[:that position's slot count])}."""
+    dept_totals = defaultdict(float)
+    dept_items = defaultdict(list)
+    for r in rows:
+        dept_totals[r["department"]] += r["units"]
+        dept_items[r["department"]].append(r)
+    ranked_depts = sorted(dept_totals.items(), key=lambda kv: -kv[1])
+
+    open_positions = sorted((i for i in range(len(slot_counts)) if i not in exclude_positions),
+                             key=lambda i: -slot_counts[i])
+    assignment = {}
+    for rank, pos in enumerate(open_positions):
+        if rank >= len(ranked_depts):
+            break
+        dept_name, _ = ranked_depts[rank]
+        items = sorted(dept_items[dept_name], key=lambda r: -r["units"])[:slot_counts[pos]]
+        assignment[pos] = (dept_name, items)
+    return assignment
 
 
-def select_back_school_supplies(rows, count=5):
-    pool = sorted((r for r in rows if r["department"] == BACK_DEPT), key=lambda r: -r["units"])
-    picked = pool[:count]
-    log(f"BACK school supplies (Stationery): pool={len(pool)} picked={len(picked)}")
-    return picked
-
-
-def select_back_best_sellers(rows, count=10):
-    """One top seller per real UBEST category, store-wide, excluding the
-    Stationery department (that's already covered by 'Back to School
-    Essentials') -- ranked by that item's own units so the strongest
-    category leaders win the 'Best Seller'/'Top Product' slots."""
+def select_cross_category_topsellers(rows, count):
+    """One top seller per real UBEST category, store-wide, ranked by
+    that item's own units -- a variety showcase rather than a single
+    department's full lineup."""
     best_per_category = {}
     for r in rows:
-        if r["department"] == BACK_DEPT:
-            continue
         cat = r["category"]
         if cat not in best_per_category or r["units"] > best_per_category[cat]["units"]:
             best_per_category[cat] = r
-    picked = sorted(best_per_category.values(), key=lambda r: -r["units"])[:count]
-    log(f"BACK best sellers (one per category, excl. Stationery): categories={len(best_per_category)} picked={len(picked)}")
-    return picked
+    return sorted(best_per_category.values(), key=lambda r: -r["units"])[:count]
 
 
 # ---------- Image placeholder (no network image fetch yet -- UBEST's image CDN is down) ----------
@@ -218,12 +230,13 @@ def placeholder_image_marker(repo):
 
 # ---------- Upsert directly against the published (dehydrated) state ----------
 
-def upsert_product(repo, state, products_by_id, stockno, name, price, image_url, template_id):
+def upsert_product(repo, state, products_by_id, prefix, stockno, name, price, template_id):
     """Returns (pid, photo_status). Returning products (same stockno as a
     past run) keep their already-published photo untouched. Brand-new
     products get a flat placeholder -- rerun once UBEST's image CDN is back
-    to backfill the real photo for just those."""
-    pid = f"sales-heb-{re.sub(r'[^A-Za-z0-9]+', '-', stockno).strip('-').lower()}"
+    to backfill the real photo for just those. `prefix` keeps each store's
+    sales-driven ids from colliding ('sales-heb-' vs 'sales-ppm-')."""
+    pid = f"{prefix}-{re.sub(r'[^A-Za-z0-9]+', '-', stockno).strip('-').lower()}"
     existing = products_by_id.get(pid)
     if existing is not None:
         image = existing["image"]
@@ -244,47 +257,49 @@ def upsert_product(repo, state, products_by_id, stockno, name, price, image_url,
     return pid, photo_status
 
 
-def apply_updates(repo, state, front_selection, back_items):
-    products_by_id = {p["id"]: p for p in state["products"]}
-    everyday_slots = state["everyday"]["slots"]
-    homeback_slots = state["homeBack"]["slots"]
+def apply_side(repo, state, products_by_id, prefix, template_key, template_id, rows,
+               fixed_positions=None, cross_category_positions=(), cross_category_total=0):
+    """Fills every group in one template side (e.g. everyday, homeBack,
+    peso, pesoBack). Positions not in fixed_positions or
+    cross_category_positions get dynamically assigned to a department
+    per assign_dynamic_departments; cross_category_positions share one
+    combined top-category pool split across them in rank order; fixed
+    positions are left completely untouched (slots and label both)."""
+    fixed_positions = fixed_positions or {}
+    tpl = state[template_key]
+    slots = tpl["slots"]
+    group_names = tpl.get("groupNames") or []
+    by_idx = defaultdict(list)
+    for i, s in enumerate(slots):
+        by_idx[s["group"]].append(i)
+    slot_counts = [len(by_idx.get(i, [])) for i in range(len(group_names))]
 
-    front_by_group = {}
-    for i, s in enumerate(everyday_slots):
-        front_by_group.setdefault(s["group"], []).append(i)
-    front_log = []
-    for grp in front_selection:
-        g = grp["group"]
-        for idx, item in zip(front_by_group.get(g, []), grp["items"]):
-            pid, photo_status = upsert_product(repo, state, products_by_id, item["stockno"], item["name"],
-                                                item["retail_price"], item["image_url"], "home-everyday")
-            everyday_slots[idx] = {"productId": pid, "group": g, "discountPercent": 0}
-            front_log.append((grp["label"], item["name"], item["units"], photo_status))
+    entries = []
+    exclude = set(fixed_positions) | set(cross_category_positions)
+    for pos, (label, items) in assign_dynamic_departments(rows, slot_counts, exclude).items():
+        group_names[pos] = label
+        for idx, item in zip(by_idx.get(pos, []), items):
+            pid, photo_status = upsert_product(repo, state, products_by_id, prefix, item["stockno"], item["name"], item["retail_price"], template_id)
+            slots[idx] = {"productId": pid, "group": pos, "discountPercent": 0}
+            entries.append((label, item["name"], item["units"], photo_status))
 
-    back_by_group = {}
-    for i, s in enumerate(homeback_slots):
-        back_by_group.setdefault(s["group"], []).append(i)
-    back_log = []
-    for g in (0, 1, 2):
-        chunk = back_items[g * 5:(g + 1) * 5]
-        for idx, item in zip(back_by_group.get(g, []), chunk):
-            pid, photo_status = upsert_product(repo, state, products_by_id, item["stockno"], item["name"],
-                                                item["retail_price"], item["image_url"], "home-back")
-            homeback_slots[idx] = {"productId": pid, "group": g, "discountPercent": 0}
-            back_log.append((g, item["name"], item["units"], photo_status))
+    if cross_category_positions:
+        picks = select_cross_category_topsellers(rows, cross_category_total)
+        cursor = 0
+        for pos in cross_category_positions:
+            count = slot_counts[pos]
+            chunk = picks[cursor:cursor + count]
+            cursor += count
+            for idx, item in zip(by_idx.get(pos, []), chunk):
+                pid, photo_status = upsert_product(repo, state, products_by_id, prefix, item["stockno"], item["name"], item["retail_price"], template_id)
+                slots[idx] = {"productId": pid, "group": pos, "discountPercent": 0}
+                entries.append((group_names[pos], item["name"], item["units"], photo_status))
 
-    names = state["homeBack"].get("groupNames") or ["Christmas Gift Bundles", "Best Seller This Season", "Top Product"]
-    names[0] = BACK_FIRST_SECTION_NAME
-    state["homeBack"]["groupNames"] = names
+    for pos, label in fixed_positions.items():
+        group_names[pos] = label
 
-    referenced = {s["productId"] for s in everyday_slots} | {s["productId"] for s in homeback_slots}
-    kept = [p for p in state["products"] if not p["id"].startswith("sales-heb-") or p["id"] in referenced]
-    pruned = len(state["products"]) - len(kept)
-    state["products"] = kept
-    if pruned:
-        log(f"pruned {pruned} orphaned sales-heb product(s) no longer referenced by any slot")
-
-    return front_log, back_log
+    tpl["groupNames"] = group_names
+    return entries
 
 
 # ---------- Shell helpers ----------
@@ -324,28 +339,40 @@ def main():
     project_path = REPO / "defaults" / "project.json"
     project = json.loads(project_path.read_text(encoding="utf-8"))
     state = project["state"]
+    products_by_id = {p["id"]: p for p in state["products"]}
     log(f"starting sourceRevision: {project['sourceRevision']}, products: {len(state['products'])}")
 
-    rows, last_week = fetch_catalog_and_last_week(base_url, api_key, STORE_ID)
-    front_selection = select_front(rows)
-    school_supplies = select_back_school_supplies(rows)
-    best_sellers = select_back_best_sellers(rows)
-    back_items = school_supplies + best_sellers
-    if any(len(g["items"]) < 1 for g in front_selection) or len(back_items) < 15:
-        raise RuntimeError("Not enough last-week sales data to fill every slot; aborting without changes.")
+    all_entries = []
+    last_weeks = {}
+    for store_id, cfg in STORES.items():
+        rows, last_week = fetch_catalog_and_last_week(base_url, api_key, store_id)
+        last_weeks[store_id] = last_week
+        if len(rows) < 20:
+            raise RuntimeError(f"[{store_id}] not enough last-week sales data; aborting without changes.")
 
-    front_log, back_log = apply_updates(REPO, state, front_selection, back_items)
+        front_entries = apply_side(REPO, state, products_by_id, cfg["prefix"], cfg["front_key"], cfg["front_template_id"], rows)
+        all_entries += [(store_id, "FRONT", *e) for e in front_entries]
+
+        back_entries = apply_side(REPO, state, products_by_id, cfg["prefix"], cfg["back_key"], cfg["back_template_id"], rows,
+                                   fixed_positions=cfg.get("back_fixed"),
+                                   cross_category_positions=cfg.get("back_cross_category_positions", ()),
+                                   cross_category_total=cfg.get("back_cross_category_total", 0))
+        all_entries += [(store_id, "BACK", *e) for e in back_entries]
+
+        referenced = {s["productId"] for s in state[cfg["front_key"]]["slots"]} | {s["productId"] for s in state[cfg["back_key"]]["slots"]}
+        kept = [p for p in state["products"] if not p["id"].startswith(f"{cfg['prefix']}-") or p["id"] in referenced]
+        pruned = len(state["products"]) - len(kept)
+        state["products"] = kept
+        if pruned:
+            log(f"[{store_id}] pruned {pruned} orphaned {cfg['prefix']}- product(s)")
+
     placeholder_count = 0
-    for label, name, units, photo_status in front_log:
+    for store_id, side, label, name, units, photo_status in all_entries:
         tag = " [placeholder photo]" if photo_status == "placeholder" else ""
         placeholder_count += photo_status == "placeholder"
-        log(f"  FRONT [{label}] {name} ({units} units){tag}")
-    for g, name, units, photo_status in back_log:
-        tag = " [placeholder photo]" if photo_status == "placeholder" else ""
-        placeholder_count += photo_status == "placeholder"
-        log(f"  BACK [group {g}] {name} ({units} units){tag}")
+        log(f"  [{store_id}] {side} [{label}] {name} ({units} units){tag}")
     if placeholder_count:
-        log(f"{placeholder_count} product(s) got a generic placeholder photo (new this week, "
+        log(f"{placeholder_count} product(s) got a generic placeholder photo (new this run, "
             f"UBEST image CDN unavailable) -- rerun once the CDN is back to backfill real photos.")
 
     project["sourceRevision"] += 1
@@ -365,7 +392,8 @@ def main():
         flush_log(True)
         return
 
-    commit_msg = f"Weekly sales sync: Home Express Basak ({last_week['week_start']} to {last_week['week_end']})"
+    commit_msg = "Weekly sales sync: " + "; ".join(
+        f"{sid} ({lw['week_start']} to {lw['week_end']})" for sid, lw in last_weeks.items())
     run(["git", "commit", "-m", commit_msg], REPO)
     if run(["git", "push", "origin", "main"], REPO) != 0:
         flush_log(False, "git push failed; commit is local only. Resolve and push manually.")

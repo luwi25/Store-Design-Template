@@ -20,8 +20,13 @@ const html=fs.readFileSync('public/index.html','utf8');
  const slot1ExpectedNameValue=String(slot1OriginalTextSizes?.name??100);
  const slot0=source.homeBack.slots[0];
  const slot0ExpectedName=slot0.details?.name||source.products.find(p=>p.id===slot0.productId)?.name;
- // A product's own stock code is unique within the catalog, so searching it always matches exactly one slot.
- const uniqueSearchCode=source.products.find(p=>p.id===source.homeBack.slots[2].productId)?.code;
+ // The product search only filters the active template's own slots (not the whole catalog), and
+ // multiple stores can share the same supplier stock code (e.g. a glue stick sold at both Home
+ // Express and PesoPlus) -- so pick a code unique among homeBack's own 15 slot-products, the exact
+ // set the search box will filter over, rather than assuming every code is globally unique.
+ const homeBackSlotProducts=source.homeBack.slots.map(s=>source.products.find(p=>p.id===s.productId)).filter(Boolean);
+ const codeCounts=new Map();for(const p of homeBackSlotProducts){codeCounts.set(p.code,(codeCounts.get(p.code)||0)+1)}
+ const uniqueSearchCode=homeBackSlotProducts.find(p=>codeCounts.get(p.code)===1)?.code;
  w.flashSaleActions.openSlot(0);if(mobile){assert(w.document.querySelector('#slotDialog #slotEditor'));assert.equal(w.document.querySelector('#slotDialog').open,true)}else{assert(w.document.querySelector('#studioInspectorBody #slotEditor'));assert.equal(w.document.querySelector('#slotDialog').open,false)}
  const input=w.document.querySelector('#slotText-name');assert(input);input.value=140;input.dispatchEvent(new w.Event('input',{bubbles:true}));await new Promise(r=>setTimeout(r,400));
  assert.equal(saved.homeBack.slots[0].textSizes.name,140);assert.deepEqual(saved.homeBack.slots[1].textSizes||null,slot1OriginalTextSizes);
