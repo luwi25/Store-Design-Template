@@ -62,12 +62,31 @@ html=re.sub(r'data:image/(png|jpeg|webp|svg\+xml);base64,([A-Za-z0-9+/=]+)',exte
 (OUT/'index.html').write_text(html,encoding='utf-8')
 for name in ['default-project.js','browser-db.js','browser-background.js','background-worker.js','mobile.css','mobile.js','install-app.js','manifest.webmanifest']:
     shutil.copy2(ROOT/name,OUT/name)
-shutil.copytree(ROOT/'defaults',OUT/'defaults',dirs_exist_ok=True)
+# Ship current image references only, rather than every historical replacement.
+published=json.loads((ROOT/'defaults/project.json').read_text(encoding='utf-8'))
+published_images=set()
+def collect_published_images(value):
+    if isinstance(value,dict):
+        if '__defaultImage' in value:
+            name=value['__defaultImage']
+            if not re.fullmatch(r'images/[a-f0-9]{64}\.(png|jpg|webp|svg)',name):
+                raise ValueError('Invalid published image path')
+            published_images.add(name)
+        else:
+            for item in value.values(): collect_published_images(item)
+    elif isinstance(value,list):
+        for item in value: collect_published_images(item)
+collect_published_images(published)
+(OUT/'defaults/images').mkdir(parents=True,exist_ok=True)
+shutil.copy2(ROOT/'defaults/project.json',OUT/'defaults/project.json')
+for name in published_images:
+    shutil.copy2(ROOT/'defaults'/name,OUT/'defaults'/name)
 shutil.copytree(ROOT/'vendor',OUT/'vendor',dirs_exist_ok=True)
 shutil.copytree(ROOT/'icons',OUT/'icons',dirs_exist_ok=True)
 (OUT/'.nojekyll').touch()
 # Content hashes allow updates to reuse unchanged offline files.
-files=sorted(path.relative_to(OUT).as_posix() for path in OUT.rglob('*') if path.is_file() and path.name not in ['sw.js','.nojekyll'])
+files=sorted(path.relative_to(OUT).as_posix() for path in OUT.rglob('*') if path.is_file() and path.name not in ['sw.js','.nojekyll'] and
+             (not path.relative_to(OUT).as_posix().startswith('defaults/images/') or path.relative_to(OUT/'defaults').as_posix() in published_images))
 digest=hashlib.sha256()
 for name in files:
     digest.update(name.encode());digest.update((OUT/name).read_bytes())

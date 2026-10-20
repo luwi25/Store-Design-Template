@@ -6,7 +6,7 @@ async function fetchFreshPublishedProject(base) {
   // Bypass both the HTTP cache and older installed workers' exact-URL caches.
   url.searchParams.set('check', Date.now().toString());
   try {
-    const response = await fetch(url, {cache: 'no-store'});
+    const response = await fetch(url, {cache: 'no-store', signal: AbortSignal.timeout(10000)});
     if (response.ok) return response;
     throw new Error('Published project request failed.');
   } catch (error) {
@@ -16,11 +16,13 @@ async function fetchFreshPublishedProject(base) {
   }
 }
 
+let checkedPublishedProject;
 window.fetchPublishedRevision = async function () {
   const base = new URL('defaults/', document.baseURI);
   const response = await fetchFreshPublishedProject(base);
   if (!response.ok) return null;
   const project = await response.json();
+  checkedPublishedProject = project;
   return typeof project.sourceRevision === 'number' ? project.sourceRevision : null;
 };
 
@@ -28,9 +30,13 @@ window.fetchPublishedRevision = async function () {
    or when a newer one has been published since the last save. */
 window.loadPublishedDefault = async function () {
   const base = new URL('defaults/', document.baseURI);
-  const response = await fetchFreshPublishedProject(base);
-  if (!response.ok) throw new Error('The starting project could not load. Please retry.');
-  const project = await response.json();
+  let project = checkedPublishedProject;
+  if (!project) {
+    const response = await fetchFreshPublishedProject(base);
+    if (!response.ok) throw new Error('The starting project could not load. Please retry.');
+    project = await response.json();
+  }
+  checkedPublishedProject = undefined;
   if (project.version !== 1 || !Array.isArray(project.state?.products)) {
     throw new Error('Invalid starting project.');
   }
@@ -48,7 +54,8 @@ window.loadPublishedDefault = async function () {
   await Promise.all(Array.from({length: Math.min(4, queue.length)}, async () => {
     while (queue.length) {
       const [path, mime] = queue.shift();
-      const image = await fetch(new URL(path, base));
+      // Content-hashed image paths are immutable; a cached copy is always valid.
+      const image = await fetch(new URL(path, base), {cache: 'force-cache'});
       if (!image.ok) throw new Error('A starting product image could not load. Please retry.');
       const blob = new Blob([await image.arrayBuffer()], {type: mime});
       const data = await new Promise((resolve, reject) => {
