@@ -698,7 +698,7 @@ async function exportPNG(){
 
 function printGeometry(){
  const paper={'half-letter':[139.7,215.9],a4:[210,297],a3:[297,420],letter:[215.9,279.4],'long-bond':[215.9,330.2]}[state.poster.paper]||[215.9,279.4];
- const half=state.poster.fit==='half',margin=5,gap=4,available=paper[0]-margin*2;
+ const half=state.poster.fit==='half',margin=2.5,gap=4,available=paper[0]-margin*2;
  // Keep both copies inside common printer margins, scaling both axes equally.
  const fitScale=Math.min(available/paper[0],(paper[1]-margin*2-gap)/(paper[1]-gap));
  const rotatedWidth=half?paper[0]*fitScale:state.poster.fit==='size'?Math.min(215.9,available):available;
