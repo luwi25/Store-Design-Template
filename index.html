@@ -911,8 +911,7 @@ async function initPeso(){try{
 // Paint a complete ribbon, including its rounded end, instead of a square text patch.
 function drawSectionRibbon(ctx,x,y,width,height){
  const radius=Math.min(16,height*.24),right=x+width,bottom=y+height;
- const gradient=ctx.createLinearGradient(x,y,right,y);gradient.addColorStop(0,'#d11008');gradient.addColorStop(.82,'#d11008');gradient.addColorStop(1,'#ee0704');
- ctx.fillStyle=gradient;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(right-radius,y);ctx.quadraticCurveTo(right,y,right,y+radius);ctx.lineTo(right-3,bottom-radius);ctx.quadraticCurveTo(right-3,bottom,right-radius-3,bottom);ctx.lineTo(x,bottom);ctx.closePath();ctx.fill();
+ ctx.fillStyle='#d11008';ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(right-radius,y);ctx.quadraticCurveTo(right,y,right,y+radius);ctx.lineTo(right-3,bottom-radius);ctx.quadraticCurveTo(right-3,bottom,right-radius-3,bottom);ctx.lineTo(x,bottom);ctx.closePath();ctx.fill();
 }
 function pesoText(ctx,text,x,y,width,size,weight=700,condense=1){ctx.font=`${weight} ${size}px Outfit, Arial, sans-serif`;const measured=ctx.measureText(text).width;if(measured>width)ctx.font=`${weight} ${size*Math.min(1,width/measured/condense)}px Outfit, Arial, sans-serif`;ctx.fillText(text,x,y,width);return Math.min(width,ctx.measureText(text).width)}
 async function pesoCanvas({width=1650,height=2550}={}){
