@@ -106,7 +106,7 @@ function updateProductSheetHeading(){
  const copy=document.createElement('div'),name=document.createElement('strong'),code=document.createElement('small');
  name.textContent=p?.name||'Choose a product';code.textContent=p?.code||'Product settings';copy.append(name,code);
  const price=document.createElement('b');price.textContent=p?money(salePrice(p,slot)):'';
- const close=document.createElement('button');close.type='button';close.className='sheet-close';close.textContent='?';close.setAttribute('aria-label','Close product settings');close.onclick=()=>$('slotDialog').close();heading.append(copy,price,close);
+ const close=document.createElement('button');close.type='button';close.className='sheet-close';close.textContent='\u00d7';close.setAttribute('aria-label','Close product settings');close.onclick=()=>$('slotDialog').close();heading.append(copy,price,close);
 }
 function prepareProductSheet(){
  const dialog=$('slotDialog');dialog.dataset.sheetSize='compact';dialog.style.removeProperty('--sheet-drag-height');

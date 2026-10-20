@@ -55,3 +55,70 @@
 }
 @media screen and (max-width:380px){.two-col{grid-template-columns:1fr}.brand{font-size:16px}}
 @media print{.mobile-nav,.mobile-product-picker,#installApp,.install-dialog{display:none!important}}
+
+/* Mobile editor spacing; artwork and printing are intentionally outside these selectors. */
+@media screen and (max-width:820px){
+ .studio-editor .app{padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+ .studio-editor .topbar{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px 12px;padding:12px max(12px,env(safe-area-inset-right,0px)) 12px max(12px,env(safe-area-inset-left,0px));align-items:center}
+ .studio-editor .brand{min-width:0;font-size:16px}
+ .studio-editor .brand small{font-size:11px;line-height:1.4}
+ .studio-editor #studioTemplate{grid-column:1/-1;grid-row:2;width:100%;min-height:44px;padding:10px 12px;font-size:16px;box-sizing:border-box}
+ .studio-editor .saving-status{grid-column:2;grid-row:1;max-width:120px;font-size:10px;padding:6px 8px;line-height:1.4;overflow-wrap:anywhere}
+ .studio-editor .top-actions{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:8px;width:100%;margin:0}
+ .studio-editor .top-actions .btn{flex:1 1 100px;min-height:44px;font-size:12px;line-height:1.3;padding:10px 8px}
+ .studio-editor .left-rail>.panel,.studio-editor .left-rail>.panel[data-studio-panel=catalog],.studio-editor .right-rail>.panel{padding:16px;margin:0}
+ .mobile-ui[data-mobile-active=catalog] [data-mobile-panel=catalog]{display:block!important}
+ .mobile-nav{grid-template-columns:repeat(5,minmax(0,1fr));gap:3px;padding:6px 6px calc(8px + env(safe-area-inset-bottom,0px))}
+ .mobile-nav button{min-width:0;min-height:48px;font:600 11px Outfit,sans-serif;padding:8px 2px;border-radius:10px}
+ .mobile-nav button[aria-pressed=true]{background:#eaf5f3;color:#163b65;box-shadow:inset 0 0 0 1px #b9d9d7}
+ .studio-editor .panel-head{gap:12px;margin-bottom:14px}
+ .studio-editor .panel h2{font-size:15px;letter-spacing:0;line-height:1.4}
+ .studio-editor .template-card{padding:12px;gap:12px;margin-bottom:10px;border-radius:12px}
+ .studio-editor .template-copy b{font-size:14px;line-height:1.4}
+ .studio-editor .template-copy small{font-size:12px;line-height:1.5}
+ .studio-editor .stage{gap:14px;padding:14px 12px 22px}
+ .studio-editor .stage-top{gap:8px;line-height:1.5;font-size:11px;justify-content:center}
+ .studio-editor .studio-zoom{justify-content:center;gap:8px;margin:0;width:100%}
+ .studio-editor .studio-zoom button{min-width:44px;min-height:44px}
+ .studio-editor .mobile-product-picker{margin:0;gap:6px}
+ .studio-editor .mobile-product-picker label{font-size:12px;letter-spacing:0;text-transform:none}
+ .studio-editor .design-products{gap:8px;margin-top:0}
+ .studio-editor .design-products .btn{min-height:44px}
+ .studio-editor .studio-search{margin:12px 0;gap:8px}
+ .studio-editor .studio-product{min-height:72px;padding:12px 8px;gap:12px;margin:4px 0;border-bottom-color:#edf0f5}
+ .studio-editor .studio-product img{width:44px;height:44px}
+ .studio-editor .studio-product strong{font-size:14px;line-height:1.4;overflow-wrap:break-word}
+ .studio-editor .studio-product small{font-size:11px;line-height:1.4}
+ .studio-editor .studio-product>b{font-size:13px}
+ .studio-editor #studioProductList h3{font-size:11px;line-height:1.5;margin:22px 0 8px;letter-spacing:.035em}
+ .studio-editor #catalogList{gap:12px}
+ .studio-editor #catalogList .product-mini{grid-template-columns:48px minmax(0,1fr);padding:12px;gap:10px 12px}
+ .studio-editor #catalogList .mini-thumb{width:48px;height:48px}
+ .studio-editor #catalogList .mini-info b{font-size:14px;line-height:1.4}
+ .studio-editor #catalogList .mini-info span{font-size:13px}
+ .studio-editor #catalogList .catalog-actions{gap:8px;padding-top:8px}
+ .studio-editor #catalogList .icon-btn{font-size:12px;min-width:64px}
+ .studio-editor #catalogPagination{gap:8px;margin:16px 0}
+ .studio-editor #catalogPagination .btn,.studio-editor #catalogPageStatus{font-size:12px}
+ .studio-editor .field{margin-bottom:16px;gap:6px}
+ .studio-editor .field label{font-size:12px;line-height:1.4;letter-spacing:0;text-transform:none}
+ .studio-editor .helper{font-size:12px;line-height:1.55}
+ .studio-editor #slotDialog .sheet-heading{gap:10px;padding:0 16px 12px}
+ .studio-editor #slotDialog .sheet-heading strong{font-size:14px;line-height:1.35}
+ .studio-editor #slotDialog .sheet-heading img{width:40px;height:40px}
+ .studio-editor #slotDialog #slotEditor{padding:16px 16px calc(24px + env(safe-area-inset-bottom,0px))}
+ .studio-editor #slotEditor .discount-presets{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin-bottom:16px}
+ .studio-editor #slotEditor .discount-presets .btn{min-width:0;min-height:44px;font-size:12px}
+ .studio-editor #slotEditor .product-advanced summary{min-height:44px;line-height:1.5;align-content:center;margin-bottom:8px}
+ .studio-editor #slotEditor .product-advanced input[type=file]{font-size:14px;padding:10px}
+ .studio-editor .modal-actions{gap:10px;padding-top:12px}
+ .studio-editor .modal-actions .btn{min-height:44px}
+ .studio-editor .notice{max-width:calc(100vw - 32px);box-sizing:border-box;bottom:calc(82px + env(safe-area-inset-bottom,0px));line-height:1.5}
+}
+@media screen and (max-width:360px){
+ .studio-editor .studio-price-fields{grid-template-columns:1fr}
+ .studio-editor #slotDialog .sheet-heading{display:grid;grid-template-columns:36px minmax(0,1fr) 44px;gap:6px 8px}
+ .studio-editor #slotDialog .sheet-heading img{grid-row:1/3;width:36px;height:36px}
+ .studio-editor #slotDialog .sheet-heading>b{grid-column:2;font-size:13px}
+ .studio-editor #slotDialog .sheet-close{grid-column:3;grid-row:1/3}
+}
