@@ -28,6 +28,7 @@ before committing anything; see the log file in data/sync_logs/.
 """
 import hashlib
 import json
+import os
 import re
 import subprocess
 import sys
@@ -97,6 +98,12 @@ def flush_log(ok, extra=None):
 # ---------- UBEST API ----------
 
 def load_api_key():
+    base_url = os.environ.get("UBEST_BASE_URL")
+    api_key = os.environ.get("UBEST_API_KEY")
+    if base_url and api_key:
+        return base_url.rstrip("/"), api_key
+    if base_url or api_key:
+        raise RuntimeError("Both UBEST_BASE_URL and UBEST_API_KEY must be configured.")
     key_file = DATA / "ubest_api_key.json"
     if key_file.exists():
         cfg = json.loads(key_file.read_text(encoding="utf-8"))
@@ -621,16 +628,20 @@ def main():
         log("ABORTED before push: tests failed.")
         sys.exit(1)
 
-    run(["git", "add", "defaults"], REPO)
+    if run(["git", "add", "defaults"], REPO) != 0:
+        raise RuntimeError("Could not stage the sales update.")
     diff_check = subprocess.run(["git", "diff", "--cached", "--quiet"], cwd=str(REPO))
     if diff_check.returncode == 0:
         log("nothing to commit (defaults snapshot unchanged).")
         flush_log(True)
         return
 
+    if diff_check.returncode != 1:
+        raise RuntimeError("Could not inspect staged changes.")
     commit_msg = "Weekly sales sync: " + "; ".join(
         f"{sid} ({lw['week_start']} to {lw['week_end']})" for sid, lw in last_weeks.items())
-    run(["git", "commit", "-m", commit_msg], REPO)
+    if run(["git", "commit", "-m", commit_msg], REPO) != 0:
+        raise RuntimeError("Could not commit the sales update; refusing to push.")
     if run(["git", "push", "origin", "main"], REPO) != 0:
         flush_log(False, "git push failed; commit is local only. Resolve and push manually.")
         log("ABORTED: push failed.")
