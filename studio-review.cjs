@@ -10,6 +10,9 @@ const html=fs.readFileSync('public/index.html','utf8');
  w.HTMLCanvasElement.prototype.toDataURL=()=> 'data:image/png;base64,YWJj';
  w.HTMLCanvasElement.prototype.getContext=function(){return new Proxy({canvas:this,font:'',measureText:t=>({width:String(t).length*5}),fillText(t){draws.push({text:t,font:this.font})},createRadialGradient:()=>({addColorStop(){}}),createLinearGradient:()=>({addColorStop(){}})}, {get:(o,k)=>k in o?o[k]:(()=>{})})};
  const source=JSON.parse(fs.readFileSync('defaults/project.json','utf8')).state;
+ // This scenario exercises Home Express Back. A published backup can open any
+ // template, so select the scenario explicitly instead of inheriting that choice.
+ source.templateId='home-back';
  w.StoreDatabase={load:async()=>structuredClone(source),save:async s=>{saved=JSON.parse(JSON.stringify(s))},preserveLegacy:async()=>{}};
  w.eval([...w.document.querySelectorAll('script')].find(s=>s.textContent.includes('function renderPoster')).textContent);
  await new Promise(r=>setTimeout(r,700));assert.equal(errors.length,0,errors.join('\n'));
