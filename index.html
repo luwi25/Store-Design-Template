@@ -908,6 +908,12 @@ async function initPeso(){try{
  const [x,y,w,h]=crops[group][i],sx=pesoImage.naturalWidth/1023,sy=pesoImage.naturalHeight/1537,c=document.createElement('canvas');c.width=Math.round(w*sx);c.height=Math.round(h*sy);const ctx=c.getContext('2d');ctx.imageSmoothingQuality='high';ctx.drawImage(pesoImage,x*sx,y*sy,w*sx,h*sy,0,0,c.width,c.height);
  state.products.push({id,templateId:'peso-plus',name,price,code:`PESO-FRONT4-${group+1}-${i+1}`,image:c.toDataURL('image/png')})}));pesoState();renderAll();save();
  }catch(e){console.error(e);showNotice('Could not load PesoPlus. Reload the page to try again.')}}
+// Paint a complete ribbon, including its rounded end, instead of a square text patch.
+function drawSectionRibbon(ctx,x,y,width,height){
+ const radius=Math.min(16,height*.24),right=x+width,bottom=y+height;
+ const gradient=ctx.createLinearGradient(x,y,right,y);gradient.addColorStop(0,'#d11008');gradient.addColorStop(.82,'#d11008');gradient.addColorStop(1,'#ee0704');
+ ctx.fillStyle=gradient;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(right-radius,y);ctx.quadraticCurveTo(right,y,right,y+radius);ctx.lineTo(right-3,bottom-radius);ctx.quadraticCurveTo(right-3,bottom,right-radius-3,bottom);ctx.lineTo(x,bottom);ctx.closePath();ctx.fill();
+}
 function pesoText(ctx,text,x,y,width,size,weight=700,condense=1){ctx.font=`${weight} ${size}px Outfit, Arial, sans-serif`;const measured=ctx.measureText(text).width;if(measured>width)ctx.font=`${weight} ${size*Math.min(1,width/measured/condense)}px Outfit, Arial, sans-serif`;ctx.fillText(text,x,y,width);return Math.min(width,ctx.measureText(text).width)}
 async function pesoCanvas({width=1650,height=2550}={}){
  await document.fonts.load('800 20px Outfit');if(!pesoBackground)throw Error('PesoPlus artwork is loading');const c=document.createElement('canvas');c.width=width;c.height=height;const ctx=c.getContext('2d');ctx.imageSmoothingQuality='high';ctx.scale(width/1023,height/1537);ctx.drawImage(pesoBackground,0,0,1023,1537);
@@ -916,7 +922,11 @@ async function pesoCanvas({width=1650,height=2550}={}){
   const fontSize=i===1?PESO_FRONT_RIBBONS[2][3]*0.74:rh*0.74;
   ctx.font=`900 ${fontSize}px Outfit`;
   const ribbonWidth=i===1?Math.min(995-rx,Math.max(rw,Math.ceil(ctx.measureText(label).width)+24)):rw;
-  ctx.fillStyle='#d11008';ctx.fillRect(rx,ry,ribbonWidth,rh);ctx.fillStyle='#fff';ctx.textAlign='left';pesoText(ctx,label,rx+8,ry+rh*0.72,ribbonWidth-16,fontSize,900);ctx.restore()});
+  const bandHeight=g.y-ry;
+  // Clear the complete old banner end and lettering, retaining the crown at left.
+  ctx.fillStyle=i===0?'#c90008':'#fffdf3';ctx.fillRect(rx,ry,1000-rx,bandHeight);
+  drawSectionRibbon(ctx,rx,ry,Math.min(1000-rx,ribbonWidth+24),bandHeight);
+  ctx.fillStyle='#fff';ctx.textAlign='left';pesoText(ctx,label,rx+8,ry+rh*0.72,ribbonWidth-16,fontSize,900);ctx.restore()});
  const store=state.poster.store||'PESOPLUS';if(store.replace(/\s/g,'').toUpperCase()!=='PESOPLUS'){ctx.fillStyle='#bd0012';ctx.fillRect(136,15,300,68);ctx.fillStyle='#fff';ctx.textAlign='left';pesoText(ctx,store,144,74,282,53,800)}
  const slots=pesoState().slots,images=await Promise.all(slots.map(async slot=>{try{return await loadCanvasImage(slot.image||productFor(slot)?.image||svgThumb('+','#fffdf6'))}catch{return null}}));
  slots.forEach((slot,index)=>{const b=pesoCard(index),p=productFor(slot),im=images[index];
@@ -965,7 +975,11 @@ async function initHomeBack(){try{
 async function homeBackCanvas({width=1650,height=2550}={}){
  await document.fonts.load('800 20px Outfit');if(!homeBackBackground)throw Error('Home Express-Back artwork is loading');const c=document.createElement('canvas');c.width=width;c.height=height;const ctx=c.getContext('2d');ctx.imageSmoothingQuality='high';ctx.scale(width/1280,height/1924);ctx.drawImage(homeBackBackground,0,0,1280,1924);
  if(homeBackLogo){const area={x:81,y:12,w:566,h:159},s=Math.min(area.w/homeBackLogo.naturalWidth,area.h/homeBackLogo.naturalHeight),lw=homeBackLogo.naturalWidth*s,lh=homeBackLogo.naturalHeight*s;ctx.drawImage(homeBackLogo,area.x+(area.w-lw)/2,area.y+(area.h-lh)/2,lw,lh)}
- homeBackGroups.forEach((g,i)=>{const [rx,ry,rw,rh]=HOME_BACK_RIBBONS[i],label=(homeBackState().groupNames[i]||g.name).toUpperCase();ctx.save();ctx.fillStyle='#d11008';ctx.fillRect(rx,ry,rw,rh);ctx.fillStyle='#fff';ctx.textAlign='left';pesoText(ctx,label,rx+10,ry+rh*0.74,rw-20,rh*0.76,900);ctx.restore()});
+ homeBackGroups.forEach((g,i)=>{const [rx,ry,rw,rh]=HOME_BACK_RIBBONS[i],label=(homeBackState().groupNames[i]||g.name).toUpperCase();ctx.save();
+  const bandHeight=g.y-ry;
+  ctx.fillStyle='#fffdf3';ctx.fillRect(rx,ry,750,bandHeight);
+  drawSectionRibbon(ctx,rx,ry,720,bandHeight);
+  ctx.fillStyle='#fff';ctx.textAlign='left';pesoText(ctx,label,rx+10,ry+rh*0.74,rw-20,rh*0.76,900);ctx.restore()});
  const store=state.poster.store||'HOMEEXPRESS';if(store.replace(/\s/g,'').toUpperCase()!=='HOMEEXPRESS'){ctx.fillStyle='#ffffff';ctx.fillRect(205,22,475,85);ctx.fillStyle='#063373';ctx.textAlign='left';pesoText(ctx,store,212,91,460,64,800)}
  const slots=homeBackState().slots,images=await Promise.all(slots.map(async slot=>{try{return await loadCanvasImage(slot.image||productFor(slot)?.image||svgThumb('+','#fffdf6'))}catch{return null}}));
  slots.forEach((slot,index)=>{
