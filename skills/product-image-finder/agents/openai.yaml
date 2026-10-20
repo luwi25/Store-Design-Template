@@ -1,4 +1,4 @@
 interface:
   display_name: "Product Image Finder & Enhancer"
-  short_description: "Find and review accurate product photos for posters"
-  default_prompt: "Use $product-image-finder to find and enhance missing product photos and prepare a review queue for Store Design Template."
+  short_description: "Find, clean and enhance verified product photos"
+  default_prompt: "Use $product-image-finder on C:/Users/Admin/store-design-template-github to enhance photos of products placed in the four templates, excluding Christmas Gift Bundles; isolate and crop to the verified named product object or sold set, remove surrounding backgrounds and external text, remove verified leading stock codes from displayed product names, preserve descriptive names and product branding, apply verified results without manual review, and retain uncertain photos."
