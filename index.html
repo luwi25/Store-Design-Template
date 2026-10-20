@@ -911,7 +911,12 @@ async function initPeso(){try{
 function pesoText(ctx,text,x,y,width,size,weight=700,condense=1){ctx.font=`${weight} ${size}px Outfit, Arial, sans-serif`;const measured=ctx.measureText(text).width;if(measured>width)ctx.font=`${weight} ${size*Math.min(1,width/measured/condense)}px Outfit, Arial, sans-serif`;ctx.fillText(text,x,y,width);return Math.min(width,ctx.measureText(text).width)}
 async function pesoCanvas({width=1650,height=2550}={}){
  await document.fonts.load('800 20px Outfit');if(!pesoBackground)throw Error('PesoPlus artwork is loading');const c=document.createElement('canvas');c.width=width;c.height=height;const ctx=c.getContext('2d');ctx.imageSmoothingQuality='high';ctx.scale(width/1023,height/1537);ctx.drawImage(pesoBackground,0,0,1023,1537);
- pesoGroups.forEach((g,i)=>{const [rx,ry,rw,rh]=PESO_FRONT_RIBBONS[i],label=(pesoState().groupNames[i]||g.name).toUpperCase();ctx.save();ctx.fillStyle='#d11008';ctx.fillRect(rx,ry,rw,rh);ctx.fillStyle='#fff';ctx.textAlign='left';pesoText(ctx,label,rx+8,ry+rh*0.72,rw-16,rh*0.74,900);ctx.restore()});
+ pesoGroups.forEach((g,i)=>{const [rx,ry,rw,rh]=PESO_FRONT_RIBBONS[i],label=(pesoState().groupNames[i]||g.name).toUpperCase();ctx.save();
+  // Longer middle-section names need a wider ribbon, not smaller lettering.
+  const fontSize=i===1?PESO_FRONT_RIBBONS[2][3]*0.74:rh*0.74;
+  ctx.font=`900 ${fontSize}px Outfit`;
+  const ribbonWidth=i===1?Math.min(995-rx,Math.max(rw,Math.ceil(ctx.measureText(label).width)+24)):rw;
+  ctx.fillStyle='#d11008';ctx.fillRect(rx,ry,ribbonWidth,rh);ctx.fillStyle='#fff';ctx.textAlign='left';pesoText(ctx,label,rx+8,ry+rh*0.72,ribbonWidth-16,fontSize,900);ctx.restore()});
  const store=state.poster.store||'PESOPLUS';if(store.replace(/\s/g,'').toUpperCase()!=='PESOPLUS'){ctx.fillStyle='#bd0012';ctx.fillRect(136,15,300,68);ctx.fillStyle='#fff';ctx.textAlign='left';pesoText(ctx,store,144,74,282,53,800)}
  const slots=pesoState().slots,images=await Promise.all(slots.map(async slot=>{try{return await loadCanvasImage(slot.image||productFor(slot)?.image||svgThumb('+','#fffdf6'))}catch{return null}}));
  slots.forEach((slot,index)=>{const b=pesoCard(index),p=productFor(slot),im=images[index];
