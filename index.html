@@ -75,7 +75,7 @@
  body.printing-top #printSheet{display:block!important;width:var(--sheet-width)!important;height:auto!important;overflow:visible!important}
  .top-print-page{position:relative;width:var(--sheet-width);height:var(--sheet-height);overflow:hidden;break-after:page;page-break-after:always;background:white}
  .top-print-page:last-child{break-after:auto;page-break-after:auto}
- .top-print-page>.print-cut-line{display:block!important;position:absolute;left:0;right:0;top:50%;height:0;margin:0;border:0;border-top:.2mm dashed #888;transform:translateY(-50%);z-index:2;pointer-events:none;print-color-adjust:exact;-webkit-print-color-adjust:exact}
+ .top-print-page>.print-cut-line{display:block!important;position:absolute;left:var(--print-inset,5mm);right:var(--print-inset,5mm);top:50%;height:0;margin:0;border:0;border-top:.2mm dashed #888;transform:translateY(-50%);z-index:2;pointer-events:none;print-color-adjust:exact;-webkit-print-color-adjust:exact}
  .top-print-placement{position:absolute;left:var(--print-inset,5mm);top:var(--print-inset,5mm);width:var(--art-height);height:var(--art-width)}
  body.printing-top #printSheet .top-print-art{display:block!important;position:absolute;left:0;top:0;width:var(--art-width)!important;height:var(--art-height)!important;max-width:none!important;max-height:none!important;transform-origin:top left;transform:translateY(var(--art-width)) rotate(-90deg);margin:0;print-color-adjust:exact;-webkit-print-color-adjust:exact}
 }
@@ -662,16 +662,16 @@ async function exportPDF(){
  btn.disabled=true;btn.setAttribute('aria-busy','true');label.textContent='Preparing PDF…';
  try{
   const templateId=state.templateId,name=templateName(templateId,'Store design');
-  const {paper,half,rotatedWidth,artWidth}=printGeometry(),scale=300/25.4;
+  const {paper,half,rotatedWidth,artWidth,inset,outerTop}=printGeometry(),scale=300/25.4;
   const artwork=await exportPosterCanvas({width:Math.round(artWidth*scale),height:Math.round(rotatedWidth*scale)});
   const sheet=document.createElement('canvas');sheet.width=Math.round(paper[0]*scale);sheet.height=Math.round(paper[1]*scale);
   const ctx=sheet.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,sheet.width,sheet.height);ctx.imageSmoothingQuality='high';
   ctx.scale(sheet.width/paper[0],sheet.height/paper[1]);
   for(let i=0;i<2;i++){
-   const top=half?(i===0?0:paper[1]-artWidth):i*paper[1]/2+(paper[1]/2-artWidth)/2;
-   ctx.save();ctx.translate(half?0:5,top+artWidth);ctx.rotate(-Math.PI/2);ctx.drawImage(artwork,0,0,artWidth,rotatedWidth);ctx.restore();
+   const top=half?(i===0?outerTop:paper[1]-outerTop-artWidth):i*paper[1]/2+(paper[1]/2-artWidth)/2;
+   ctx.save();ctx.translate(inset,top+artWidth);ctx.rotate(-Math.PI/2);ctx.drawImage(artwork,0,0,artWidth,rotatedWidth);ctx.restore();
   }
-  ctx.strokeStyle='#888';ctx.lineWidth=.2;ctx.setLineDash([1.4,1.4]);ctx.beginPath();ctx.moveTo(0,paper[1]/2);ctx.lineTo(paper[0],paper[1]/2);ctx.stroke();
+  ctx.strokeStyle='#888';ctx.lineWidth=.2;ctx.setLineDash([1.4,1.4]);ctx.beginPath();ctx.moveTo(inset,paper[1]/2);ctx.lineTo(paper[0]-inset,paper[1]/2);ctx.stroke();
   const blob=await printSheetPDF(sheet,paper),url=URL.createObjectURL(blob),link=document.createElement('a');
   link.href=url;link.download=(name.replace(/[<>:"/\\|?*\x00-\x1f]/g,'').trim()||'Store design')+' - print-ready.pdf';
   document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);
@@ -698,14 +698,19 @@ async function exportPNG(){
 
 function printGeometry(){
  const paper={'half-letter':[139.7,215.9],a4:[210,297],a3:[297,420],letter:[215.9,279.4],'long-bond':[215.9,330.2]}[state.poster.paper]||[215.9,279.4];
- const half=state.poster.fit==='half';const available=paper[0]-10;const rotatedWidth=half?paper[0]:state.poster.fit==='size'?Math.min(215.9,available):available;const artWidth=half?(paper[1]-4)/2:Math.min(rotatedWidth*139.7/215.9,paper[1]/2-4);
- return {paper,half,rotatedWidth,artWidth};
+ const half=state.poster.fit==='half',margin=5,gap=4,available=paper[0]-margin*2;
+ // Keep both copies inside common printer margins, scaling both axes equally.
+ const fitScale=Math.min(available/paper[0],(paper[1]-margin*2-gap)/(paper[1]-gap));
+ const rotatedWidth=half?paper[0]*fitScale:state.poster.fit==='size'?Math.min(215.9,available):available;
+ const artWidth=half?(paper[1]-gap)/2*fitScale:Math.min(rotatedWidth*139.7/215.9,paper[1]/2-4);
+ const inset=(paper[0]-rotatedWidth)/2,outerTop=half?(paper[1]-gap-artWidth*2)/2:(paper[1]/2-artWidth)/2;
+ return {paper,half,rotatedWidth,artWidth,inset,outerTop};
 }
 function preparePrintPages(artworks,startHalf=0){
- const {paper,half,rotatedWidth,artWidth}=printGeometry();
+ const {paper,half,rotatedWidth,artWidth,inset,outerTop}=printGeometry();
  let style=$('dynamicPageRule');if(!style){style=document.createElement('style');style.id='dynamicPageRule';document.head.append(style)}
- style.textContent=`@page{size:${paper[0]}mm ${paper[1]}mm;margin:0}#printSheet{--print-inset:${half?0:5}mm;--sheet-width:${paper[0]}mm;--sheet-height:${paper[1]}mm;--art-width:${artWidth}mm;--art-height:${rotatedWidth}mm}`;
- const pages=[];artworks.forEach((art,i)=>{const position=i+startHalf,pageIndex=Math.floor(position/2);if(!pages[pageIndex]){const page=document.createElement('div');page.className='top-print-page';const cut=document.createElement('div');cut.className='print-cut-line';cut.setAttribute('aria-hidden','true');page.append(cut);pages[pageIndex]=page}const placement=document.createElement('div');placement.className='top-print-placement';placement.style.top=`${half?(position%2===0?0:paper[1]-artWidth):(position%2)*paper[1]/2+(paper[1]/2-artWidth)/2}mm`;art.classList.add('top-print-art');placement.append(art);pages[pageIndex].append(placement)});
+ style.textContent=`@page{size:${paper[0]}mm ${paper[1]}mm;margin:0}#printSheet{--print-inset:${inset}mm;--sheet-width:${paper[0]}mm;--sheet-height:${paper[1]}mm;--art-width:${artWidth}mm;--art-height:${rotatedWidth}mm}`;
+ const pages=[];artworks.forEach((art,i)=>{const position=i+startHalf,pageIndex=Math.floor(position/2);if(!pages[pageIndex]){const page=document.createElement('div');page.className='top-print-page';const cut=document.createElement('div');cut.className='print-cut-line';cut.setAttribute('aria-hidden','true');page.append(cut);pages[pageIndex]=page}const placement=document.createElement('div');placement.className='top-print-placement';placement.style.top=`${half?(position%2===0?outerTop:paper[1]-outerTop-artWidth):(position%2)*paper[1]/2+(paper[1]/2-artWidth)/2}mm`;art.classList.add('top-print-art');placement.append(art);pages[pageIndex].append(placement)});
  $('printSheet').replaceChildren(...pages);document.body.classList.add('printing-top');return pages;
 }
 function printPoster(){if(usesCanvasTemplate()&&!activeSlots().length){showNotice('Add a product before printing.');return}if($('printBtn').disabled)return;if(usesCanvasTemplate())return printDuplex();const clone=poster.cloneNode(true);clone.removeAttribute('id');clone.querySelectorAll('[id]').forEach(el=>el.removeAttribute('id'));preparePrintPages([clone,clone.cloneNode(true)]);window.print()}

@@ -33,16 +33,16 @@ async function exportPDF(){
  btn.disabled=true;btn.setAttribute('aria-busy','true');label.textContent='Preparing PDF…';
  try{
   const templateId=state.templateId,name=templateName(templateId,'Store design');
-  const {paper,half,rotatedWidth,artWidth}=printGeometry(),scale=300/25.4;
+  const {paper,half,rotatedWidth,artWidth,inset,outerTop}=printGeometry(),scale=300/25.4;
   const artwork=await exportPosterCanvas({width:Math.round(artWidth*scale),height:Math.round(rotatedWidth*scale)});
   const sheet=document.createElement('canvas');sheet.width=Math.round(paper[0]*scale);sheet.height=Math.round(paper[1]*scale);
   const ctx=sheet.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,sheet.width,sheet.height);ctx.imageSmoothingQuality='high';
   ctx.scale(sheet.width/paper[0],sheet.height/paper[1]);
   for(let i=0;i<2;i++){
-   const top=half?(i===0?0:paper[1]-artWidth):i*paper[1]/2+(paper[1]/2-artWidth)/2;
-   ctx.save();ctx.translate(half?0:5,top+artWidth);ctx.rotate(-Math.PI/2);ctx.drawImage(artwork,0,0,artWidth,rotatedWidth);ctx.restore();
+   const top=half?(i===0?outerTop:paper[1]-outerTop-artWidth):i*paper[1]/2+(paper[1]/2-artWidth)/2;
+   ctx.save();ctx.translate(inset,top+artWidth);ctx.rotate(-Math.PI/2);ctx.drawImage(artwork,0,0,artWidth,rotatedWidth);ctx.restore();
   }
-  ctx.strokeStyle='#888';ctx.lineWidth=.2;ctx.setLineDash([1.4,1.4]);ctx.beginPath();ctx.moveTo(0,paper[1]/2);ctx.lineTo(paper[0],paper[1]/2);ctx.stroke();
+  ctx.strokeStyle='#888';ctx.lineWidth=.2;ctx.setLineDash([1.4,1.4]);ctx.beginPath();ctx.moveTo(inset,paper[1]/2);ctx.lineTo(paper[0]-inset,paper[1]/2);ctx.stroke();
   const blob=await printSheetPDF(sheet,paper),url=URL.createObjectURL(blob),link=document.createElement('a');
   link.href=url;link.download=(name.replace(/[<>:"/\\|?*\x00-\x1f]/g,'').trim()||'Store design')+' - print-ready.pdf';
   document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);
