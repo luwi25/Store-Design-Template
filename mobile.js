@@ -24,7 +24,7 @@
  const poster=document.getElementById('poster');
  function updatePicker(){
   const targets=[...poster.querySelectorAll('.duplex-hit,.product-grid>.product-card')].filter(el=>el.getClientRects().length || el.classList.contains('duplex-hit'));
-  select.replaceChildren(new Option('Choose a productâ€¦',''));
+  select.replaceChildren(new Option('Choose a product…',''));
   targets.forEach((target,i)=>select.add(new Option(target.getAttribute('aria-label')||'Product '+(i+1),String(i))));
   select.disabled=!targets.length;
  }

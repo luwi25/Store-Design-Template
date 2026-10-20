@@ -96,12 +96,16 @@
  .studio-editor #catalogList .mini-thumb{width:48px;height:48px}
  .studio-editor #catalogList .mini-info b{font-size:14px;line-height:1.4}
  .studio-editor #catalogList .mini-info span{font-size:13px}
- .studio-editor #catalogList .catalog-actions{gap:8px;padding-top:8px}
- .studio-editor #catalogList .icon-btn{font-size:12px;min-width:64px}
+ .studio-editor #catalogList .catalog-actions{gap:8px;padding-top:6px;align-items:center}
+ .studio-editor #catalogList .icon-btn{display:flex;align-items:center;justify-content:center;font-size:12px;min-width:64px;background:#f3f6f9;border-radius:8px}
+ .studio-editor #catalogList .icon-btn.delete-product{background:#fcf1f1}
  .studio-editor #catalogPagination{gap:8px;margin:16px 0}
  .studio-editor #catalogPagination .btn,.studio-editor #catalogPageStatus{font-size:12px}
  .studio-editor .field{margin-bottom:16px;gap:6px}
  .studio-editor .field label{font-size:12px;line-height:1.4;letter-spacing:0;text-transform:none}
+ /* The paper-size and print-fit option text ("Short bond (8.5 x 11 in)") is wider than a
+    390px-class phone can fit in a 2-up row without clipping mid-word; stack this pair only. */
+ .studio-editor .two-col:has(#paperSelect){grid-template-columns:1fr;gap:16px}
  .studio-editor .helper{font-size:12px;line-height:1.55}
  .studio-editor #slotDialog .sheet-heading{gap:10px;padding:0 16px 12px}
  .studio-editor #slotDialog .sheet-heading strong{font-size:14px;line-height:1.35}
