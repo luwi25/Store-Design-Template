@@ -49,3 +49,5 @@ Products and Catalog navigation tabs are visually hidden in the sidebar and corr
 The Add a background image action is visually hidden; its upload handler remains available. Sidebar spacing uses 16px panel padding, 10px template-card gaps, readable wrapped names, and 14px field separation. Settings summaries and mobile inputs retain accessible touch heights. These rules are scoped to screen-only editor rails in sidebar-spacing.css.
 
 The redundant desktop Templates tab strip is hidden. The left rail and its panels use a continuous white background; the template panel has no leftover top divider. Keep mobile Templates navigation available.
+
+The mobile Choose a product picker is visually hidden. Users open product settings by tapping a poster product; the picker DOM and handlers remain unchanged.
