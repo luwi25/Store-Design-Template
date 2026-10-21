@@ -81,9 +81,6 @@ def collect_published_images(value):
 collect_published_images(published)
 (OUT/'defaults/images').mkdir(parents=True,exist_ok=True)
 shutil.copy2(ROOT/'defaults/project.json',OUT/'defaults/project.json')
-shutil.copy2(ROOT/'defaults/sales-sync.json',OUT/'defaults/sales-sync.json')
-for name in ['sales-sync-status.js', 'sales-sync-status.css']:
-    shutil.copy2(ROOT/name,OUT/name)
 for name in published_images:
     shutil.copy2(ROOT/'defaults'/name,OUT/'defaults'/name)
 shutil.copytree(ROOT/'vendor',OUT/'vendor',dirs_exist_ok=True)
