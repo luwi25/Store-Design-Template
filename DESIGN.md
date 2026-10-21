@@ -63,3 +63,5 @@ Desktop Templates starts near the top of the left rail: no rail top padding or i
 Mobile polish is CSS-only: compact two-column toolbar prioritizes Download/Print, wider preview, distinct selected-product outline, clearer sheet handle/header, grouped pricing/image/text controls, 44-48px targets and focus rings. Existing sheet gestures, keyboard expansion, handlers, data and desktop/print appearance remain unchanged. Install app remains available.
 
 Mobile toolbar shows Download, Print poster and More. More contains the original Background remover, Restore Published Defaults and Install app buttons; moving existing nodes preserves their handlers and states. Desktop positions are restored on wider screens. The menu supports Escape, outside dismissal and keyboard focus.
+
+Zoom minus/percentage/plus and Fit controls are visually hidden on desktop and mobile. Keep their handlers and preview scaling logic intact.

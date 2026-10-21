@@ -1,5 +1,6 @@
 /* Editor panels only: no poster, canvas, or print-layout changes. */
 @media screen {
+ .studio-editor .studio-zoom { display:none!important; }
  #uploadTemplateBtn { display:none!important; }
  .studio-editor .left-rail .studio-tabs { display:none!important; }
  .studio-editor .left-rail { background:#fff; background-image:none; }
