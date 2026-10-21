@@ -6,7 +6,17 @@
  .studio-editor .left-rail > .panel { background:#fff; }
  .studio-editor .left-rail > [data-studio-panel="templates"] { border-top:0; }
  @media (min-width:821px) {
-  .studio-editor .left-rail { min-height:calc(100dvh - 70px); box-sizing:border-box; }
+  /* The sticky rail reaches top:0 after the toolbar scrolls away.
+     Fill that entire viewport, including the area below short lists. */
+  .studio-editor .left-rail {
+   height:100vh;
+   height:100dvh;
+   min-height:100vh;
+   min-height:100dvh;
+   max-height:100vh;
+   max-height:100dvh;
+   box-sizing:border-box;
+  }
  }
  @media (max-width:820px) {
   .studio-editor .mobile-ui[data-mobile-active="templates"] .workspace { background:#fff; }

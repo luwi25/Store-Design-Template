@@ -53,3 +53,5 @@ The redundant desktop Templates tab strip is hidden. The left rail and its panel
 The mobile Choose a product picker is visually hidden. Users open product settings by tapping a poster product; the picker DOM and handlers remain unchanged.
 
 Template text defaults starts expanded in template settings; users can still collapse the section.
+
+The desktop left rail fills the viewport while sticky, with internal scrolling for long template lists. Do not subtract toolbar height: the toolbar scrolls out of view.
