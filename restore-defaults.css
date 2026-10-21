@@ -1,6 +1,6 @@
 @media screen {
   .restore-defaults-actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:12px; }
-  .restore-defaults-panel .restore-defaults-actions { flex-direction:column; }
+  .restore-defaults-picker .restore-defaults-actions { flex-direction:column; }
   .restore-defaults-actions .btn, .restore-defaults-dialog > .btn { min-height:44px; white-space:normal; }
   .restore-defaults-dialog { box-sizing:border-box; width:min(480px,calc(100vw - 32px)); max-height:calc(100dvh - 32px); overflow:auto; border:1px solid #d8e4e3; border-radius:18px; padding:24px; color:#263640; background:#fff; box-shadow:0 20px 60px #163b6530; }
   .restore-defaults-dialog::backdrop { background:#102b4b80; }
@@ -11,4 +11,4 @@
   .restore-defaults-dialog .restore-defaults-actions { justify-content:flex-end; }
   .restore-defaults-dialog button:focus-visible { outline:3px solid #18a999; outline-offset:3px; }
 }
-@media print { .restore-defaults-panel, .restore-defaults-dialog { display:none!important; } }
+@media print { #restorePublishedDefaults, .restore-defaults-dialog { display:none!important; } }

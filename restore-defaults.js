@@ -57,10 +57,23 @@ function restoredTemplateProject(current, published, templateId) {
 
 function setupRestoreDefaults() {
   if (typeof window.loadPublishedDefault !== 'function') return;
-  const panel = document.createElement('section');
-  panel.className = 'panel restore-defaults-panel';
-  panel.innerHTML = '<h2>Restore Published Defaults</h2><p class="helper">Return to the latest owner-published version.</p><div class="restore-defaults-actions"><button class="btn" type="button" data-reset="template">Reset selected template</button><button class="btn" type="button" data-reset="project">Reset entire project</button></div>';
-  document.querySelector('.right-rail').append(panel);
+  const toolbarButton = document.createElement('button');
+  toolbarButton.type = 'button';
+  toolbarButton.id = 'restorePublishedDefaults';
+  toolbarButton.className = 'btn';
+  toolbarButton.textContent = 'Restore Published Defaults';
+  toolbarButton.setAttribute('aria-haspopup','dialog');
+  const backgroundButton = $('bgRemoverBtn');
+  if (backgroundButton) backgroundButton.after(toolbarButton);
+  else document.querySelector('.top-actions').append(toolbarButton);
+  const panel = document.createElement('dialog');
+  panel.className = 'restore-defaults-dialog restore-defaults-picker';
+  panel.setAttribute('aria-labelledby','restoreDefaultsPickerTitle');
+  panel.innerHTML = '<h2 id="restoreDefaultsPickerTitle">Restore Published Defaults</h2><p class="helper">Choose what to restore to the latest owner-published version. You can download a backup before confirming.</p><div class="restore-defaults-actions"><button class="btn" type="button" data-reset="template">Reset selected template</button><button class="btn" type="button" data-reset="project">Reset entire project</button><button class="btn" type="button" data-close>Cancel</button></div>';
+  document.body.append(panel);
+  toolbarButton.onclick = () => panel.showModal();
+  panel.querySelector('[data-close]').onclick = () => panel.close();
+  panel.addEventListener('close', () => { if (!dialog.open) toolbarButton.focus(); });
   const dialog = document.createElement('dialog');
   dialog.className = 'restore-defaults-dialog';
   dialog.setAttribute('aria-labelledby','restoreDefaultsTitle');
@@ -73,7 +86,8 @@ function setupRestoreDefaults() {
   panel.addEventListener('click', event => {
     const button = event.target.closest('[data-reset]');
     if (!button || busy) return;
-    scope = button.dataset.reset; selectedId = state.templateId; trigger = button;
+    scope = button.dataset.reset; selectedId = state.templateId; trigger = toolbarButton;
+    panel.close();
     dialog.querySelector('h2').textContent = scope === 'template' ? 'Reset selected template?' : 'Reset entire project?';
     dialog.querySelector('#restoreDefaultsDescription').textContent = scope === 'template'
       ? 'Restore “' + templateName(selectedId) + '” including its products, photos, discounts, text sizes, name and settings. Other templates and existing catalog edits are kept. Published product copies may be added to the catalog.'
