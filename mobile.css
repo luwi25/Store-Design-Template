@@ -158,7 +158,7 @@
  .studio-editor .top-actions>#printBtn{order:-1}
  .studio-editor .top-actions>.btn{border-radius:10px;background:#f3f6fa;color:#163b65;border-color:#e2e8f0;font-weight:600}
  .studio-editor .top-actions>#printBtn{background:#163b65;color:#fff;border-color:#163b65}
- .studio-editor .top-actions #downloadMenuButton{min-height:44px;border-radius:10px;background:#163b65;color:#fff;border-color:#163b65;font-weight:700}
+ .studio-editor .top-actions #downloadMenuButton{min-height:44px;border-radius:10px;background:#f3f6fa;color:#163b65;border-color:#dce4ed;font-weight:700}
  .studio-editor .top-actions .download-options{box-sizing:border-box;max-width:calc(100vw - 32px)}
  .studio-editor .top-actions .download-options .btn{min-height:48px;font-size:13px;padding:12px}
  .studio-editor .stage{padding:10px 8px 16px;gap:10px}
