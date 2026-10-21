@@ -51,3 +51,5 @@ The Add a background image action is visually hidden; its upload handler remains
 The redundant desktop Templates tab strip is hidden. The left rail and its panels use a continuous white background; the template panel has no leftover top divider. Keep mobile Templates navigation available.
 
 The mobile Choose a product picker is visually hidden. Users open product settings by tapping a poster product; the picker DOM and handlers remain unchanged.
+
+Template text defaults starts expanded in template settings; users can still collapse the section.
