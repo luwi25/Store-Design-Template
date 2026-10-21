@@ -57,3 +57,5 @@ Template text defaults starts expanded in template settings; users can still col
 The desktop left rail fills the viewport while sticky, with internal scrolling for long template lists. Do not subtract toolbar height: the toolbar scrolls out of view.
 
 Mobile hides the Templates screen and its bottom navigation button. Preview is the mobile starting screen, with Preview and Settings sharing the navigation width. Desktop template access remains unchanged.
+
+Desktop Templates starts near the top of the left rail: no rail top padding or inherited sibling-panel margin, with a 12px template-panel inset. Hidden panels must not leave spacing above the visible template list.
