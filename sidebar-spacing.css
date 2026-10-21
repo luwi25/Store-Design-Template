@@ -1,7 +1,16 @@
 /* Editor panels only: no poster, canvas, or print-layout changes. */
 @media screen {
  #uploadTemplateBtn { display:none!important; }
- .studio-editor .left-rail .studio-tabs { padding:12px 16px; }
+ .studio-editor .left-rail .studio-tabs { display:none!important; }
+ .studio-editor .left-rail { background:#fff; background-image:none; }
+ .studio-editor .left-rail > .panel { background:#fff; }
+ .studio-editor .left-rail > [data-studio-panel="templates"] { border-top:0; }
+ @media (min-width:821px) {
+  .studio-editor .left-rail { min-height:calc(100dvh - 70px); box-sizing:border-box; }
+ }
+ @media (max-width:820px) {
+  .studio-editor .mobile-ui[data-mobile-active="templates"] .workspace { background:#fff; }
+ }
  .studio-editor .left-rail > .panel,
  .studio-editor .right-rail > .panel { padding:16px; min-width:0; }
  .studio-editor .left-rail .panel-head { gap:10px; align-items:center; margin:0 0 14px; }

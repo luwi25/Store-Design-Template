@@ -47,3 +47,5 @@ Print paper and Print fit fields are hidden in template settings. Their values a
 Products and Catalog navigation tabs are visually hidden in the sidebar and corresponding mobile navigation. Keep their DOM, handlers, catalog data, and product editing functions intact. Mobile navigation displays Templates, Preview, and Settings.
 
 The Add a background image action is visually hidden; its upload handler remains available. Sidebar spacing uses 16px panel padding, 10px template-card gaps, readable wrapped names, and 14px field separation. Settings summaries and mobile inputs retain accessible touch heights. These rules are scoped to screen-only editor rails in sidebar-spacing.css.
+
+The redundant desktop Templates tab strip is hidden. The left rail and its panels use a continuous white background; the template panel has no leftover top divider. Keep mobile Templates navigation available.
