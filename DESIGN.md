@@ -65,3 +65,5 @@ Mobile polish is CSS-only: compact two-column toolbar prioritizes Download/Print
 Mobile toolbar shows Download, Print poster and More. More contains the original Background remover, Restore Published Defaults and Install app buttons; moving existing nodes preserves their handlers and states. Desktop positions are restored on wider screens. The menu supports Escape, outside dismissal and keyboard focus.
 
 Zoom minus/percentage/plus and Fit controls are visually hidden on desktop and mobile. Keep their handlers and preview scaling logic intact.
+
+Download menu includes PDF, PNG and Download backup on desktop and mobile. Reuse the original downloadDatabaseBackup button and its handler; include backup in keyboard navigation and disabled-state checks.

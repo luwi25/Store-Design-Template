@@ -1210,24 +1210,26 @@ function setupStudioUI(){
 
 function setupDownloadMenu(){
  const pdf=$('pdfBtn'),png=$('pngBtn');if(!pdf||!png)return;
+ const backup=$('downloadDatabaseBackup');
+ const downloadButtons=[pdf,png,backup].filter(Boolean);
  const wrap=document.createElement('div');wrap.className='download-dropdown';
  const toggle=document.createElement('button');toggle.id='downloadMenuButton';toggle.type='button';toggle.className='btn';toggle.textContent='Download ▾';
  toggle.setAttribute('aria-expanded','false');toggle.setAttribute('aria-controls','downloadOptions');
  const options=document.createElement('div');options.id='downloadOptions';options.className='download-options';options.hidden=true;options.setAttribute('role','group');options.setAttribute('aria-label','Download format');
- pdf.before(wrap);wrap.append(toggle,options);options.append(pdf,png);
+ pdf.before(wrap);wrap.append(toggle,options);options.append(...downloadButtons);
  const close=(focus=false)=>{options.hidden=true;toggle.setAttribute('aria-expanded','false');if(focus)toggle.focus()};
- const open=()=>{options.hidden=false;toggle.setAttribute('aria-expanded','true');[pdf,png].find(b=>!b.disabled)?.focus()};
+ const open=()=>{options.hidden=false;toggle.setAttribute('aria-expanded','true');downloadButtons.find(b=>!b.disabled)?.focus()};
  toggle.onclick=()=>options.hidden?open():close();
  toggle.onkeydown=event=>{if(event.key==='ArrowDown'){event.preventDefault();open()}};
  options.addEventListener('keydown',event=>{
   if(event.key==='Escape'){event.preventDefault();event.stopPropagation();close(true)}
-  if(event.key==='ArrowDown'||event.key==='ArrowUp'){event.preventDefault();const enabled=[pdf,png].filter(b=>!b.disabled);if(enabled.length)enabled[(enabled.indexOf(document.activeElement)+1)%enabled.length].focus()}
+  if(event.key==='ArrowDown'||event.key==='ArrowUp'){event.preventDefault();const enabled=downloadButtons.filter(b=>!b.disabled);if(enabled.length)enabled[(enabled.indexOf(document.activeElement)+(event.key==='ArrowDown'?1:-1)+enabled.length)%enabled.length].focus()}
  });
  options.addEventListener('click',event=>{if(event.target.closest('button')&&!event.target.closest('button').disabled)close(true);else if(event.target.closest('button')?.getAttribute('aria-busy')==='true')close(true)});
  document.addEventListener('pointerdown',event=>{if(!wrap.contains(event.target))close()});
  wrap.addEventListener('focusout',()=>setTimeout(()=>{if(!wrap.contains(document.activeElement))close()},0));
- const sync=()=>{const busy=[pdf,png].find(b=>b.getAttribute('aria-busy')==='true');toggle.textContent=busy?(busy===pdf?'Preparing PDF…':'Preparing PNG…'):'Download ▾';toggle.setAttribute('aria-busy',String(Boolean(busy)));toggle.disabled=Boolean(busy)||(pdf.disabled&&png.disabled)};
- const observer=new MutationObserver(sync);for(const button of [pdf,png])observer.observe(button,{attributes:true,attributeFilter:['disabled','aria-busy']});sync();
+ const sync=()=>{const busy=[pdf,png].find(b=>b.getAttribute('aria-busy')==='true');toggle.textContent=busy?(busy===pdf?'Preparing PDF…':'Preparing PNG…'):'Download ▾';toggle.setAttribute('aria-busy',String(Boolean(busy)));toggle.disabled=Boolean(busy)||downloadButtons.every(b=>b.disabled)};
+ const observer=new MutationObserver(sync);for(const button of downloadButtons)observer.observe(button,{attributes:true,attributeFilter:['disabled','aria-busy']});sync();
 }
 
 function updateProductSheetHeading(){
