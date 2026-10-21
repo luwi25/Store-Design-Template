@@ -2,7 +2,9 @@
 
 Preserve the approved template artwork. Editor controls use Outfit, navy #163b65 and teal #18a999.
 
-Published defaults seed empty browsers only. Do not show a Load published project control. Existing projects remain local and retain the backup/import controls.
+Published defaults seed empty browsers and refresh revision-tracked projects at startup when a newer snapshot is published. Do not show the old Load published project control above the preview. Backup/import controls remain available in Catalog.
+
+Settings provides Restore Published Defaults in the browser build. Each scope requires an explicit confirmation and offers a backup download. Selected-template reset restores that template's settings and products while preserving other templates and existing catalog edits; changed shared products are copied instead of overwritten. Entire-project reset replaces the whole project. Fetch fresh published data before saving, retain the current project on failure, and respect concurrent-tab save conflicts. The controls share desktop Settings and the mobile Settings section.
 
 Both catalog and template photo editors share createBackgroundTools. Background removal overlays its preview with an accessible status, spinner and waiting guidance. Preserve the original on failure, allow retry and respect reduced motion.
 

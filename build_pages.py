@@ -14,7 +14,8 @@ html=(ROOT/'index.html').read_text(encoding='utf-8')
 # Always publish the maintained UI source, even if the standalone bundle is stale.
 ui_start=html.index('// Runs inside the editor closure;')
 ui_end=html.index('initTemplateSettings();',ui_start)
-html=html[:ui_start]+(ROOT/'studio-ui.js').read_text(encoding='utf-8')+'\n'+html[ui_end:]
+html=html[:ui_start]+(ROOT/'studio-ui.js').read_text(encoding='utf-8')+'\n'+(ROOT/'restore-defaults.js').read_text(encoding='utf-8')+'\n'+html[ui_end:]
+html=html.replace('setupStudioUI();','setupStudioUI();setupRestoreDefaults();')
 html=html.replace('width=device-width,initial-scale=1','width=device-width,initial-scale=1,viewport-fit=cover')
 html=html.replace('<meta name="theme-color" content="#0b1b43">','<meta name="theme-color" content="#163b65">')
 html=html.replace('</head>','''<link rel="manifest" href="manifest.webmanifest">
@@ -23,6 +24,7 @@ html=html.replace('</head>','''<link rel="manifest" href="manifest.webmanifest">
 <meta name="apple-mobile-web-app-title" content="Store Design">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="stylesheet" href="mobile.css">
+<link rel="stylesheet" href="restore-defaults.css">
 <style>#usePublishedProject[hidden]{display:none!important}@media print{.published-default-actions{display:none!important}}</style>
 <script src="mobile.js" defer></script>
 <script src="install-app.js" defer></script>
@@ -60,7 +62,7 @@ def external_image(match):
     return 'assets/'+name
 html=re.sub(r'data:image/(png|jpeg|webp|svg\+xml);base64,([A-Za-z0-9+/=]+)',external_image,html)
 (OUT/'index.html').write_text(html,encoding='utf-8')
-for name in ['default-project.js','browser-db.js','browser-background.js','background-worker.js','mobile.css','mobile.js','install-app.js','manifest.webmanifest']:
+for name in ['default-project.js','browser-db.js','browser-background.js','background-worker.js','mobile.css','mobile.js','install-app.js','manifest.webmanifest','restore-defaults.css']:
     shutil.copy2(ROOT/name,OUT/name)
 # Ship current image references only, rather than every historical replacement.
 published=json.loads((ROOT/'defaults/project.json').read_text(encoding='utf-8'))
