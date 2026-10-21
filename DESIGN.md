@@ -45,3 +45,5 @@ The toolbar uses one Download button opening PDF and PNG options. Keep existing 
 Print paper and Print fit fields are hidden in template settings. Their values and event bindings remain intact for saved projects, PDF export and printing.
 
 Products and Catalog navigation tabs are visually hidden in the sidebar and corresponding mobile navigation. Keep their DOM, handlers, catalog data, and product editing functions intact. Mobile navigation displays Templates, Preview, and Settings.
+
+The Add a background image action is visually hidden; its upload handler remains available. Sidebar spacing uses 16px panel padding, 10px template-card gaps, readable wrapped names, and 14px field separation. Settings summaries and mobile inputs retain accessible touch heights. These rules are scoped to screen-only editor rails in sidebar-spacing.css.
