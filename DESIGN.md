@@ -55,3 +55,5 @@ The mobile Choose a product picker is visually hidden. Users open product settin
 Template text defaults starts expanded in template settings; users can still collapse the section.
 
 The desktop left rail fills the viewport while sticky, with internal scrolling for long template lists. Do not subtract toolbar height: the toolbar scrolls out of view.
+
+Mobile hides the Templates screen and its bottom navigation button. Preview is the mobile starting screen, with Preview and Settings sharing the navigation width. Desktop template access remains unchanged.

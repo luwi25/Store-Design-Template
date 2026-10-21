@@ -2,16 +2,17 @@
  const app=document.querySelector('.app'),left=document.querySelector('.left-rail'),stage=document.querySelector('.stage'),settings=document.querySelector('.right-rail');
  stage.dataset.mobilePanel='preview';settings.dataset.mobilePanel='settings';
  [...left.children].filter(panel=>panel.classList.contains('panel')).forEach(panel=>panel.dataset.mobilePanel=panel.dataset.studioPanel==='products'?'products':panel.querySelector('#templateList')?'templates':'catalog');
- app.classList.add('mobile-ui');app.dataset.mobileActive='templates';
+ app.classList.add('mobile-ui');app.dataset.mobileActive='preview';
  const nav=document.createElement('nav');nav.className='mobile-nav';nav.setAttribute('aria-label','Editor sections');
  function showPanel(id){
+  if(id==='templates')id='preview';
   app.dataset.mobileActive=id;
   for(const button of nav.children)button.setAttribute('aria-pressed',String(button.dataset.panel===id));
   if(window.matchMedia('(max-width:820px)').matches)window.scrollTo({top:0,behavior:'instant'});
   if(id==='preview')updatePicker();
  }
  for(const [id,label] of [['templates','Templates'],['products','Products'],['preview','Preview'],['catalog','Catalog'],['settings','Settings']]){
-  const button=document.createElement('button');button.type='button';button.textContent=label;button.dataset.panel=id;button.setAttribute('aria-pressed',String(id==='templates'));
+  const button=document.createElement('button');button.type='button';button.textContent=label;button.dataset.panel=id;button.setAttribute('aria-pressed',String(id==='preview'));
   button.onclick=()=>showPanel(id);nav.append(button);
  }
  app.append(nav);
