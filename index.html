@@ -348,6 +348,7 @@
 }
 
 </style>
+<link rel="stylesheet" href="download-menu.css">
 </head>
 <body>
 <div class="app" inert>
@@ -1178,6 +1179,7 @@ function renderStudioProducts(){
 }
 function setupStudioUI(){
  document.body.classList.add('studio-editor');setupProductSheet();
+ setupDownloadMenu();
  const left=document.querySelector('.left-rail'),right=document.querySelector('.right-rail');
  const oldPanels=[...left.children];oldPanels[0].dataset.studioPanel='templates';oldPanels[1].dataset.studioPanel='catalog';oldPanels[2].dataset.studioPanel='catalog';
  const panel=document.createElement('section');panel.className='panel studio-product-panel';panel.dataset.studioPanel='products';panel.dataset.mobilePanel='products';
@@ -1194,6 +1196,28 @@ function setupStudioUI(){
  const zoom=document.createElement('div');zoom.className='studio-zoom';zoom.innerHTML='<button type="button" class="btn btn-sm" aria-label="Zoom out">−</button><output aria-live="polite">100%</output><button type="button" class="btn btn-sm" aria-label="Zoom in">+</button><button type="button" class="btn btn-sm">Fit</button>';
  document.querySelector('.stage-top').append(zoom);let scale=1;const buttons=zoom.querySelectorAll('button');const apply=()=>{const stage=document.querySelector('.stage'),width=Math.min(500,stage.clientWidth-48);document.querySelector('.poster-wrap').style.width=Math.max(200,width*scale)+'px';zoom.querySelector('output').textContent=Math.round(scale*100)+'%'};
  buttons[0].onclick=()=>{scale=Math.max(.5,scale-.1);apply()};buttons[1].onclick=()=>{scale=Math.min(2,scale+.1);apply()};buttons[2].onclick=()=>{scale=1;apply()};window.addEventListener('resize',apply);apply();
+}
+
+function setupDownloadMenu(){
+ const pdf=$('pdfBtn'),png=$('pngBtn');if(!pdf||!png)return;
+ const wrap=document.createElement('div');wrap.className='download-dropdown';
+ const toggle=document.createElement('button');toggle.id='downloadMenuButton';toggle.type='button';toggle.className='btn';toggle.textContent='Download ▾';
+ toggle.setAttribute('aria-expanded','false');toggle.setAttribute('aria-controls','downloadOptions');
+ const options=document.createElement('div');options.id='downloadOptions';options.className='download-options';options.hidden=true;options.setAttribute('role','group');options.setAttribute('aria-label','Download format');
+ pdf.before(wrap);wrap.append(toggle,options);options.append(pdf,png);
+ const close=(focus=false)=>{options.hidden=true;toggle.setAttribute('aria-expanded','false');if(focus)toggle.focus()};
+ const open=()=>{options.hidden=false;toggle.setAttribute('aria-expanded','true');[pdf,png].find(b=>!b.disabled)?.focus()};
+ toggle.onclick=()=>options.hidden?open():close();
+ toggle.onkeydown=event=>{if(event.key==='ArrowDown'){event.preventDefault();open()}};
+ options.addEventListener('keydown',event=>{
+  if(event.key==='Escape'){event.preventDefault();event.stopPropagation();close(true)}
+  if(event.key==='ArrowDown'||event.key==='ArrowUp'){event.preventDefault();const enabled=[pdf,png].filter(b=>!b.disabled);if(enabled.length)enabled[(enabled.indexOf(document.activeElement)+1)%enabled.length].focus()}
+ });
+ options.addEventListener('click',event=>{if(event.target.closest('button')&&!event.target.closest('button').disabled)close(true);else if(event.target.closest('button')?.getAttribute('aria-busy')==='true')close(true)});
+ document.addEventListener('pointerdown',event=>{if(!wrap.contains(event.target))close()});
+ wrap.addEventListener('focusout',()=>setTimeout(()=>{if(!wrap.contains(document.activeElement))close()},0));
+ const sync=()=>{const busy=[pdf,png].find(b=>b.getAttribute('aria-busy')==='true');toggle.textContent=busy?(busy===pdf?'Preparing PDF…':'Preparing PNG…'):'Download ▾';toggle.setAttribute('aria-busy',String(Boolean(busy)));toggle.disabled=Boolean(busy)||(pdf.disabled&&png.disabled)};
+ const observer=new MutationObserver(sync);for(const button of [pdf,png])observer.observe(button,{attributes:true,attributeFilter:['disabled','aria-busy']});sync();
 }
 
 function updateProductSheetHeading(){

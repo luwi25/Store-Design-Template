@@ -1,0 +1,10 @@
+@media screen {
+ .download-dropdown{position:relative;display:inline-flex;min-width:0}
+ .download-options[hidden]{display:none!important}
+ .download-options{position:absolute;right:0;top:calc(100% + 8px);z-index:1000;display:flex;flex-direction:column;gap:6px;width:200px;max-width:calc(100vw - 32px);padding:8px;background:#fff;border:1px solid #d8e4e3;border-radius:12px;box-shadow:0 10px 30px #163b6526}
+ .top-actions .download-options .btn{flex:none;width:100%;min-height:44px;text-align:left;justify-content:flex-start;color:#163b65;background:#f7f8fc;border:1px solid transparent}
+ .top-actions .download-options .btn:hover{background:#eaf5f2;border-color:#18a999}
+ .download-dropdown .btn:focus-visible{outline:3px solid #18a999;outline-offset:2px}
+ @media(max-width:820px){.top-actions .download-dropdown{flex:1 1 100px}.download-dropdown>#downloadMenuButton{width:100%}.download-options{left:0;right:auto}}
+}
+@media print{.download-dropdown{display:none!important}}

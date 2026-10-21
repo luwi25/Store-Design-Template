@@ -37,3 +37,7 @@ spacing belongs in mobile.css; artwork, canvas text and print styles are unchang
 ## Browser icon
 
 The favicon uses a white poster sheet and teal sparkle on navy. Keep it legible at 16px; avoid lettering or store-specific logos. SVG is primary, with PNG and ICO fallbacks in icons/.
+
+## Download actions
+
+The toolbar uses one Download button opening PDF and PNG options. Keep existing export handlers, progress and disabled states. The dropdown supports keyboard focus, Escape and outside-click dismissal on desktop and mobile.
