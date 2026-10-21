@@ -47,7 +47,7 @@ self.addEventListener('fetch',event=>{
   // network for it (like app code) so a slightly-stale installed service worker never
   // serves an old cached catalog. defaults/images/* stay cache-first: they're large,
   // content-hashed by sha256, and genuinely immutable for a given hash.
-  const appCode=event.request.mode==='navigate'||/\.(?:js|css)$/.test(url.pathname)||url.pathname.endsWith('/defaults/project.json');
+  const appCode=event.request.mode==='navigate'||/\.(?:js|css)$/.test(url.pathname)||url.pathname.endsWith('/defaults/project.json')||url.pathname.endsWith('/defaults/sales-sync.json');
   if(appCode){
    try{
     const response=await fetch(event.request,{cache:'no-cache'});

@@ -620,6 +620,15 @@ def main():
 
     project["sourceRevision"] += 1
     project_path.write_text(json.dumps(project, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+    # Public status contains only timing and sales periods, never API credentials.
+    sync_status = {
+        "syncedAt": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "sourceRevision": project["sourceRevision"],
+        "stores": [{"name": "Home Express Basak" if sid == "home-express-basak" else "PesoPlus Mambaling",
+                    "weekStart": week["week_start"], "weekEnd": week["week_end"]}
+                   for sid, week in last_weeks.items()],
+    }
+    (REPO / "defaults" / "sales-sync.json").write_text(json.dumps(sync_status, ensure_ascii=False), encoding="utf-8")
     log(f"wrote defaults/project.json, sourceRevision -> {project['sourceRevision']}, products: {len(state['products'])}")
 
     if not run_tests(REPO):

@@ -57,3 +57,5 @@ Template text defaults starts expanded in template settings; users can still col
 The desktop left rail fills the viewport while sticky, with internal scrolling for long template lists. Do not subtract toolbar height: the toolbar scrolls out of view.
 
 Mobile hides the Templates screen and its bottom navigation button. Preview is the mobile starting screen, with Preview and Settings sharing the navigation width. Desktop template access remains unchanged.
+
+Sales sync uses a compact expandable status panel above Preview on desktop and mobile. Show public workflow status separately from published sales metadata; never imply that browser edits match the published snapshot. Use Philippine time, visible unavailable states, one-minute checks only while visible, and no status panel in print.
