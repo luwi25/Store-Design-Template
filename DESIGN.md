@@ -59,3 +59,5 @@ The desktop left rail fills the viewport while sticky, with internal scrolling f
 Mobile hides the Templates screen and its bottom navigation button. Preview is the mobile starting screen, with Preview and Settings sharing the navigation width. Desktop template access remains unchanged.
 
 Desktop Templates starts near the top of the left rail: no rail top padding or inherited sibling-panel margin, with a 12px template-panel inset. Hidden panels must not leave spacing above the visible template list.
+
+Mobile polish is CSS-only: compact two-column toolbar prioritizes Download/Print, wider preview, distinct selected-product outline, clearer sheet handle/header, grouped pricing/image/text controls, 44-48px targets and focus rings. Existing sheet gestures, keyboard expansion, handlers, data and desktop/print appearance remain unchanged. Install app remains available.

@@ -134,3 +134,63 @@
  .studio-editor .mobile-ui [data-mobile-panel="templates"]{display:none!important}
  .studio-editor .mobile-nav{grid-template-columns:repeat(2,minmax(0,1fr))!important}
 }
+
+/* Mobile presentation only: reuse the existing controls and sheet gestures. */
+@media screen and (max-width:820px){
+ .studio-editor .topbar{gap:8px 10px;padding-top:10px;padding-bottom:10px}
+ .studio-editor #studioTemplate{border-radius:10px;background:#f4f7fb;border-color:#dce4ed}
+ .studio-editor .top-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+ .studio-editor .top-actions>.btn,.studio-editor .top-actions>.download-dropdown{min-width:0;width:100%;box-sizing:border-box}
+ .studio-editor .top-actions>.download-dropdown{order:-2}
+ .studio-editor .top-actions>#printBtn{order:-1}
+ .studio-editor .top-actions>.btn{border-radius:10px;background:#f3f6fa;color:#163b65;border-color:#e2e8f0;font-weight:600}
+ .studio-editor .top-actions #downloadMenuButton{min-height:44px;border-radius:10px;background:#163b65;color:#fff;border-color:#163b65;font-weight:700}
+ .studio-editor .top-actions .download-options{box-sizing:border-box;max-width:calc(100vw - 32px)}
+ .studio-editor .top-actions .download-options .btn{min-height:48px;font-size:13px;padding:12px}
+ .studio-editor .stage{padding:10px 8px 16px;gap:10px}
+ .studio-editor .poster-wrap{width:min(100%,560px);margin-inline:auto}
+ .studio-editor .stage-top{width:100%;box-sizing:border-box;gap:4px 8px;font-size:10px}
+ .studio-editor .studio-zoom{gap:6px;margin-top:4px}
+ .studio-editor .studio-zoom button{border-radius:9px;background:#fff}
+ .studio-editor .studio-zoom output{min-width:44px;font-variant-numeric:tabular-nums}
+ .studio-editor .stage-caption{margin:0;font-size:11px;color:#64748b}
+ .studio-editor .mobile-nav{padding-inline:max(12px,env(safe-area-inset-left,0px));gap:8px}
+ .studio-editor .mobile-nav button{font-size:13px;min-height:48px;border-radius:12px}
+ .studio-editor .mobile-nav button[aria-pressed=true]{background:#e4f3f0;color:#163b65;box-shadow:inset 0 0 0 1px #abd5ce}
+ .studio-editor #slotDialog{border-radius:24px 24px 0 0;box-shadow:0 -8px 40px #163b6530}
+ .studio-editor #slotDialog::backdrop{background:#10243a38}
+ .studio-editor #slotDialog .sheet-handle{height:44px;min-height:44px;background:#fff}
+ .studio-editor #slotDialog .sheet-handle span{width:48px;height:5px;background:#94a8bb}
+ .studio-editor #slotDialog .sheet-heading{gap:10px;padding:0 14px 14px;border-bottom:1px solid #dce5ed;box-shadow:0 3px 8px #163b6506;z-index:1}
+ .studio-editor #slotDialog .sheet-heading img{width:44px;height:44px;background:#f5f8fb;border-radius:10px;padding:4px;box-sizing:border-box}
+ .studio-editor #slotDialog .sheet-heading strong{font-size:14px;line-height:1.4}
+ .studio-editor #slotDialog .sheet-heading small{font-size:11px;line-height:1.4;color:#64748b}
+ .studio-editor #slotDialog .sheet-heading>b{font-size:15px;color:#163b65}
+ .studio-editor #slotDialog .sheet-close{background:#edf2f7;color:#163b65;border-radius:50%;flex-shrink:0}
+ .studio-editor #slotDialog #slotEditor{padding:16px 14px calc(28px + env(safe-area-inset-bottom,0px));scroll-padding-block:24px;background:#fff}
+ .studio-editor #slotEditor .field{gap:8px;margin-bottom:16px;scroll-margin-block:24px}
+ .studio-editor #slotEditor .field label{font-size:12px;font-weight:600;color:#40576d;line-height:1.5}
+ .studio-editor #slotEditor input:not([type=range]):not([type=file]),.studio-editor #slotEditor select{font-size:16px;min-height:48px;border-radius:10px;padding:10px 12px;border-color:#dce4ed;background:#f6f8fb}
+ .studio-editor #slotEditor .studio-price-fields{gap:12px}
+ .studio-editor #slotEditor .product-pricing-heading{font-size:13px;margin:18px 0 12px;color:#163b65}
+ .studio-editor #slotEditor .discount-presets{gap:6px;margin-bottom:20px}
+ .studio-editor #slotEditor .discount-presets .btn{border-radius:10px;min-height:44px;font-size:12px;padding:8px 4px}
+ .studio-editor #slotEditor .discount-presets .btn[aria-pressed=true]{background:#163b65;color:#fff;border-color:#163b65}
+ .studio-editor #slotEditor .slot-text-controls{padding:18px 0;margin:4px 0;border-top-color:#dce5ed}
+ .studio-editor #slotEditor .slot-text-controls h3{color:#163b65;font-size:14px;margin-bottom:8px}
+ .studio-editor #slotEditor .text-size-stepper{gap:10px;align-items:center}
+ .studio-editor #slotEditor .text-size-stepper .btn{min-width:44px;min-height:44px;border-radius:10px}
+ .studio-editor #slotEditor .slot-text-controls input[type=range]{min-height:40px}
+ .studio-editor #slotEditor .product-advanced{border:1px solid #dce5ed;border-radius:12px;padding:0 12px;margin-top:16px;background:#f8fafc}
+ .studio-editor #slotEditor .product-advanced summary{min-height:48px;padding:12px 0;box-sizing:border-box;margin:0;font-weight:600;color:#163b65}
+ .studio-editor #slotEditor .product-advanced[open] summary{margin-bottom:12px;border-bottom:1px solid #e2e8f0}
+ .studio-editor #slotEditor .background-tools{display:flex;flex-wrap:wrap;gap:8px}
+ .studio-editor #slotEditor .background-tools .btn{min-height:44px;flex:1 1 130px}
+ .studio-editor #slotEditor .product-remove-action{padding-top:20px;margin-top:16px;border-top:1px solid #e2e8f0}
+ .studio-editor #slotEditor :is(input,select,button,summary):focus-visible,.studio-editor .topbar :is(button,select):focus-visible{outline:3px solid #18a999;outline-offset:2px}
+ .studio-editor .duplex-hit[aria-pressed=true]{box-shadow:inset 0 0 0 3px #16877f;outline:1px solid #fff;outline-offset:-4px}
+}
+@media screen and (max-width:360px){
+ .studio-editor #slotDialog .sheet-heading{grid-template-columns:44px minmax(0,1fr) 44px;gap:6px 10px}
+ .studio-editor .top-actions .btn{font-size:11px}
+}
