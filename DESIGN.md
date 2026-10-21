@@ -31,3 +31,7 @@ Catalog and Settings. Templates is the initial section; selecting a template ope
 Preview. Shared catalog editing stays separate from the list of placed products.
 The existing shared product form remains in the swipeable bottom sheet. Mobile
 spacing belongs in mobile.css; artwork, canvas text and print styles are unchanged.
+
+## Browser icon
+
+The favicon uses a white poster sheet and teal sparkle on navy. Keep it legible at 16px; avoid lettering or store-specific logos. SVG is primary, with PNG and ICO fallbacks in icons/.
