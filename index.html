@@ -349,6 +349,15 @@
 
 </style>
 <link rel="stylesheet" href="download-menu.css">
+<style id="sidebar-tab-visibility">
+@media screen {
+ .studio-tabs > button:nth-child(2),
+ .studio-tabs > button:nth-child(3),
+ .mobile-nav > button[data-panel="products"],
+ .mobile-nav > button[data-panel="catalog"] { display:none!important; }
+ .mobile-nav { grid-template-columns:repeat(3,minmax(0,1fr))!important; }
+}
+</style>
 </head>
 <body>
 <div class="app" inert>
