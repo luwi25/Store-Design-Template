@@ -41,3 +41,5 @@ The favicon uses a white poster sheet and teal sparkle on navy. Keep it legible 
 ## Download actions
 
 The toolbar uses one Download button opening PDF and PNG options. Keep existing export handlers, progress and disabled states. The dropdown supports keyboard focus, Escape and outside-click dismissal on desktop and mobile.
+
+Print paper and Print fit fields are hidden in template settings. Their values and event bindings remain intact for saved projects, PDF export and printing.
