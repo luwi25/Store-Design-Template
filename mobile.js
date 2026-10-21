@@ -30,7 +30,8 @@
  options.addEventListener('click',event=>{if(event.target.closest('button'))closeMore()});
  document.addEventListener('pointerdown',event=>{if(!more.contains(event.target))closeMore()});
  document.addEventListener('focusin',event=>{if(!more.contains(event.target))closeMore()});
- mobileWidth.addEventListener('change',arrangeToolbar);
+ if(mobileWidth.addEventListener)mobileWidth.addEventListener('change',arrangeToolbar);
+ else mobileWidth.addListener?.(arrangeToolbar);
  new MutationObserver(arrangeToolbar).observe(toolbar,{childList:true,subtree:true});
  arrangeToolbar();
  const app=document.querySelector('.app'),left=document.querySelector('.left-rail'),stage=document.querySelector('.stage'),settings=document.querySelector('.right-rail');
