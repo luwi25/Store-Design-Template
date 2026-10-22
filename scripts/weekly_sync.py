@@ -393,37 +393,72 @@ def placeholder_image_marker(repo):
 
 # ---------- Upsert directly against the published (dehydrated) state ----------
 
+def catalog_product_for_stockno(state, prefix, stockno, sales_product_id):
+    """Match the local editable catalog by stock number without crossing stores."""
+    normalized = str(stockno or "").strip().casefold()
+    if not normalized:
+        return None
+    matches = [p for p in state["products"]
+               if str(p.get("code") or "").strip().casefold() == normalized]
+    if not matches:
+        return None
+
+    # An existing sales record for this store is the most current local catalog
+    # entry for this stock number, including edits made since the last sync.
+    current = next((p for p in matches if p.get("id") == sales_product_id), None)
+    if current:
+        return current
+
+    other_sales_prefixes = {"sales-heb-", "sales-ppm-"} - {prefix}
+    matches = [p for p in matches
+               if not any(str(p.get("id", "")).startswith(other) for other in other_sales_prefixes)]
+    store_matches = [p for p in matches
+                     if str(p.get("templateId") or "").startswith("home-" if prefix == "sales-heb" else "peso-")]
+    if len(store_matches) == 1:
+        return store_matches[0]
+    if len(store_matches) > 1:
+        log(f"[{stockno}] multiple same-store catalog matches; using API name/photo")
+        return None
+
+    # A store-neutral catalog item is safe only when its code is unique.
+    neutral = [p for p in matches if not p.get("templateId")]
+    if len(neutral) == 1 and len(matches) == 1:
+        return neutral[0]
+    if matches:
+        log(f"[{stockno}] ambiguous or other-store catalog match; using API name/photo")
+    return None
+
+
 def upsert_product(repo, state, products_by_id, prefix, stockno, name, price, image_url, template_id):
-    """Returns (pid, photo_status). Every product carries a `photoSource`
-    status: "ubest-api" (the real catalog photo -- the one true best
-    source, since it's a guaranteed-correct match), "claude" (Claude
-    picked the best of several web search candidates), "ddgs"
-    (DuckDuckGo's first result, no Claude available), or "placeholder".
+    """Update one sales-ranked item using the matching local catalog entry.
 
-    Priority each run, cheapest/best first:
-      1. A short-timeout attempt at the UBEST API's own image_url, unless
-         already sourced from there -- so every product auto-upgrades to
-         the authoritative photo the moment that CDN is reachable again,
-         not just brand-new ones. Costs ~8s per product while it's down.
-      2. If that fails: a fresh web search (ddgs, optionally Claude-picked)
-         for anything brand-new, still on the flat placeholder, or
-         currently ddgs-sourced with Claude now available to upgrade it.
-      3. Otherwise keep whatever photo it already has (claude-sourced, or
-         ddgs with no Claude key to improve on it -- no point re-searching
-         for no gain).
-      4. The flat placeholder, if nothing above produced anything.
-
-    `prefix` keeps each store's sales-driven ids from colliding
-    ('sales-heb-' vs 'sales-ppm-')."""
+    An exact, store-appropriate Product code match supplies the local name and
+    image, preserving edits and approved image provenance. API sales ranking
+    and current price remain authoritative. Without a usable local photo, keep
+    approved assets, try the API image, then the existing web-search fallback.
+    Store prefixes keep Home Express and PesoPlus sales IDs distinct.
+    """
     pid = f"{prefix}-{re.sub(r'[^A-Za-z0-9]+', '-', stockno).strip('-').lower()}"
     existing = products_by_id.get(pid)
+    catalog_product = catalog_product_for_stockno(state, prefix, stockno, pid)
     placeholder = placeholder_image_marker(repo)
     current_source = existing.get("photoSource") if existing else None
 
-    image = None
-    photo_source = None
-    # Reviewed assets are pinned; only the image-review workflow replaces them.
-    if existing is not None and current_source == "approved":
+    # A unique local stock-code match supplies the catalog name and photo.
+    # Existing local names are preserved as entered; API data remains the fallback.
+    display_name = (catalog_product.get("name") or name) if catalog_product else name
+    catalog_image = catalog_product.get("image") if catalog_product else None
+    image = catalog_image or None
+    used_catalog_image = image is not None
+    photo_source = ((catalog_product.get("photoSource") or "catalog-matched")
+                    if image is not None else None)
+    if image is not None and catalog_product.get("photoApproval"):
+        photo_approval = catalog_product["photoApproval"]
+    else:
+        photo_approval = None
+
+    # Reviewed/catalog assets are pinned; only the image-review workflow replaces them.
+    if image is None and existing is not None and current_source == "approved":
         image, photo_source = existing["image"], "approved"
     elif image_url and current_source != "ubest-api":
         try:
@@ -450,7 +485,9 @@ def upsert_product(repo, state, products_by_id, prefix, stockno, name, price, im
         else:
             image, photo_source = placeholder, "placeholder"
 
-    if photo_source == "placeholder":
+    if used_catalog_image:
+        photo_status = "catalog-matched"
+    elif photo_source == "placeholder":
         photo_status = "placeholder"
     elif photo_source == "ubest-api":
         photo_status = "cached" if photo_source == current_source else "api-sourced"
@@ -458,11 +495,16 @@ def upsert_product(repo, state, products_by_id, prefix, stockno, name, price, im
         photo_status = "cached" if photo_source == current_source else f"web-sourced-{photo_source}"
 
     product = {
-        "id": pid, "templateId": template_id, "name": title_case(name),
+        "id": pid, "templateId": template_id,
+        "name": display_name if catalog_product else title_case(name),
         "price": price if price is not None else 0, "code": stockno, "image": image,
         "photoSource": photo_source,
     }
+    if photo_approval:
+        product["photoApproval"] = photo_approval
     if existing is not None:
+        if not photo_approval:
+            existing.pop("photoApproval", None)
         existing.update(product)
     else:
         products_by_id[pid] = product
@@ -599,6 +641,7 @@ def main():
     tags = {"placeholder": " [placeholder photo]",
             "web-sourced-ddgs-picked": " [new photo -- size/shape heuristic pick]",
             "web-sourced-ddgs": " [new photo -- DuckDuckGo first result]",
+            "catalog-matched": " [matched local catalog by stock number]",
             "api-sourced": " [new photo -- real UBEST catalog photo]"}
     for store_id, side, label, name, units, photo_status in all_entries:
         placeholder_count += photo_status == "placeholder"
