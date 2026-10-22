@@ -378,8 +378,9 @@
   <main class="workspace">
     <aside class="rail left-rail" aria-label="Templates and product catalog">
       <section class="panel">
-        <div class="store-filter-row"><span class="store-filter-row-label">Store</span><button type="button" class="btn btn-sm" id="storeFilterBtn" onclick="window.flashSaleActions.openStoreChooser()"><span id="storeFilterLabel">All stores</span> ▾</button></div>
+        <div class="store-filter-row"><span class="store-filter-row-label">Store</span><button type="button" class="btn btn-sm" id="storeFilterBtn" onclick="window.flashSaleActions.openStoreChooser()"><span id="storeFilterLabel">Locked</span> ▾</button></div>
         <div class="panel-head"><h2>Templates</h2><span class="count" id="templateCount">1</span></div>
+        <p class="helper" id="storeLockedHint" hidden>Choose a store above and enter its password to see its templates.</p>
         <div id="templateList"></div><div class="field template-name-field"><label for="templateNameInput">Selected template name</label><input id="templateNameInput" type="text" maxlength="80" placeholder="Name this template"><p class="helper">Saved automatically. This name identifies the template in the list and downloads.</p></div>
         <button class="upload-template" id="uploadTemplateBtn" type="button" onclick="window.flashSaleActions.uploadTemplate()">＋ Add a background image<span>Use your artwork as a saved template</span></button>
         <input id="templateFile" class="sr-only" type="file" accept="image/png,image/jpeg,image/webp">
@@ -487,14 +488,14 @@
 </dialog>
 <dialog class="modal" id="storeChooserDialog" aria-labelledby="storeChooserHeading">
   <div class="modal-inner">
-    <div class="modal-head"><div><h2 id="storeChooserHeading">Choose a store</h2><p>Show templates for one store only, or keep all templates visible. Change this anytime from the Store row above the templates list.</p></div><button class="icon-btn" type="button" aria-label="Close" onclick="window.flashSaleActions.closeStoreChooser()">✕</button></div>
+    <div class="modal-head"><div><h2 id="storeChooserHeading">Choose a store</h2><p>Each store is password-protected. Enter its password to show its templates. Change this anytime from the Store row above the templates list.</p></div><button class="icon-btn" type="button" aria-label="Close" onclick="window.flashSaleActions.closeStoreChooser()">✕</button></div>
     <div class="store-choice" id="storeChoiceButtons" role="group" aria-label="Store to show templates for">
-      <button class="store-choice-btn" type="button" data-store="home-express" aria-pressed="false"><b>Home Express</b><span>Front &amp; back templates</span></button>
-      <button class="store-choice-btn" type="button" data-store="pesoplus" aria-pressed="false"><b>PesoPlus</b><span>Front &amp; back templates</span></button>
+      <button class="store-choice-btn" type="button" data-store="home-express" aria-pressed="false"><b>Home Express</b><span>Requires a password</span></button>
+      <button class="store-choice-btn" type="button" data-store="pesoplus" aria-pressed="false"><b>PesoPlus</b><span>Requires a password</span></button>
       <button class="store-choice-btn" type="button" data-store="all" aria-pressed="false"><b>All stores</b><span>Requires a password</span></button>
     </div>
     <form id="storePasswordGate" class="store-password-gate" hidden>
-      <div class="field"><label for="storePassword">Password for All stores</label><input id="storePassword" type="password" autocomplete="off"><span class="error-line" id="storePasswordError"></span></div>
+      <div class="field"><label for="storePassword" id="storePasswordLabel">Password</label><input id="storePassword" type="password" autocomplete="off"><span class="error-line" id="storePasswordError"></span></div>
       <div class="modal-actions"><button class="btn" type="button" id="storePasswordCancel">Back</button><button class="btn btn-primary" type="submit">Unlock</button></div>
     </form>
   </div>
@@ -625,18 +626,19 @@ let bgRemoverImage=null,bgRemoverOriginal=null,bgRemoverTools=null;
 function mountBgRemoverTools(){const holder=$('bgRemoverTools');holder.replaceChildren();bgRemoverTools=createBackgroundTools({container:holder,getImage:()=>bgRemoverImage,getOriginal:()=>bgRemoverOriginal,setOriginal:value=>bgRemoverOriginal=value,applyImage:value=>{bgRemoverImage=value},isCurrent:()=>$('bgRemoverDialog').open})}
 function openBgRemover(){bgRemoverImage=null;bgRemoverOriginal=null;$('bgRemoverFile').value='';$('bgRemoverError').textContent='';mountBgRemoverTools();$('bgRemoverDialog').showModal()}
 const STORE_FILTER_KEY='flashSaleStoreFilter';
-const ALL_STORES_PASSWORD='admin123';
-let storeFilter=null;
+const STORE_PASSWORDS={'home-express':'homeexpress123','pesoplus':'pesoplus123','all':'admin123'};
+let storeFilter=null,pendingStoreChoice=null;
 try{storeFilter=localStorage.getItem(STORE_FILTER_KEY)}catch(e){console.warn('Store filter choice could not be read',e)}
-function storeFilterLabelText(value){return value==='home-express'?'Home Express':value==='pesoplus'?'PesoPlus':'All stores'}
+function storeFilterLabelText(value){return value==='home-express'?'Home Express':value==='pesoplus'?'PesoPlus':value==='all'?'All stores':'Locked'}
 function applyStoreFilterToDOM(){
  const wrap=$('templateList');if(!wrap)return;
  wrap.querySelectorAll('.template-store-group').forEach(section=>{
   const label=section.getAttribute('aria-label')||'';
-  const show=!storeFilter||storeFilter==='all'||label.startsWith('Other templates')||(storeFilter==='home-express'&&label.startsWith('Home Express'))||(storeFilter==='pesoplus'&&label.startsWith('PesoPlus'));
+  const show=storeFilter==='all'||label.startsWith('Other templates')||(storeFilter==='home-express'&&label.startsWith('Home Express'))||(storeFilter==='pesoplus'&&label.startsWith('PesoPlus'));
   section.classList.toggle('is-store-hidden',!show);
  });
  if($('storeFilterLabel'))$('storeFilterLabel').textContent=storeFilterLabelText(storeFilter);
+ if($('storeLockedHint'))$('storeLockedHint').hidden=Boolean(storeFilter);
  for(const b of $('storeChooserDialog').querySelectorAll('.store-choice-btn'))b.setAttribute('aria-pressed',String(Boolean(storeFilter)&&b.dataset.store===storeFilter));
 }
 function ensureActiveTemplateVisible(){
@@ -652,16 +654,16 @@ function setStoreFilter(value){
  ensureActiveTemplateVisible();
  renderStudioProducts()
 }
-function resetStorePasswordGate(){$('storePasswordError').textContent='';$('storePassword').value='';$('storePasswordGate').hidden=true;$('storeChoiceButtons').hidden=false}
-function requestAllStoresUnlock(){$('storePasswordError').textContent='';$('storePassword').value='';$('storeChoiceButtons').hidden=true;$('storePasswordGate').hidden=false;$('storePassword').focus()}
+function resetStorePasswordGate(){pendingStoreChoice=null;$('storePasswordError').textContent='';$('storePassword').value='';$('storePasswordGate').hidden=true;$('storeChoiceButtons').hidden=false}
+function requestStoreUnlock(store){pendingStoreChoice=store;$('storePasswordLabel').textContent='Password for '+storeFilterLabelText(store);$('storePasswordError').textContent='';$('storePassword').value='';$('storeChoiceButtons').hidden=true;$('storePasswordGate').hidden=false;$('storePassword').focus()}
 function openStoreChooser(){applyStoreFilterToDOM();resetStorePasswordGate();$('storeChooserDialog').showModal()}
-function closeStoreChooser(){if(!storeFilter)setStoreFilter('home-express');resetStorePasswordGate();$('storeChooserDialog').close()}
+function closeStoreChooser(){resetStorePasswordGate();$('storeChooserDialog').close()}
 function initStoreChooser(){
- for(const b of $('storeChooserDialog').querySelectorAll('.store-choice-btn'))b.addEventListener('click',()=>{if(b.dataset.store==='all')requestAllStoresUnlock();else{setStoreFilter(b.dataset.store);$('storeChooserDialog').close()}});
+ for(const b of $('storeChooserDialog').querySelectorAll('.store-choice-btn'))b.addEventListener('click',()=>requestStoreUnlock(b.dataset.store));
  $('storePasswordCancel').addEventListener('click',resetStorePasswordGate);
  $('storePasswordGate').addEventListener('submit',event=>{
   event.preventDefault();
-  if($('storePassword').value===ALL_STORES_PASSWORD){resetStorePasswordGate();setStoreFilter('all');$('storeChooserDialog').close()}
+  if(pendingStoreChoice&&$('storePassword').value===STORE_PASSWORDS[pendingStoreChoice]){const store=pendingStoreChoice;resetStorePasswordGate();setStoreFilter(store);$('storeChooserDialog').close()}
   else{$('storePasswordError').textContent='Incorrect password.';$('storePassword').value='';$('storePassword').focus()}
  });
  applyStoreFilterToDOM();
