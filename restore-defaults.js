@@ -1,9 +1,9 @@
 // Embedded in the editor closure by the browser build.
 function restoredTemplateProject(current, published, templateId) {
-  const keys = {'home-everyday':'everyday','home-back':'homeBack','peso-plus':'peso','peso-back':'pesoBack'};
+  const keys = {'home-everyday':'everyday','home-back':'homeBack','home-collection':'homeCollection','peso-plus':'peso','peso-back':'pesoBack'};
   const key = keys[templateId];
   if (!key || !Array.isArray(published[key]?.slots)) {
-    throw Error('This template has no published default. Choose one of the four store templates.');
+    throw Error('This template has no published default. Choose a store template.');
   }
   if (!Array.isArray(published.products) || !published.templateSettings?.[templateId]) {
     throw Error('The published template is incomplete. Your project has not been changed.');

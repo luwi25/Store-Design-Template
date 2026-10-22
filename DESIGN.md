@@ -69,3 +69,11 @@ Zoom minus/percentage/plus and Fit controls are visually hidden on desktop and m
 Download menu includes PDF, PNG and Download backup on desktop and mobile. Reuse the original downloadDatabaseBackup button and its handler; include backup in keyboard navigation and disabled-state checks.
 
 Group template navigation by stable store identity: Home Express, PesoPlus, then Other templates for custom designs. Keep alphabetical order within each group, preserve renamed template titles, and use matching optgroups in the toolbar selector.
+
+## Home Express blue and orange collection
+
+Home Express - Back (Blue & Orange) is an additional template with five rows of five products: Christmas Bundles, Kitchenware, School Supplies, Hardware, and Groceries. The supplied artwork owns the logo, tagline, section ribbons, and footer. Cards use blue names on white backgrounds with orange corners and a bold dark-orange price below each name. Names, photos and prices are editable through the shared product inspector. Displayed prices use the existing discount calculation and sale-price text-size control. Card photos fit above the name and price without cropping. Seed prices remain zero because the reference provides none. Existing four templates and their sales-sync assignments retain their current configuration.
+
+The maintained renderer is home-express-collection.js. embed_collection.py embeds its source artwork and catalog seed assets into both the standalone HTML and Pages build. The template participates in store navigation, product selection, deletion, backup/import, selected-template restore, PNG/PDF export, and the shared two-copy print layout.
+
+The blue-and-orange template exposes all five section headings in its own Section headings panel, with a restore-original action. Names persist in homeCollection.groupNames, retain spaces while typing, and fall back to original labels when blank. Preview, product-list headings, PNG, PDF and print share those labels. Section ribbons use consistent live canvas typography; product names wrap to two lines with measured font fitting. Product photos retain their source detail and aspect ratio with high-quality resampling and separate space for names and prices.

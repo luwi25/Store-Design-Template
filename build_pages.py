@@ -5,12 +5,14 @@ import hashlib
 import json
 import re
 import shutil
+from embed_collection import embed_collection
 
 ROOT=Path(__file__).resolve().parent
 OUT=ROOT/'public'
 OUT.mkdir(exist_ok=True)
 (OUT/'assets').mkdir(exist_ok=True)
 html=(ROOT/'index.html').read_text(encoding='utf-8')
+html=embed_collection(html,ROOT)
 # Always publish the maintained UI source, even if the standalone bundle is stale.
 ui_start=html.index('// Runs inside the editor closure;')
 ui_end=html.index('initTemplateSettings();',ui_start)
