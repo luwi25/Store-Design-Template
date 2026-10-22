@@ -67,3 +67,5 @@ Mobile toolbar shows Download, Print poster and More. More contains the original
 Zoom minus/percentage/plus and Fit controls are visually hidden on desktop and mobile. Keep their handlers and preview scaling logic intact.
 
 Download menu includes PDF, PNG and Download backup on desktop and mobile. Reuse the original downloadDatabaseBackup button and its handler; include backup in keyboard navigation and disabled-state checks.
+
+Group template navigation by stable store identity: Home Express, PesoPlus, then Other templates for custom designs. Keep alphabetical order within each group, preserve renamed template titles, and use matching optgroups in the toolbar selector.
