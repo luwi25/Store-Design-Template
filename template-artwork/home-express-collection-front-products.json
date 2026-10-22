@@ -1,0 +1,98 @@
+[
+  {
+    "id": "home-collection-front-0-0",
+    "templateId": "home-collection-front",
+    "name": "Stainless Steel Pot",
+    "price": 0,
+    "code": "",
+    "image": {
+      "__defaultImage": "images/6d73fcae0eb870cf1a26af9c67e4c74b373f7592233e12fbe579cff12cb18030.png",
+      "mime": "image/png"
+    },
+    "photoSource": "supplied-template"
+  },
+  {
+    "id": "home-collection-front-0-1",
+    "templateId": "home-collection-front",
+    "name": "Rice Cooker",
+    "price": 0,
+    "code": "",
+    "image": {
+      "__defaultImage": "images/d0376a2fbe36fa83d2592dd543b3f3bb32c2e5dd3c458c1ab2300fb3c23a0a5d.png",
+      "mime": "image/png"
+    },
+    "photoSource": "supplied-template"
+  },
+  {
+    "id": "home-collection-front-0-2",
+    "templateId": "home-collection-front",
+    "name": "Electric Fan",
+    "price": 0,
+    "code": "",
+    "image": {
+      "__defaultImage": "images/46025ef0793dbfd639eccc29de03c017e09ee3a970c601e9489c4962e5789234.png",
+      "mime": "image/png"
+    },
+    "photoSource": "supplied-template"
+  },
+  {
+    "id": "home-collection-front-0-3",
+    "templateId": "home-collection-front",
+    "name": "Electric Kettle",
+    "price": 0,
+    "code": "",
+    "image": {
+      "__defaultImage": "images/ed82eb70a0e8ebabe8abdb4675c8a9fa65f429cfe772a685dc6fe23a88ebf0ac.png",
+      "mime": "image/png"
+    },
+    "photoSource": "supplied-template"
+  },
+  {
+    "id": "home-collection-front-1-0",
+    "templateId": "home-collection-front",
+    "name": "Storage Drawer",
+    "price": 0,
+    "code": "",
+    "image": {
+      "__defaultImage": "images/2e62c2d8bca14293e3bb6d600236a3767ddeedd1db4f22fd60cf8ce6176c0b7e.png",
+      "mime": "image/png"
+    },
+    "photoSource": "supplied-template"
+  },
+  {
+    "id": "home-collection-front-1-1",
+    "templateId": "home-collection-front",
+    "name": "Storage Basket",
+    "price": 0,
+    "code": "",
+    "image": {
+      "__defaultImage": "images/37fd0e88447019349fa62108f4d6cf647a186918459b2623d8dc40bae6360ae4.png",
+      "mime": "image/png"
+    },
+    "photoSource": "supplied-template"
+  },
+  {
+    "id": "home-collection-front-1-2",
+    "templateId": "home-collection-front",
+    "name": "Backpack",
+    "price": 0,
+    "code": "",
+    "image": {
+      "__defaultImage": "images/6a306cbfc4b16a6d3c350c95882171b86e32b2dbff2ca184d173af656f51cda3.png",
+      "mime": "image/png"
+    },
+    "photoSource": "supplied-template"
+  },
+  {
+    "id": "home-collection-front-1-3",
+    "templateId": "home-collection-front",
+    "name": "Slippers",
+    "price": 0,
+    "code": "",
+    "image": {
+      "__defaultImage": "images/cbafe425073ad6eda7eb6a1e50501f8a6cee467570340b48cdfc1cdb3f523043.png",
+      "mime": "image/png"
+    },
+    "photoSource": "supplied-template"
+  }
+]

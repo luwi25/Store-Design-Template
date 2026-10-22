@@ -13,9 +13,18 @@ def collection_source(root: Path) -> str:
     for product in products:
         marker = product["image"]
         product["image"] = data_url(root / "defaults" / marker["__defaultImage"], marker["mime"])
-    return (root / "home-express-collection.js").read_text(encoding="utf-8").replace(
+    back = (root / "home-express-collection.js").read_text(encoding="utf-8").replace(
         "__HOME_COLLECTION_ART__", json.dumps(artwork)
     ).replace("__HOME_COLLECTION_SEEDS__", json.dumps(products, ensure_ascii=False))
+    front_artwork = data_url(root / "template-artwork/home-express-collection-front.jpg", "image/jpeg")
+    front_products = json.loads((root / "template-artwork/home-express-collection-front-products.json").read_text(encoding="utf-8"))
+    for product in front_products:
+        marker = product["image"]
+        product["image"] = data_url(root / "defaults" / marker["__defaultImage"], marker["mime"])
+    front = (root / "home-express-collection-front.js").read_text(encoding="utf-8").replace(
+        "__HOME_COLLECTION_FRONT_ART__", json.dumps(front_artwork)
+    ).replace("__HOME_COLLECTION_FRONT_SEEDS__", json.dumps(front_products, ensure_ascii=False))
+    return back + "\n" + front
 
 
 def embed_collection(html: str, root: Path) -> str:
