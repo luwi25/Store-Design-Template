@@ -33,8 +33,11 @@
  .studio-editor .left-rail .panel-head h2,
  .studio-editor .right-rail .panel > h2 { line-height:1.4; letter-spacing:.025em; margin:0 0 12px; }
  .studio-editor .left-rail .panel-head h2 { margin:0; }
+ .studio-editor .store-filter-row { display:flex; align-items:center; justify-content:space-between; gap:8px; margin:0 0 14px; padding-bottom:14px; border-bottom:1px solid #e5e9ef; }
+ .studio-editor .store-filter-row-label { font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:#56637c; }
  .studio-editor .left-rail #templateList { display:grid; grid-template-columns:minmax(0,1fr); gap:10px; }
  .studio-editor .template-store-group { display:grid; gap:10px; min-width:0; }
+ .studio-editor .template-store-group.is-store-hidden { display:none; }
  .studio-editor .template-store-group + .template-store-group { margin-top:8px; padding-top:14px; border-top:1px solid #e5e9ef; }
  .studio-editor .template-store-heading { margin:0; font-size:12px; font-weight:700; line-height:1.5; color:#163b65; }
  .studio-editor .left-rail .template-card { box-sizing:border-box; margin:0; padding:10px; gap:10px; min-height:76px; }
