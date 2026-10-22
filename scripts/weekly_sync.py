@@ -20,6 +20,13 @@ Two exceptions, both on Home Express's Back (homeBack):
     store-wide, so they stay varied rather than collapsing into a
     single department like the dynamic groups do.
 
+Home Express Template #2 is included in the same Monday run:
+  - Front (homeCollectionFront): the eight highest-selling eligible products
+    across the store, using the same last-completed-week period.
+  - Back (homeCollection): four ranked department sections; section 0,
+    Christmas Bundles, is preserved including its saved heading.
+  - Template #2 department ranking is independent of Template #1.
+
 Then public/ is rebuilt, the test suite runs, and the result is
 committed and pushed only if everything passes.
 
@@ -63,6 +70,8 @@ STORES = {
         "front_template_id": "home-everyday", "back_template_id": "home-back",
         "back_fixed": {0: "Christmas Gift Bundles"},
         "back_cross_category_positions": (1, 2), "back_cross_category_total": 10,
+        "collection_front_key": "homeCollectionFront",
+        "collection_back_key": "homeCollection",
     },
     "pesoplus-mambaling": {
         "prefix": "sales-ppm", "front_key": "peso", "back_key": "pesoBack",
@@ -409,7 +418,7 @@ def catalog_product_for_stockno(state, prefix, stockno, sales_product_id):
     if current:
         return current
 
-    other_sales_prefixes = {"sales-heb-", "sales-ppm-"} - {prefix}
+    other_sales_prefixes = {"sales-heb-", "sales-ppm-"} - {f"{prefix}-"}
     matches = [p for p in matches
                if not any(str(p.get("id", "")).startswith(other) for other in other_sales_prefixes)]
     store_matches = [p for p in matches
@@ -460,7 +469,7 @@ def upsert_product(repo, state, products_by_id, prefix, stockno, name, price, im
     # Reviewed/catalog assets are pinned; only the image-review workflow replaces them.
     if image is None and existing is not None and current_source == "approved":
         image, photo_source = existing["image"], "approved"
-    elif image_url and current_source != "ubest-api":
+    elif image is None and image_url and current_source != "ubest-api":
         try:
             image = download_and_enhance_image(repo, image_url, timeout=8)
             photo_source = "ubest-api"
@@ -567,6 +576,86 @@ def apply_side(repo, state, products_by_id, prefix, template_key, template_id, r
     return entries, departments_used
 
 
+def apply_home_collection(repo, state, products_by_id, prefix, rows, front_key, back_key):
+    """Fill Template #2; keep the Christmas row and its label exactly as saved.
+
+    Front is the eight highest-selling products across the eligible store
+    catalog, not a one-product-per-category variety selection. Back ranks
+    departments independently so Template #1 does not consume its categories.
+    """
+    if front_key not in state or back_key not in state:
+        raise RuntimeError("Home Express Template #2 is missing from the published project.")
+    front = state[front_key]
+    back = state[back_key]
+    front_indices = sorted(range(len(front["slots"])),
+                           key=lambda index: (front["slots"][index].get("group", 0), index))
+    # One catalog item per stock number, even if an upstream response repeats it.
+    unique = {}
+    for row in rows:
+        key = str(row["stockno"]).strip().casefold()
+        if key and (key not in unique or row["units"] > unique[key]["units"]):
+            unique[key] = row
+    ranked = sorted(unique.values(), key=lambda row: (-row["units"], str(row["stockno"])))
+    entries = []
+    for offset, index in enumerate(front_indices):
+        group = front["slots"][index].get("group", 0)
+        if offset >= len(ranked):
+            front["slots"][index] = {"productId": None, "group": group, "discountPercent": 0}
+            continue
+        item = ranked[offset]
+        pid, status = upsert_product(repo, state, products_by_id, prefix,
+                                    item["stockno"], item["name"], item["retail_price"],
+                                    item["image_url"], "home-collection-front")
+        front["slots"][index] = {"productId": pid, "group": group, "discountPercent": 0}
+        entries.append(("FRONT #2", "Best sellers", item["name"], item["units"], status))
+
+    # Initialize legacy backups without labels, preserving any custom labels.
+    defaults = ["Christmas Bundles", "Kitchenware", "School Supplies", "Hardware", "Groceries"]
+    labels = back.setdefault("groupNames", [])
+    labels.extend(defaults[len(labels):])
+    by_group = defaultdict(list)
+    for index, slot in enumerate(back["slots"]):
+        by_group[slot["group"]].append(index)
+    counts = [len(by_group[position]) for position in range(len(labels))]
+    assignments = assign_dynamic_departments(list(unique.values()), counts, {0})
+    for group, indices in by_group.items():
+        if group == 0:
+            continue  # Preserve every Christmas slot, image override, price and text setting.
+        assignment = assignments.get(group)
+        if assignment is None:
+            log(f"[Home Express #2] no ranked department for section {group}; clearing stale products")
+            items = []
+        else:
+            department, items = assignment
+            labels[group] = DEPARTMENT_LABEL_OVERRIDES.get(department, department)
+        for offset, index in enumerate(indices):
+            if offset >= len(items):
+                back["slots"][index] = {"productId": None, "group": group, "discountPercent": 0}
+                continue
+            item = items[offset]
+            pid, status = upsert_product(repo, state, products_by_id, prefix,
+                                        item["stockno"], item["name"], item["retail_price"],
+                                        item["image_url"], "home-collection")
+            back["slots"][index] = {"productId": pid, "group": group, "discountPercent": 0}
+            entries.append(("BACK #2", labels[group], item["name"], item["units"], status))
+    return entries
+
+
+def referenced_product_ids(value):
+    """Include all saved template slots before pruning generated sales products."""
+    if isinstance(value, dict):
+        result = {value["productId"]} if value.get("productId") else set()
+        for child in value.values():
+            result.update(referenced_product_ids(child))
+        return result
+    if isinstance(value, list):
+        result = set()
+        for child in value:
+            result.update(referenced_product_ids(child))
+        return result
+    return set()
+
+
 # ---------- Shell helpers ----------
 
 def run(cmd, cwd):
@@ -630,10 +719,17 @@ def main():
                                       exclude_departments=front_depts)
         all_entries += [(store_id, "BACK", *e) for e in back_entries]
 
-        referenced = {s["productId"] for s in state[cfg["front_key"]]["slots"]} | {s["productId"] for s in state[cfg["back_key"]]["slots"]}
+        if cfg.get("collection_front_key"):
+            collection_entries = apply_home_collection(
+                REPO, state, products_by_id, cfg["prefix"], rows,
+                cfg["collection_front_key"], cfg["collection_back_key"])
+            all_entries += [(store_id, *entry) for entry in collection_entries]
+
+        referenced = referenced_product_ids(state)
         kept = [p for p in state["products"] if not p["id"].startswith(f"{cfg['prefix']}-") or p["id"] in referenced]
         pruned = len(state["products"]) - len(kept)
         state["products"] = kept
+        products_by_id = {product["id"]: product for product in kept}
         if pruned:
             log(f"[{store_id}] pruned {pruned} orphaned {cfg['prefix']}- product(s)")
 
