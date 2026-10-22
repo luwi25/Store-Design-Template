@@ -84,6 +84,10 @@ function setupStudioUI(){
  document.body.classList.add('studio-editor');setupProductSheet();
  setupDownloadMenu();
  const left=document.querySelector('.left-rail'),right=document.querySelector('.right-rail');
+ // Keep the shared rename control accessible in desktop and mobile settings.
+ const templateNameField=$('templateNameInput').closest('.field');
+ $('templateNameInput').maxLength=80;
+ $('storeInput').closest('.field').before(templateNameField);
  const oldPanels=[...left.children];oldPanels[0].dataset.studioPanel='templates';oldPanels[1].dataset.studioPanel='catalog';oldPanels[2].dataset.studioPanel='catalog';
  const panel=document.createElement('section');panel.className='panel studio-product-panel';panel.dataset.studioPanel='products';panel.dataset.mobilePanel='products';
  panel.innerHTML='<div class="panel-head"><h2>On this poster</h2><span id="studioProductCount" class="count"></span></div><div class="studio-search"><label class="sr-only" for="studioProductSearch">Search products on this poster</label><input id="studioProductSearch" type="search" placeholder="Search products"><button class="btn btn-primary" type="button" id="studioAdd" aria-label="Add product to poster">+</button></div><div class="studio-list-actions"><button type="button" class="btn btn-sm" id="studioClearSearch" hidden>Clear search</button><button type="button" class="btn btn-sm" id="studioUndoRemoval" hidden>Undo removal</button></div><p class="helper" id="studioCapacity"></p><div id="studioProductList"></div>';

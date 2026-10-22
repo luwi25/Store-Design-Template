@@ -376,7 +376,7 @@
     <aside class="rail left-rail" aria-label="Templates and product catalog">
       <section class="panel">
         <div class="panel-head"><h2>Templates</h2><span class="count" id="templateCount">1</span></div>
-        <div id="templateList"></div><div class="field template-name-field"><label for="templateNameInput">Selected template name</label><input id="templateNameInput" type="text" maxlength="36" placeholder="Name this template"><p class="helper">Saved automatically with your local templates.</p></div>
+        <div id="templateList"></div><div class="field template-name-field"><label for="templateNameInput">Selected template name</label><input id="templateNameInput" type="text" maxlength="80" placeholder="Name this template"><p class="helper">Saved automatically. This name identifies the template in the list and downloads.</p></div>
         <button class="upload-template" id="uploadTemplateBtn" type="button" onclick="window.flashSaleActions.uploadTemplate()">＋ Add a background image<span>Use your artwork as a saved template</span></button>
         <input id="templateFile" class="sr-only" type="file" accept="image/png,image/jpeg,image/webp">
       </section>
@@ -574,7 +574,7 @@ function setMode(mode){state.discount.mode=mode;state.discount.value=mode==='per
 
 $('paperSelect').addEventListener('change',()=>{state.poster.paper=$('paperSelect').value;save()});$('fitSelect').addEventListener('change',()=>{state.poster.fit=$('fitSelect').value;save()});
 function validateImage(file){return /^image\/(png|jpeg|webp)$/.test(file.type)&&file.size<=5*1024*1024}function readImage(file){return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=reject;r.readAsDataURL(file)})}
- $('templateNameInput').addEventListener('input',()=>{const input=$('templateNameInput'),value=input.value,start=input.selectionStart,end=input.selectionEnd;state.templateNames={...state.templateNames,[state.templateId]:value};renderTemplates();renderCatalog();input.value=value;input.focus();input.setSelectionRange(start,end);save()});
+ $('templateNameInput').addEventListener('input',()=>{const input=$('templateNameInput'),value=input.value,start=input.selectionStart,end=input.selectionEnd;state.templateNames={...state.templateNames,[state.templateId]:value};renderTemplates();renderCatalog();renderStudioProducts();input.value=value;input.focus();input.setSelectionRange(start,end);save()});
 $('templateFile').addEventListener('change',async()=>{const file=$('templateFile').files[0];if(!file)return;if(!validateImage(file)){showNotice('Choose a PNG, JPEG, or WebP image under 5 MB.');return}try{const image=await readImage(file);const name=file.name.replace(/\.[^.]+$/,'').slice(0,28)||'My template';const id='template-'+Date.now();state.templates.push({id,name,image});state.templateId=id;renderAll();save();showNotice('Background added as a reusable template.')}catch{showNotice('The image could not be read. Try another file.')}finally{$('templateFile').value=''}});
 // Shared catalog and template product photo controls.
 function createBackgroundTools({container,getImage,getOriginal,setOriginal,applyImage,isCurrent,setBusy=()=>{}}){
@@ -1399,6 +1399,10 @@ function setupStudioUI(){
  document.body.classList.add('studio-editor');setupProductSheet();
  setupDownloadMenu();
  const left=document.querySelector('.left-rail'),right=document.querySelector('.right-rail');
+ // Keep the shared rename control accessible in desktop and mobile settings.
+ const templateNameField=$('templateNameInput').closest('.field');
+ $('templateNameInput').maxLength=80;
+ $('storeInput').closest('.field').before(templateNameField);
  const oldPanels=[...left.children];oldPanels[0].dataset.studioPanel='templates';oldPanels[1].dataset.studioPanel='catalog';oldPanels[2].dataset.studioPanel='catalog';
  const panel=document.createElement('section');panel.className='panel studio-product-panel';panel.dataset.studioPanel='products';panel.dataset.mobilePanel='products';
  panel.innerHTML='<div class="panel-head"><h2>On this poster</h2><span id="studioProductCount" class="count"></span></div><div class="studio-search"><label class="sr-only" for="studioProductSearch">Search products on this poster</label><input id="studioProductSearch" type="search" placeholder="Search products"><button class="btn btn-primary" type="button" id="studioAdd" aria-label="Add product to poster">+</button></div><div class="studio-list-actions"><button type="button" class="btn btn-sm" id="studioClearSearch" hidden>Clear search</button><button type="button" class="btn btn-sm" id="studioUndoRemoval" hidden>Undo removal</button></div><p class="helper" id="studioCapacity"></p><div id="studioProductList"></div>';
