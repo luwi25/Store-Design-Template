@@ -6,6 +6,8 @@ import hashlib
 import html
 import io
 import json
+import re
+import importlib.metadata
 import os
 from pathlib import Path
 import sqlite3
@@ -16,10 +18,12 @@ from urllib.parse import urlparse
 import uuid
 
 STORES = {
-    'home-express-basak': ('everyday', 'homeBack'),
+    'home-express-basak': ('everyday', 'homeBack', 'homeCollectionFront', 'homeCollection'),
     'pesoplus-mambaling': ('peso', 'pesoBack'),
 }
 MAX_BYTES = 20 * 1024 * 1024
+PROCESSING_VERSION = 2
+MODES = ("existing", "replacement", "names")
 
 
 def now():
@@ -51,6 +55,12 @@ def product_in_store(project, store, pid):
 
 def identity(product):
     return json.dumps({k: product.get(k) for k in ('id', 'code', 'name')}, sort_keys=True)
+
+
+def curated_product_ids(state, store):
+    keys = ('homeBack', 'homeCollection') if store == 'home-express-basak' else ('homeBack',)
+    return {slot.get('productId') for key in keys
+            for slot in state.get(key, {}).get('slots', []) if slot.get('group') == 0}
 
 
 def db_open(root):
@@ -108,13 +118,29 @@ def load_image_bytes(args):
     return raw, extension
 
 
+def has_missing_placement(project, store, pid):
+    """Only empty effective photos qualify; present references are never reprocessed."""
+    state = project['state']
+    product = product_in_store(project, store, pid)
+    if pid in curated_product_ids(state, store):
+        return False
+    return any(s.get('productId') == pid and not (s.get('image') or product.get('image'))
+               for key in STORES[store] for s in state.get(key, {}).get('slots', []))
+
+
 def add(args, repo, root, db):
     _, project = read_project(repo)
     product = product_in_store(project, args.store, args.product)
+    if not has_missing_placement(project, args.store, args.product):
+        return {'status': 'skipped', 'reason_code': 'existing_image_or_excluded', 'current_photo_retained': True}
     if args.source_type != 'user-photo' and not args.source_page:
         raise ValueError('Provide the source product page for a web candidate.')
     if args.source_page and urlparse(args.source_page).scheme not in ('http', 'https'):
         raise ValueError('Source page must be an HTTP(S) URL.')
+    if args.mode == 'names':
+        raise ValueError('Name-only mode does not register images.')
+    if args.mode == 'existing' and args.url:
+        raise ValueError('Existing-image mode cannot download replacements.')
     raw, extension = load_image_bytes(args)
     digest = sha(raw)
     path = root / 'originals' / f'{digest}.{extension}'
@@ -131,12 +157,17 @@ def add(args, repo, root, db):
     return {'candidate': cid, 'status': 'candidate', 'original': str(path)}
 
 
-def worker(source, target, remove_background=False):
+def worker(source, target, remove_background=False, crop=None, focus=False, sharpen=1.1):
     from PIL import Image, ImageOps, ImageEnhance
     with Image.open(source) as image:
         if image.width * image.height > 25_000_000:
             raise ValueError('Image exceeds the processing limit.')
         image = ImageOps.exif_transpose(image).convert('RGBA')
+    if crop:
+        left, top, right, bottom = crop
+        if not (0 <= left < right <= image.width and 0 <= top < bottom <= image.height):
+            raise ValueError('SKIP[invalid_crop]: Crop must be within the oriented source image.')
+        image = image.crop(crop)
     if remove_background:
         from rembg import remove, new_session
         import numpy as np
@@ -145,73 +176,119 @@ def worker(source, target, remove_background=False):
         # Restrict automatic cutouts to clean, near-white studio backgrounds.
         # Busy scenes and existing transparency need individual assessment.
         if np.mean(before[:, :, 3] < 245) > .02:
-            raise ValueError('Retained: source already contains transparency.')
+            raise ValueError('SKIP[existing_transparency]: Use focus-only on an intact cutout; inspect residual backgrounds separately.')
         rgb = before[:, :, :3]
         white = np.min(rgb, axis=2) > 235
         border = np.concatenate((white[0], white[-1], white[:, 0], white[:, -1]))
         if np.mean(border) < .95:
-            raise ValueError('Retained: background is not a clean white studio surface.')
+            raise ValueError('SKIP[complex_background]: Background needs a verified object crop or source-pixel mask.')
         session = new_session('u2net', providers=['CPUExecutionProvider'])
         cutout = remove(image, session=session).convert('RGBA')
         alpha = np.asarray(cutout)[:, :, 3]
         foreground = np.min(rgb, axis=2) < 220
         core = ndimage.binary_erosion(foreground, iterations=1)
         if not core.any() or np.mean(alpha[core] >= 220) < .99:
-            raise ValueError('Retained: cutout removes visible product or packaging detail.')
+            raise ValueError('SKIP[detail_loss]: Visible product or packaging pixels were removed or faded.')
         labels, count = ndimage.label(foreground)
         sizes = np.bincount(labels.ravel())
         retained = np.bincount(labels.ravel(), weights=(alpha > 128).ravel(), minlength=len(sizes))
         for label in range(1, count + 1):
             if sizes[label] >= max(12, foreground.size * .0002) and retained[label] / sizes[label] < .98:
-                raise ValueError('Retained: cutout may remove an accessory or fine component.')
+                raise ValueError('SKIP[component_loss]: A visible component may be an accessory or fine product part.')
         coverage = np.mean(alpha > 128)
         if not .03 < coverage < .95 or np.mean(alpha < 10) < .05:
-            raise ValueError('Retained: cutout foreground coverage is implausible.')
+            raise ValueError('SKIP[coverage]: Foreground is empty, nearly full, or implausibly small.')
+        # White regions enclosed by visible material may be labels or packaging.
+        # Retain them conservatively; semantic inspection decides whether they are holes.
+        enclosed = ndimage.binary_fill_holes(foreground) & ~foreground
+        if enclosed.sum() > 20 and np.mean(alpha[enclosed] >= 220) < .98:
+            raise ValueError('SKIP[white_detail_loss]: Enclosed light product or packaging area became transparent.')
+        edge = np.concatenate((alpha[0], alpha[-1], alpha[:, 0], alpha[:, -1]))
+        if np.mean(edge > 128) > .01:
+            raise ValueError('SKIP[edge_contact]: Foreground touches the image boundary; complete object cannot be assured.')
         image = cutout
+    if focus:
+        bounds = image.getchannel('A').getbbox()
+        if not bounds:
+            raise ValueError('SKIP[empty_foreground]: No visible product remains.')
+        image = image.crop(bounds)
     # No enlargement: the canvas follows the available source resolution.
     image.thumbnail((1056, 1056), Image.Resampling.LANCZOS)
     alpha = image.getchannel('A')
-    image = ImageEnhance.Sharpness(image.convert('RGB')).enhance(1.1).convert('RGBA')
+    image = ImageEnhance.Sharpness(image.convert('RGB')).enhance(sharpen).convert('RGBA')
     image.putalpha(alpha)
     side = max(1, round(max(image.size) / .88))
-    canvas = Image.new('RGBA', (side, side), (255, 255, 255, 0))
-    canvas.alpha_composite(image, ((side-image.width)//2, (side-image.height)//2))
+    pad = max(3, round(max(image.size) * .06))
+    size = (image.width + 2*pad, image.height + 2*pad) if focus else (side, side)
+    canvas = Image.new('RGBA', size, (255, 255, 255, 0))
+    canvas.alpha_composite(image, ((size[0]-image.width)//2, (size[1]-image.height)//2))
     canvas.save(target, format='PNG', optimize=True, compress_level=9)
 
 
 def enhance(args, repo, root, db):
+    if args.mode == 'names':
+        raise ValueError('Name-only mode cannot process images.')
     row = candidate(db, args.candidate)
+    _, project = read_project(repo)
+    if not has_missing_placement(project, row['store'], row['product']):
+        return {'status': 'skipped', 'reason_code': 'existing_image_or_excluded', 'current_photo_retained': True}
     if row['status'] in ('approved', 'rejected'):
         raise ValueError('Add a new candidate to revise an approved or rejected version.')
     source = root / row['original']
     if sha(source.read_bytes()) != row['original_hash']:
         raise ValueError('Original image hash changed. Register a fresh candidate.')
+    if args.crop and not args.target_evidence:
+        raise ValueError('A crop requires --target-evidence identifying the complete product/set.')
+    versions = {}
+    for package in ('Pillow', 'rembg', 'onnxruntime', 'numpy', 'scipy'):
+        try:
+            versions[package] = importlib.metadata.version(package)
+        except importlib.metadata.PackageNotFoundError:
+            versions[package] = None
+    model_hashes = {}
+    if args.remove_background:
+        model_root = Path(os.environ.get('U2NET_HOME', str(root / 'models')))
+        if model_root.is_dir():
+            model_hashes = {str(path.relative_to(model_root)): sha(path.read_bytes()) for path in sorted(model_root.rglob('*.onnx'))}
+    options = dict(models=model_hashes, version=PROCESSING_VERSION, remove_background=args.remove_background,
+                   crop=args.crop, focus=args.focus, sharpen=args.sharpen, versions=versions,
+                   engine_hash=sha(Path(__file__).read_bytes()), target_evidence=args.target_evidence)
+    # Only reuse approved processing, never an unreviewed/failed intermediate.
+    key = sha(json.dumps({'source': row['original_hash'], 'options': options}, sort_keys=True).encode())
+    for cached in db.execute("SELECT * FROM candidates WHERE store=? AND product=? AND identity=? AND status='approved'", (row['store'], row['product'], row['identity'])):
+        meta = json.loads(cached['processing'] or '{}')
+        if meta.get('cache_key') == key and cached['enhanced']:
+            path = root / cached['enhanced']
+            if path.is_file() and sha(path.read_bytes()) == cached['enhanced_hash']:
+                meta.update(cache_hit=cached['id'], processed_at=now())
+                with db:
+                    db.execute("UPDATE candidates SET enhanced=?,enhanced_hash=?,processing=?,status='needs-review',error=NULL WHERE id=?", (cached['enhanced'],cached['enhanced_hash'],json.dumps(meta),row['id']))
+                return {'candidate': row['id'], 'status': 'needs-review', 'cache_hit': True, 'enhanced': str(path)}
     outdir = root / 'enhanced'
     outdir.mkdir(exist_ok=True)
     temp = outdir / f'{uuid.uuid4().hex}.tmp.png'
-    command = [sys.executable, str(Path(__file__).resolve()), '_worker', str(source), str(temp)]
-    if args.remove_background:
-        command.append('--remove-background')
+    command = [sys.executable, str(Path(__file__).resolve()), '_worker', str(source), str(temp), '--options', json.dumps(options)]
     try:
         result = subprocess.run(command, capture_output=True, text=True, timeout=args.timeout)
         if result.returncode:
-            raise RuntimeError('Enhancement worker failed: ' + result.stderr[-1500:])
+            raise RuntimeError(result.stderr[-1500:])
         raw = temp.read_bytes()
         digest = sha(raw)
         target = outdir / f'{digest}.png'
         os.replace(temp, target)
+        options.update(cache_key=key, cache_hit=False, processed_at=now(), upscale=False)
         with db:
-            db.execute('''UPDATE candidates SET enhanced=?,enhanced_hash=?,processing=?,
-              status='needs-review',error=NULL WHERE id=?''',
-              (str(target.relative_to(root)), digest,
-               json.dumps({'remove_background': args.remove_background, 'max_pixels': 1200,
-                           'cutout_checks': 'white-background/detail-retention/components/coverage-v1' if args.remove_background else None,
-                           'sharpen': 1.1, 'upscale': False, 'processed_at': now()}), row['id']))
-        return {'candidate': row['id'], 'status': 'needs-review', 'enhanced': str(target)}
+            db.execute("UPDATE candidates SET enhanced=?,enhanced_hash=?,processing=?,status='needs-review',error=NULL WHERE id=?", (str(target.relative_to(root)),digest,json.dumps(options),row['id']))
+        return {'candidate': row['id'], 'status': 'needs-review', 'cache_hit': False, 'enhanced': str(target)}
     except Exception as exc:
+        message = str(exc)
+        skip = re.search(r'SKIP\[([a-z_]+)\]: ([^\n]+)', message)
+        status = 'skipped' if skip else 'failed'
+        reason = skip.group(2) if skip else message
+        code = skip.group(1) if skip else 'timeout' if isinstance(exc, subprocess.TimeoutExpired) else 'processing_error'
         with db:
-            db.execute("UPDATE candidates SET status='failed',error=? WHERE id=?", (str(exc), row['id']))
-        raise
+            db.execute('UPDATE candidates SET status=?,error=?,processing=? WHERE id=?', (status,reason,json.dumps(dict(options, reason_code=code)),row['id']))
+        return {'candidate': row['id'], 'status': status, 'reason_code': code, 'reason': reason, 'current_photo_retained': True}
     finally:
         temp.unlink(missing_ok=True)
 
@@ -250,7 +327,7 @@ def inventory(args, repo, root, db):
         if args.store and args.store != store:
             continue
         ids = set(s.get('productId') for key in keys for s in project['state'].get(key, {}).get('slots', []))
-        curated = {s.get('productId') for s in project['state'].get('homeBack', {}).get('slots', []) if s.get('group') == 0}
+        curated = curated_product_ids(project['state'], store)
         for pid in sorted(ids - {None}):
             p = product_in_store(project, store, pid)
             approved = db.execute('SELECT candidate FROM approvals WHERE store=? AND product=?', (store, pid)).fetchone()
@@ -261,6 +338,62 @@ def inventory(args, repo, root, db):
                          'existing_photo_source': p.get('photoSource'),
                          'hand_curated': store == 'home-express-basak' and pid in curated})
     return rows
+
+
+def plan(args, repo, root, db):
+    """Read-only scope plan: use actual placed images, including slot overrides."""
+    _, project = read_project(repo)
+    state = project['state']
+    products = {p['id']: p for p in state['products']}
+    rows = {}
+    excluded = 0
+    existing_image_slots = 0
+    for store, keys in STORES.items():
+        excluded_products = curated_product_ids(state, store)
+        for key in keys:
+            for index, slot in enumerate(state.get(key, {}).get('slots', [])):
+                if slot.get('productId') in excluded_products:
+                    excluded += 1
+                    continue
+                p = products.get(slot.get('productId'))
+                if p is None:
+                    continue
+                photo = slot.get('image') or p.get('image')
+                if args.mode != 'names' and photo:
+                    existing_image_slots += 1
+                    continue
+                digest = None
+                if isinstance(photo, dict) and '__defaultImage' in photo:
+                    name = photo['__defaultImage']
+                    if not re.fullmatch(r'images/[a-f0-9]{64}\.(png|jpg|webp|svg)', name):
+                        raise ValueError('Invalid default image path')
+                    path = repo / 'defaults' / name
+                    if path.is_file():
+                        digest = sha(path.read_bytes())
+                identity_key = (store, p['id'], json.dumps(photo, sort_keys=True))
+                if identity_key not in rows:
+                    approved = db.execute("SELECT c.id,c.enhanced,c.enhanced_hash FROM approvals a JOIN candidates c ON c.id=a.candidate WHERE a.store=? AND a.product=? AND c.identity=?", (store,p['id'],identity(p))).fetchone()
+                    reusable = bool(approved and digest and approved['enhanced_hash'] == digest)
+                    rows[identity_key] = dict(store=store, product=p['id'], name=p['name'], code=p.get('code'),
+                                              image=photo, source_hash=digest, already_approved=reusable,
+                                              approved_candidate=approved['id'] if reusable else None, placements=[])
+                rows[identity_key]['placements'].append(dict(template=key, slot=index, override=bool(slot.get('image'))))
+    return dict(mode=args.mode, source_revision=project['sourceRevision'], excluded_slots=excluded,
+                skipped_existing_image_slots=existing_image_slots,
+                search_allowed=args.mode == 'replacement', names_allowed=args.mode == 'names',
+                image_policy='missing_only', deployment=False, items=list(rows.values()))
+
+
+def summary(args, repo, root, db):
+    rows = []
+    for cid in dict.fromkeys(args.candidate):
+        row = candidate(db, cid)
+        meta = json.loads(row['processing'] or '{}')
+        rows.append(dict(candidate=cid, product=row['product'], name=row['name'], status=row['status'],
+                         cache_hit=bool(meta.get('cache_hit')), reason_code=meta.get('reason_code'),
+                         reason=row['error']))
+    return dict(counts={status: sum(r['status'] == status for r in rows) for status in ('approved','needs-review','skipped','failed','rejected')},
+                reused=sum(r['cache_hit'] for r in rows), items=rows, deployed=False)
 
 
 def report(args, repo, root, db):
@@ -297,17 +430,23 @@ def publish(args, repo, root, db):
     approved = db.execute('''SELECT c.*,a.hash AS approved_hash,a.reviewer,a.reason,a.created AS approved_at
       FROM approvals a JOIN candidates c ON c.id=a.candidate''').fetchall()
     changes, assets = [], []
+    selected = set(getattr(args, 'candidate', None) or [])
+    if selected and not selected.issubset({r['id'] for r in approved}):
+        raise ValueError('Selected candidate is not a current approval.')
     for row in approved:
+        if selected and row['id'] not in selected:
+            continue
         if args.store and args.store != row['store']:
             continue
         # Historical approvals outside the currently placed products are not in scope.
         placed = {s.get('productId') for key in STORES[row['store']]
                   for s in project['state'].get(key, {}).get('slots', [])}
-        excluded = {s.get('productId') for s in project['state'].get('homeBack', {}).get('slots', [])
-                    if s.get('group') == 0}
+        excluded = curated_product_ids(project['state'], row['store'])
         if row['product'] not in placed or row['product'] in excluded:
             continue
         p = product_in_store(project, row['store'], row['product'])
+        if not has_missing_placement(project, row['store'], row['product']):
+            continue
         other_store_uses_product = any(
             s.get('productId') == row['product'] for store, keys in STORES.items()
             if store != row['store'] for key in keys
@@ -354,8 +493,14 @@ def parser():
     p.add_argument('--repo', type=Path, required=True)
     sub = p.add_subparsers(dest='command', required=True)
     for name in ('inventory', 'publish'):
-        sub.add_parser(name).add_argument('--store', choices=STORES)
+        cmd = sub.add_parser(name)
+        cmd.add_argument('--store', choices=STORES)
+        if name == 'publish':
+            cmd.add_argument('--candidate', nargs='+', help='Apply only these current approvals.')
+    sub.add_parser('plan').add_argument('--mode', choices=MODES, required=True)
+    sub.add_parser('summary').add_argument('--candidate', nargs='+', required=True)
     addp = sub.add_parser('add')
+    addp.add_argument('--mode', choices=MODES, default='existing')
     addp.add_argument('--store', choices=STORES, required=True)
     addp.add_argument('--product', required=True)
     source = addp.add_mutually_exclusive_group(required=True)
@@ -366,6 +511,11 @@ def parser():
     addp.add_argument('--evidence', required=True)
     addp.add_argument('--quality', default='Not yet assessed')
     en = sub.add_parser('enhance')
+    en.add_argument('--mode', choices=MODES, default='existing')
+    en.add_argument('--crop', nargs=4, type=int, metavar=('LEFT','TOP','RIGHT','BOTTOM'))
+    en.add_argument('--target-evidence', default='')
+    en.add_argument('--focus', action='store_true')
+    en.add_argument('--sharpen', type=float, choices=(1.0, 1.06, 1.1), default=1.0)
     en.add_argument('--candidate', required=True)
     en.add_argument('--remove-background', action='store_true')
     en.add_argument('--timeout', type=int, default=120)
@@ -381,7 +531,8 @@ def parser():
 
 def main():
     if len(sys.argv) > 1 and sys.argv[1] == '_worker':
-        worker(Path(sys.argv[2]), Path(sys.argv[3]), '--remove-background' in sys.argv[4:])
+        options = json.loads(sys.argv[sys.argv.index('--options')+1]) if '--options' in sys.argv else {}
+        worker(Path(sys.argv[2]), Path(sys.argv[3]), options.get('remove_background', '--remove-background' in sys.argv[4:]), options.get('crop'), options.get('focus', False), options.get('sharpen', 1.0))
         return
     args = parser().parse_args()
     repo = args.repo.resolve()

@@ -11,32 +11,53 @@ CODEX = Path(os.environ["LOCALAPPDATA"]) / "Programs/OpenAI/Codex/bin/codex.exe"
 LOGS = REPO / "data/product_images/scheduled"
 HIDDEN = getattr(subprocess, "CREATE_NO_WINDOW", 0)
 PROMPT = r"""
-Use $product-image-finder on C:\Users\Admin\store-design-template-github in existing mode.
-Read the installed skill at C:\Users\Admin\.codex\skills\product-image-finder\SKILL.md.
-This is an authorized weekly unattended run. Use the full skill and agent visual
-inspection, with Codex usage authorized. No manual review is required.
+Use $product-image-finder on C:\Users\Admin\store-design-template-github.
+Read the installed skill at C:\Users\Admin\.codex\skills\product-image-finder\SKILL.md
+and its required references. This is an authorized weekly unattended run using
+Codex and agent visual inspection. Run these modes sequentially in this exact
+order: replacement -> existing -> names. No manual review is required.
 
-Process existing photos only for products currently placed in the four templates;
-exclude all Christmas Gift Bundles products. No replacement searches or image
-downloads. Reuse suitable unchanged approved photos and cache results. Identify
-the matching complete product or sold set; crop unrelated objects, remove the
-background and external text, and enhance gently with no invented details.
-Preserve branding on the product, packaging and included accessories. Inspect
-results against the original. Skip ambiguous or damaged cutouts with specific reasons.
-Use the repository's isolated rembg Python and local model files; never install
-dependencies or change global environments. Keep existing photos on missing dependencies.
+Scope every phase to unique store/product identities currently placed in the
+six store designs, including Home Express Template #2 Front/Back; exclude Christmas
+bundle products in either Home Express Back design and unplaced catalog products. Capture the initial project and original names/model/code evidence.
+Plan each phase against the locally updated result of the previous phase.
 
-Preserve names, prices, discounts, text settings, placement and template layouts.
-Do not run name cleanup. Use scoped candidate application and handle slot overrides
-without overwriting unrelated photos. Retain originals and image provenance.
-Check that the complete before/after project differs only in images, provenance,
-and its published revision. If it changes concurrently, stop before applying.
+1. REPLACEMENT: Run plan --mode replacement. Search and enhance ONLY products
+with no effective image in their template slots (slot image or catalog fallback).
+Skip every populated image, regardless of hash, approval, quality or prior enhancement.
+Do not inspect or fetch existing images. If no missing images remain, skip image work.
+Reuse verified approved photos first for missing products; otherwise verify exact
+product, brand, model, variant, capacity, color and pack quantity before sourcing.
+Crop unrelated content, remove backgrounds and external text, and enhance new
+candidates gently. Preserve the complete product, branding, packaging and accessories.
+Use the existing isolated rembg environment; skip uncertain matches or damaged results.
+Apply only to missing images and recheck before application. Preserve all existing
+slot overrides. Preserve names during image work.
 
-Apply accepted images locally and rebuild public/ with python build_pages.py.
+2. EXISTING: Only finish processing newly registered candidates for products still
+missing an image. Never clean or enhance photos already displayed in templates.
+Skip this phase if no eligible candidates remain; do not repeat completed processing.
+
+3. NAMES: Remove only confidently verified leading stock-number prefixes, using
+original names and code/model evidence retained before image processing. Preserve
+descriptive names, brands, sizes, models, variants and quantities. Update eligible
+catalog names and matching slot name overrides as the skill directs, preserving
+independently customized names. Leave ambiguous prefixes unchanged. Record each
+old/new name in local provenance. Do not process images in this phase.
+
+Use scoped candidate application, preserving slot-specific overrides and unrelated
+photos. Retain originals and provenance. Preserve all prices, discounts, text
+settings, placement and template layouts. Before each application check for
+concurrent edits and stop if unexpected changes occurred. Compare final changes
+with the initial snapshot: only images, provenance, verified stock-prefix name
+cleanup and the published revision may change.
+
+Apply reliable results locally and rebuild public/ with python build_pages.py.
 Do not commit, push, deploy, modify workflows, change schedules or skill code.
-Do not run tests. Do not contact other people. Do not add a progress page or undo feature.
-Report inspected, reused, applied, skipped and failed counts, specific skip reasons,
-and the local result paths. Do not claim local changes are deployed.
+Do not run tests, contact people, or add a progress page or undo feature.
+Report each phase's planned, reused, applied, skipped and failed counts, images
+background-removed, names cleaned, specific skip reasons and local result paths.
+Distinguish local results from deployed results; do not claim deployment occurred.
 """
 
 
