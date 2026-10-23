@@ -1,4 +1,7 @@
 #publishCatalog[hidden],#sharedCatalogUpdate[hidden]{display:none!important}
+#publishCatalog{color:#fff}
+.mobile-more-options #publishCatalog{background:#163b65;color:#fff}
+.mobile-more-options #publishCatalog:hover{background:#123253}
 .catalog-publish-dialog{width:min(560px,calc(100vw - 24px));max-height:calc(100dvh - 32px);padding:0;border:1px solid #d5e0eb;border-radius:16px;color:#20354b;background:#fff;box-shadow:0 20px 70px #163b6540}
 .catalog-publish-dialog::backdrop{background:#10294466}
 .catalog-publish-form{padding:24px;display:flex;flex-direction:column;gap:14px;overflow-wrap:anywhere}
