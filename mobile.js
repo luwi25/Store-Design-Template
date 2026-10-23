@@ -8,6 +8,11 @@
  more.append(moreButton,options);toolbar.append(more);
  const homes=new Map();
  const closeMore=()=>{options.hidden=true;moreButton.setAttribute('aria-expanded','false')};
+ const switchStore=document.createElement('button');
+ switchStore.id='mobileSwitchStore';switchStore.type='button';switchStore.className='btn';switchStore.textContent='Switch store';
+ switchStore.setAttribute('aria-haspopup','dialog');switchStore.setAttribute('aria-controls','storeChooserDialog');
+ switchStore.onclick=()=>{closeMore();moreButton.focus();window.flashSaleActions?.openStoreChooser()};
+ options.append(switchStore);
  function arrangeToolbar(){
   for(const id of ['bgRemoverBtn','restorePublishedDefaults','publishCatalog','sharedCatalogUpdate','storeActivityDashboard','storeActivitySync','storeApprovalNotice','installApp']){
    const button=document.getElementById(id);if(!button)continue;

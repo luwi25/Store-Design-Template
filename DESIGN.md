@@ -93,3 +93,5 @@ A store-chooser dialog opens automatically the first time the app loads, asking 
 The admin account is labelled Admin throughout the chooser, password prompt, publishing UI and activity logs. Its internal role remains `all`; the default activity view is labelled All stores and includes only Home Express and PesoPlus actors; Admin activity is available under the separate Admin filter.
 
 All activity cards show the connection IP recorded by the backend for that action, with Not recorded for historical or unavailable addresses. IP metadata is admin-only and does not affect authentication, permissions or rate limits.
+
+On mobile, More includes Switch store. It closes the menu and opens the existing store chooser, keeping the existing password and role checks. Desktop retains the sidebar Store selector. Focus returns through the More button when the chooser closes.
