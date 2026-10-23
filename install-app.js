@@ -1,5 +1,5 @@
 (() => {
- const button=document.createElement('button');button.id='installApp';button.className='btn btn-dark';button.type='button';button.textContent='Install app';
+ const button=document.createElement('button');button.id='installApp';button.className='btn';button.type='button';button.textContent='Install app';
  document.querySelector('.top-actions').append(button);
  let deferred;
  const standalone=()=>matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
