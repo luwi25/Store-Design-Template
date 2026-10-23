@@ -131,3 +131,7 @@ To return to the previous browser-only behavior, set `enabled:false` and publish
 ## Delivery status
 
 The files are prepared locally. They have not been applied to your Supabase project or deployed to GitHub by this setup task. Automated tests were not run. Complete the dashboard steps and check the store → request → admin decision → print flow before using it for store operations.
+
+## Activity filter update
+
+All stores in Activity logs includes only actions performed by Home Express and PesoPlus. Select Admin to view admin activity. Rerun the updated supabase-setup.sql to apply this filter before pagination, then publish the website changes. No Edge Function redeployment or secret changes are needed for this filter update. Existing records are preserved.

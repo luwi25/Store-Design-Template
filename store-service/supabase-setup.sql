@@ -196,7 +196,8 @@ begin
   select coalesce(jsonb_agg((to_jsonb(a)-'seq')||jsonb_build_object('cursor',a.seq) order by a.seq desc),'[]'),count(*)
    into v_rows,v_count from (
     select * from store_monitor.activity where
-     (coalesce(p_data->>'store','')='' or store=p_data->>'store' or details->>'store'=p_data->>'store')
+     ((coalesce(p_data->>'store','')='' and store in ('home-express','pesoplus'))
+      or (coalesce(p_data->>'store','')<>'' and (store=p_data->>'store' or details->>'store'=p_data->>'store')))
      and (coalesce(p_data->>'action','')='' or action=p_data->>'action')
      and (v_tid='' or template_id=v_tid) and (v_from is null or created_at>=v_from)
      and (v_to is null or created_at<v_to) and (v_before is null or seq<v_before)
