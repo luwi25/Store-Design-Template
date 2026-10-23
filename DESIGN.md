@@ -92,4 +92,4 @@ A store-chooser dialog opens automatically the first time the app loads, asking 
 
 The admin account is labelled Admin throughout the chooser, password prompt, publishing UI and activity logs. Its internal role remains `all`; the unfiltered activity view is labelled All accounts.
 
-Sign-in activity cards show the connection IP recorded by the backend, with Not recorded for historical or unavailable addresses. IP metadata is admin-only and does not affect authentication, permissions or rate limits.
+All activity cards show the connection IP recorded by the backend for that action, with Not recorded for historical or unavailable addresses. IP metadata is admin-only and does not affect authentication, permissions or rate limits.

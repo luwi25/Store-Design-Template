@@ -48,11 +48,25 @@ declare
  v_row store_monitor.print_requests%rowtype;
  v_rows jsonb; v_last jsonb; v_count integer; v_attempts integer;
  v_status text; v_comment text; v_details jsonb := '{}'; v_change jsonb;
- v_from timestamptz; v_to timestamptz; v_before bigint; v_ip text;
+ v_from timestamptz; v_to timestamptz; v_before bigint; v_ip text; v_network jsonb;
 begin
  if jsonb_typeof(p_data) is distinct from 'object' then
   return jsonb_build_object('error','Invalid request.','status',400);
  end if;
+ -- Network metadata is supplied by the Edge Function for this request.
+ -- Invalid/missing metadata must never block the action.
+ v_ip:=null;
+ if length(coalesce(p_data->>'ipAddress','')) between 2 and 45
+    and position('/' in (p_data->>'ipAddress'))=0 then
+  begin
+   v_ip:=host((p_data->>'ipAddress')::inet);
+  exception when invalid_text_representation then v_ip:=null;
+  end;
+ end if;
+ v_network:=jsonb_strip_nulls(jsonb_build_object(
+  'ipAddress',v_ip,
+  'ipSource',case when v_ip is not null and p_data->>'ipSource' in ('cf-connecting-ip','x-forwarded-for') then p_data->>'ipSource' else null end
+ ));
  -- These two actions are called only by the Edge Function, before session auth.
  if p_action='login_limit' then
   delete from store_monitor.login_limits where until_time < now();
@@ -68,20 +82,8 @@ begin
   end if;
   delete from store_monitor.sessions where expires<=now();
   insert into store_monitor.sessions(token_hash,store,expires) values(p_token_hash,v_store,now()+interval '8 hours');
-  -- Invalid/missing network metadata must never prevent a successful login.
-  v_ip:=null;
-  if length(coalesce(p_data->>'ipAddress','')) between 2 and 45
-     and position('/' in (p_data->>'ipAddress'))=0 then
-   begin
-    v_ip:=host((p_data->>'ipAddress')::inet);
-   exception when invalid_text_representation then v_ip:=null;
-   end;
-  end if;
   insert into store_monitor.activity(id,store,action,details)
-   values(gen_random_uuid()::text,v_store,'sign_in',jsonb_strip_nulls(jsonb_build_object(
-    'ipAddress',v_ip,
-    'ipSource',case when v_ip is not null and p_data->>'ipSource' in ('cf-connecting-ip','x-forwarded-for') then p_data->>'ipSource' else null end
-   )));
+   values(gen_random_uuid()::text,v_store,'sign_in',v_network);
   return jsonb_build_object('store',v_store);
  end if;
  select store into v_store from store_monitor.sessions where token_hash=p_token_hash and expires>now();
@@ -124,7 +126,7 @@ begin
    end loop;
   end if;
   insert into store_monitor.activity(id,store,action,template_id,template_name,details)
-   values(v_store||':'||v_id,v_store,v_status,v_tid,v_name,v_details) on conflict(id) do nothing;
+   values(v_store||':'||v_id,v_store,v_status,v_tid,v_name,v_details||v_network) on conflict(id) do nothing;
   return '{"ok":true}';
  elsif p_action='request_create' then
   if v_store='all' then return jsonb_build_object('error','Store accounts submit print requests.','status',400); end if;
@@ -142,8 +144,8 @@ begin
    if not found then
     insert into store_monitor.print_requests(id,store,template_id,template_name,note,preview)
      values(v_id,v_store,v_tid,v_name,coalesce(p_data->>'note',''),p_data->>'preview') returning * into v_row;
-    insert into store_monitor.activity(id,store,action,template_id,template_name)
-     values(v_id||'-submitted',v_store,'print_requested',v_tid,v_name);
+    insert into store_monitor.activity(id,store,action,template_id,template_name,details)
+     values(v_id||'-submitted',v_store,'print_requested',v_tid,v_name,v_network);
    end if;
   end if;
   return jsonb_build_object('id',v_row.id,'status',v_row.status,'created_at',v_row.created_at);
@@ -176,14 +178,14 @@ begin
    end if;
    update store_monitor.print_requests set status=v_status,comment=v_comment,decided_at=now() where id=v_id;
    insert into store_monitor.activity(id,store,action,template_id,template_name,details)
-    values(v_id||'-decision','all',v_status,v_row.template_id,v_row.template_name,jsonb_build_object('store',v_row.store,'comment',v_comment));
+    values(v_id||'-decision','all',v_status,v_row.template_id,v_row.template_name,jsonb_build_object('store',v_row.store,'comment',v_comment)||v_network);
   else
    if v_store='all' or v_row.status<>'approved' or exists(
     select 1 from store_monitor.print_requests where store=v_store and template_id=v_row.template_id and seq>v_row.seq
    ) then return jsonb_build_object('error','Admin approval is required before printing.','status',403); end if;
    if coalesce(p_data->>'eventId','') !~ '^[a-zA-Z0-9_-]{8,80}$' then return jsonb_build_object('error','Invalid print event.','status',400); end if;
    insert into store_monitor.activity(id,store,action,template_id,template_name,details)
-    values(v_store||':'||(p_data->>'eventId'),v_store,'print_initiated',v_row.template_id,v_row.template_name,jsonb_build_object('requestId',v_id)) on conflict(id) do nothing;
+    values(v_store||':'||(p_data->>'eventId'),v_store,'print_initiated',v_row.template_id,v_row.template_name,jsonb_build_object('requestId',v_id)||v_network) on conflict(id) do nothing;
   end if;
   return '{"ok":true}';
  elsif p_action='activity' then

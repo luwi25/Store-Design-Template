@@ -5,7 +5,7 @@ import { isIP } from 'node:net';
 // Connection metadata only, never an authorization or rate-limit identity.
 // Prefer the hosted gateway's single client address. Do not guess a client
 // from an ambiguous forwarded chain or accept an address from the login body.
-function signInAddress(request: Request) {
+function actionAddress(request: Request) {
  const gateway = request.headers.get('cf-connecting-ip')?.trim() || '';
  if (isIP(gateway)) return { ipAddress: gateway, ipSource: 'cf-connecting-ip' };
  const forwarded = request.headers.get('x-forwarded-for')?.trim() || '';
@@ -57,7 +57,7 @@ Deno.serve(async (request: Request) => {
    const response = await fetch(url + '/rest/v1/rpc/store_monitor_api', {
     method: 'POST', signal: AbortSignal.timeout(15000),
     headers: { 'Content-Type': 'application/json', apikey: key!, Authorization: 'Bearer ' + key },
-    body: JSON.stringify({ p_action: action, p_token_hash: tokenHash, p_data: data })
+    body: JSON.stringify({ p_action: action, p_token_hash: tokenHash, p_data: { ...data, ...actionAddress(request) } })
    });
    if (!response.ok) throw new HttpError(503, 'The shared database is unavailable. Check the SQL setup and retry.');
    const result = await response.json();
@@ -78,7 +78,7 @@ Deno.serve(async (request: Request) => {
    for (let i = 0; i < a.length; i++) difference |= a.charCodeAt(i) ^ b.charCodeAt(i);
    if (difference) throw new HttpError(401, 'Incorrect password.');
    const token = Array.from(crypto.getRandomValues(new Uint8Array(32)), b => b.toString(16).padStart(2, '0')).join('');
-   const result = await rpc('session_create', await hash(token), { store: data.store, ...signInAddress(request) });
+   const result = await rpc('session_create', await hash(token), { store: data.store });
    return reply({ ...result, token });
   }
   const token = request.headers.get('authorization')?.match(/^Bearer ([a-f0-9]{64})$/)?.[1];

@@ -8,18 +8,18 @@ The website stays on GitHub Pages. Supabase stores shared activity records and p
 
 ## 1. Create the database tables
 
-### Updating an existing installation: sign-in IP addresses
+### Updating an existing installation: IP addresses for every logged action
 
 If monitoring is already installed, apply this update in this order:
 
 1. Run the entire updated [supabase-setup.sql](supabase-setup.sql) in SQL Editor again. It updates the existing function and preserves your logs and requests.
 2. Open the existing Edge Function (displayed as `store-activity`, endpoint `quick-handler`). Replace its code with the updated [index.ts](index.ts), then click **Deploy updates**.
 3. Publish the updated website code to GitHub so Admin activity cards display **IP address**.
-4. Sign in again to create a new entry. Existing sessions and earlier sign-ins are not retroactively updated.
+4. Sign in or perform a logged action to create a new entry. Historical entries are not retroactively updated.
 
-No secret or password changes are needed. The backend records a valid IPv4 or IPv6 address from the request's gateway headers and stores it with the sign-in event. It prefers `cf-connecting-ip`, falling back to a single `x-forwarded-for` address; an ambiguous chain or missing address is left unrecorded. Supabase documents the forwarded header in its [Edge Function example](https://supabase.com/docs/guides/functions/examples/cloudflare-turnstile).
+No secret or password changes are needed. The backend records a valid IPv4 or IPv6 address from the request's gateway headers and stores it with each new logged action: sign-in, template opened, saved product edits, print request, approval/rejection, and print initiation. It prefers `cf-connecting-ip`, falling back to a single `x-forwarded-for` address; an ambiguous chain or missing address is left unrecorded. Supabase documents the forwarded header in its [Edge Function example](https://supabase.com/docs/guides/functions/examples/cloudflare-turnstile).
 
-The Admin log displays **Not recorded** for entries without an address. An IP represents the connection and may be shared or changed by a VPN; it is not used to prove a store's physical location or grant access. No external IP lookup service is used. Network metadata is visible through the admin-only activity endpoint.
+The Admin log displays **Not recorded** for entries without an address. An IP represents the connection and may be shared or changed by a VPN; it is not used to prove a store's physical location or grant access. Each action uses the connection observed when the server receives it, rather than reusing the sign-in IP. Offline queued events use the IP at sync time. Retries retain the original recorded entry and its IP. No external IP lookup service is used. Network metadata is visible through the admin-only activity endpoint.
 
 1. Open [your project](https://supabase.com/dashboard/project/ykgywmirbytzpehsgdad).
 2. In the sidebar, open **SQL Editor**, then create a new query.
