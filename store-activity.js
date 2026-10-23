@@ -34,11 +34,10 @@
   const toolbar=document.querySelector('.top-actions'),printButton=document.getElementById('printBtn');
   const dashboard=node('button','Store activity','btn');dashboard.id='storeActivityDashboard';dashboard.type='button';dashboard.hidden=true;toolbar.append(dashboard);
   const sync=node('button','Activity sync pending — retry','btn btn-sm');sync.id='storeActivitySync';sync.type='button';sync.hidden=true;toolbar.append(sync);
-  const notification=node('button','','btn btn-sm');notification.id='storeApprovalNotice';notification.type='button';notification.hidden=true;toolbar.append(notification);
   const printDialog=node('dialog',undefined,'store-service-dialog');printDialog.id='storePrintRequest';printDialog.setAttribute('aria-labelledby','storePrintTitle');
-  printDialog.innerHTML='<div class="store-service-body"><h2 id="storePrintTitle">Print poster</h2><p data-template></p><img data-preview alt="Poster preview for admin review"><p data-status role="status" aria-live="polite"></p><label data-note-label>Note to admin (optional)<textarea data-note maxlength="1000" rows="3"></textarea></label><div class="store-service-actions"><button type="button" class="btn" data-close>Close</button><button type="button" class="btn btn-dark" data-send>Send request to admin</button><button type="button" class="btn btn-dark" data-print hidden>Approved — Print poster</button><button type="button" class="btn" data-retry hidden>Retry</button></div></div>';
+  printDialog.innerHTML='<div class="store-service-body"><h2 id="storePrintTitle">Print poster</h2><p data-template></p><img data-preview alt="Poster preview for admin review"><p data-status role="status" aria-live="polite"></p><label data-note-label>Note to admin (optional)<textarea data-note maxlength="1000" rows="3"></textarea></label><div class="store-service-actions"><button type="button" class="btn" data-close>Close</button><button type="button" class="btn btn-dark" data-send>Send request to admin</button><button type="button" class="btn" data-retry hidden>Retry</button></div></div>';
   document.body.append(printDialog);
-  const ps=printDialog.querySelector('[data-status]'),note=printDialog.querySelector('[data-note]'),send=printDialog.querySelector('[data-send]'),approved=printDialog.querySelector('[data-print]'),retry=printDialog.querySelector('[data-retry]');
+  const ps=printDialog.querySelector('[data-status]'),note=printDialog.querySelector('[data-note]'),send=printDialog.querySelector('[data-send]'),retry=printDialog.querySelector('[data-retry]');
   const adminDialog=node('dialog',undefined,'store-service-dialog store-service-admin');adminDialog.id='storeAdminDashboard';adminDialog.setAttribute('aria-labelledby','storeAdminTitle');
   adminDialog.innerHTML='<div class="store-service-body"><div class="store-service-heading"><h2 id="storeAdminTitle">Store activity and print approvals</h2><button type="button" class="store-service-close" data-close aria-label="Close activity logs and print approvals" title="Close">&times;</button></div><div class="store-service-tabs"><button type="button" class="btn" data-tab="requests">Print approvals</button><button type="button" class="btn" data-tab="activity">Activity logs</button></div><form data-filters class="store-service-filters"><label>Store<select name="store"><option value="">All stores</option><option value="home-express">Home Express</option><option value="pesoplus">PesoPlus</option><option value="all">Admin</option></select></label><label data-request-filter>Status<select name="status"><option value="pending">Pending</option><option value="approved">Approved</option><option value="rejected">Rejected</option><option value="">All statuses</option></select></label><label data-log-filter hidden>Action<select name="action"><option value="">All actions</option><option value="sign_in">Sign-in</option><option value="template_opened">Template opened</option><option value="product_edited">Product edits saved</option><option value="print_requested">Print requested</option><option value="approved">Approved</option><option value="rejected">Rejected</option><option value="print_initiated">Print initiated</option></select></label><label data-log-filter hidden>From<input type="date" name="from"></label><label data-log-filter hidden>To<input type="date" name="to"></label><label data-log-filter hidden>Template<select name="template"><option value="">All templates</option></select></label><button type="submit" class="btn">Refresh</button></form><p data-admin-status role="status" aria-live="polite"></p><div data-last-active></div><div data-items></div><button type="button" class="btn" data-older hidden>Older activity</button><button type="button" class="btn" data-close>Close</button></div>';
   document.body.append(adminDialog);
@@ -74,11 +73,11 @@
   sync.onclick=flush;
   function view(){
    dashboard.hidden=!authenticated()||getMode()!=='all';
-   if(!authenticated()){notification.hidden=true;sync.hidden=true;printButton.textContent='Print poster';viewKey='';baseline=null;return}
+   if(!authenticated()){sync.hidden=true;printButton.textContent='Print poster';viewKey='';baseline=null;return}
    const info=getTemplate(),key=session.store+':'+info.id;
    if(!baseline||!viewKey.startsWith(session.store+':'))baseline=capture(getState());
-   if(!templates[info.id]){notification.hidden=true;return}
-   if(viewKey!==key){viewKey=key;queue({action:'template_opened',templateId:info.id,templateName:info.name.slice(0,160)});notification.hidden=true;poll()}
+   if(!templates[info.id]){return}
+   if(viewKey!==key){viewKey=key;queue({action:'template_opened',templateId:info.id,templateName:info.name.slice(0,160)});poll()}
   }
   function saved(state){
    if(!authenticated())return;
@@ -95,9 +94,16 @@
    }
   }
   function showRequest(){
-   const pending=request?.status==='pending',accepted=request?.status==='approved';
-   send.hidden=pending||accepted;approved.hidden=!accepted;note.parentElement.hidden=pending||accepted;
-   ps.textContent=pending?'Waiting for admin approval. Submitted '+timestamp(request.created_at):accepted?'Approved by admin on '+timestamp(request.decided_at):request?.status==='rejected'?'Request rejected. '+(request.comment||'You can send another request.'):'Send this poster preview to the admin for approval.';
+   const pending=request?.status==='pending',accepted=request?.status==='approved'&&request.can_print===true;
+   const expiredApproval=request?.status==='approved'&&request.can_print===false;
+   const needsUpdate=request?.status==='approved'&&typeof request.can_print!=='boolean';
+   send.hidden=pending||accepted||needsUpdate;note.parentElement.hidden=pending||accepted||needsUpdate;
+   ps.textContent=pending?'Waiting for admin approval. Submitted '+timestamp(request.created_at)
+    :accepted?'Approved until '+timestamp(request.expires_at)+'. Close this window and use Print poster.'
+    :expiredApproval?'Approval expired. Send a new request to admin.'
+    :needsUpdate?'Approval settings need updating in Supabase. Contact admin.'
+    :request?.status==='rejected'?'Request rejected. '+(request.comment||'You can send another request.')
+    :'Send this poster preview to the admin for approval.';
    if(accepted&&request.comment)ps.textContent+=' '+request.comment;
   }
   async function loadRequest(){const data=await api('/requests?template='+encodeURIComponent(activeTemplate.id));request=data.requests[0]||null;showRequest()}
@@ -108,31 +114,44 @@
    if(getMode()==='all'){
     const info=getTemplate();printBusy=true;try{await api('/events','POST',{id:crypto.randomUUID(),action:'print_initiated',templateId:info.id,templateName:info.name});await directPrint()}catch(error){alert(error.message)}finally{printBusy=false}return;
    }
-   activeTemplate=getTemplate();requestKey=crypto.randomUUID();request=null;preview='';note.value='';
-   printDialog.querySelector('[data-template]').textContent=names[getMode()]+' · '+activeTemplate.name;
-   printDialog.querySelector('[data-preview]').removeAttribute('src');ps.textContent='Loading poster and approval status…';send.hidden=true;approved.hidden=true;retry.hidden=true;
+   activeTemplate=getTemplate();const actor=session.store;
+   requestKey=crypto.randomUUID();request=null;preview='';note.value='';
+   printBusy=true;printButton.textContent='Checking approval?';
+   try{
+    await loadRequest();
+    if(!authenticated()||session.store!==actor||getTemplate().id!==activeTemplate.id)return;
+    if(request?.status==='approved'&&request.can_print===true){
+     try{await api('/requests/'+request.id+'/print','POST',{id:crypto.randomUUID()})}
+     catch(error){
+      // Approval may expire between loading status and authorizing printing.
+      await loadRequest();
+      if(request?.can_print===true)throw error;
+     }
+     if(request?.can_print===true){
+      if(authenticated()&&session.store===actor&&getTemplate().id===activeTemplate.id)await directPrint();
+      return;
+     }
+    }
+   }catch(error){if(authenticated())alert(error.message);return}
+   finally{printBusy=false;printButton.textContent='Print poster'}
+   if(!authenticated()||session.store!==actor||getTemplate().id!==activeTemplate.id)return;
+   printDialog.querySelector('[data-template]').textContent=names[getMode()]+' ? '+activeTemplate.name;
+   printDialog.querySelector('[data-preview]').removeAttribute('src');ps.textContent='Loading poster and approval status?';send.hidden=true;retry.hidden=true;
    printDialog.openFor();await prepare();
   }
   async function prepare(){
    printBusy=true;setBusy(printDialog,true);retry.hidden=true;
    try{await loadRequest();preview=await renderPreview();printDialog.querySelector('[data-preview]').src=preview}
-   catch(error){ps.textContent=error.message;send.hidden=true;approved.hidden=true;retry.hidden=false}
+   catch(error){ps.textContent=error.message;send.hidden=true;retry.hidden=false}
    finally{printBusy=false;setBusy(printDialog,false)}
   }
   retry.onclick=prepare;
   send.onclick=async()=>{
    if(printBusy)return;printBusy=true;setBusy(printDialog,true);ps.textContent='Sending request to admin…';
-   try{if(getTemplate().id!==activeTemplate.id)throw Error('The selected template changed. Close this request and open Print poster again.');await api('/requests','POST',{id:requestKey,templateId:activeTemplate.id,templateName:activeTemplate.name,note:note.value,preview});await loadRequest();printButton.textContent=request?.status==='pending'?'Approval pending':'Print poster'}
+   try{if(getTemplate().id!==activeTemplate.id)throw Error('The selected template changed. Close this request and open Print poster again.');await api('/requests','POST',{id:requestKey,templateId:activeTemplate.id,templateName:activeTemplate.name,note:note.value,preview});await loadRequest();requestKey=crypto.randomUUID();printButton.textContent='Print poster'}
    catch(error){ps.textContent=error.message+' Your note is still here; try sending again.'}
    finally{printBusy=false;setBusy(printDialog,false)}
   };
-  approved.onclick=async()=>{
-   if(printBusy)return;printBusy=true;setBusy(printDialog,true);
-   try{if(getTemplate().id!==activeTemplate.id)throw Error('The selected template changed. Close this request and open Print poster again.');await api('/requests/'+request.id+'/print','POST',{id:crypto.randomUUID()});printDialog.close();await directPrint()}
-   catch(error){ps.textContent=error.message}
-   finally{printBusy=false;setBusy(printDialog,false)}
-  };
-  notification.onclick=requestPrint;
   const filters=adminDialog.querySelector('[data-filters]'),items=adminDialog.querySelector('[data-items]'),adminStatus=adminDialog.querySelector('[data-admin-status]');
   const templateLabels={'home-everyday':'Home Express — Front','home-back':'Home Express — Back','home-collection':'Home Express — Back (Blue & Orange)','home-collection-front':'Home Express — Front (Blue & Orange)','peso-plus':'PesoPlus — Front','peso-back':'PesoPlus — Back'};
   for(const id of Object.keys(templates)){const option=node('option',templateLabels[id]);option.value=id;filters.elements.template.append(option)}
@@ -182,8 +201,7 @@
     if(identity==='all'){const data=await api('/requests?status=pending');if(session?.store===identity)dashboard.textContent='Store activity'+(data.requests.length?' · '+data.requests.length+' pending':'')}
     else if(templates[tid]){
      const data=await api('/requests?template='+encodeURIComponent(tid));if(session?.store!==identity||getTemplate().id!==tid)return;
-     const latest=data.requests[0];printButton.textContent=latest?.status==='pending'?'Approval pending':'Print poster';
-     notification.hidden=!latest||latest.status==='pending';notification.textContent=latest?.status==='approved'?'Print request approved':'Print request rejected';
+     const latest=data.requests[0];if(!printBusy)printButton.textContent='Print poster';
      if(printDialog.open&&!printBusy&&activeTemplate?.id===tid&&latest?.id===request?.id){request=latest;showRequest()}
     }
    }catch{}finally{polling=false}

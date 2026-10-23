@@ -135,3 +135,9 @@ The files are prepared locally. They have not been applied to your Supabase proj
 ## Activity filter update
 
 All stores in Activity logs includes only actions performed by Home Express and PesoPlus. Select Admin to view admin activity. Rerun the updated supabase-setup.sql to apply this filter before pagination, then publish the website changes. No Edge Function redeployment or secret changes are needed for this filter update. Existing records are preserved.
+
+## Five-hour print approval update
+
+Run the complete updated supabase-setup.sql in SQL Editor before publishing the website changes. The database now returns expires_at and can_print and rejects printing five hours after decided_at, using server time. Existing approvals also use their original approval time, so those older than five hours expire immediately when this update is applied. Existing history is preserved. Admin printing, PDF/PNG downloads, and sales schedules are unchanged.
+
+No Edge Function redeployment or secret changes are needed for this update. The frontend hides the separate approval notification and overlay print buttons. The main Print poster control checks current server approval each time; the overlay shows the expiry time or offers a new request. With an older database function, approved printing asks for the Supabase update rather than assuming unlimited approval.

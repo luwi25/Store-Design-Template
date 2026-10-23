@@ -1,4 +1,4 @@
-#storeActivityDashboard[hidden],#storeActivitySync[hidden],#storeApprovalNotice[hidden],.store-service-dialog [hidden]{display:none!important}
+#storeActivityDashboard[hidden],#storeActivitySync[hidden],.store-service-dialog [hidden]{display:none!important}
 .store-service-dialog{width:min(600px,calc(100vw - 24px));max-height:calc(100dvh - 32px);padding:0;border:1px solid #d5e0eb;border-radius:16px;background:#fff;color:#20354b;box-shadow:0 20px 70px #163b6540;overflow:auto}
 .store-service-dialog::backdrop{background:#10294466}
 .store-service-admin{width:min(900px,calc(100vw - 24px))}
@@ -24,4 +24,4 @@
 .store-service-card button{align-self:flex-start}
 .store-service-body [role=status]{color:#163b65;font-size:13px}
 @media(max-width:820px){.store-service-body{padding:18px}.store-service-actions .btn{min-height:44px;flex:1 1 auto}}
-@media print{.store-service-dialog,#storeActivityDashboard,#storeActivitySync,#storeApprovalNotice{display:none!important}}
+@media print{.store-service-dialog,#storeActivityDashboard,#storeActivitySync{display:none!important}}

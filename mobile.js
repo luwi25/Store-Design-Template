@@ -14,7 +14,7 @@
  switchStore.onclick=()=>{closeMore();moreButton.focus();window.flashSaleActions?.openStoreChooser()};
  options.append(switchStore);
  function arrangeToolbar(){
-  for(const id of ['bgRemoverBtn','restorePublishedDefaults','publishCatalog','sharedCatalogUpdate','storeActivityDashboard','storeActivitySync','storeApprovalNotice','installApp']){
+  for(const id of ['bgRemoverBtn','restorePublishedDefaults','publishCatalog','sharedCatalogUpdate','storeActivityDashboard','storeActivitySync','installApp']){
    const button=document.getElementById(id);if(!button)continue;
    if(!homes.has(button)){
     const home=document.createComment('Toolbar position: '+id);
