@@ -48,7 +48,7 @@ declare
  v_row store_monitor.print_requests%rowtype;
  v_rows jsonb; v_last jsonb; v_count integer; v_attempts integer;
  v_status text; v_comment text; v_details jsonb := '{}'; v_change jsonb;
- v_from timestamptz; v_to timestamptz; v_before bigint;
+ v_from timestamptz; v_to timestamptz; v_before bigint; v_ip text;
 begin
  if jsonb_typeof(p_data) is distinct from 'object' then
   return jsonb_build_object('error','Invalid request.','status',400);
@@ -68,7 +68,20 @@ begin
   end if;
   delete from store_monitor.sessions where expires<=now();
   insert into store_monitor.sessions(token_hash,store,expires) values(p_token_hash,v_store,now()+interval '8 hours');
-  insert into store_monitor.activity(id,store,action) values(gen_random_uuid()::text,v_store,'sign_in');
+  -- Invalid/missing network metadata must never prevent a successful login.
+  v_ip:=null;
+  if length(coalesce(p_data->>'ipAddress','')) between 2 and 45
+     and position('/' in (p_data->>'ipAddress'))=0 then
+   begin
+    v_ip:=host((p_data->>'ipAddress')::inet);
+   exception when invalid_text_representation then v_ip:=null;
+   end;
+  end if;
+  insert into store_monitor.activity(id,store,action,details)
+   values(gen_random_uuid()::text,v_store,'sign_in',jsonb_strip_nulls(jsonb_build_object(
+    'ipAddress',v_ip,
+    'ipSource',case when v_ip is not null and p_data->>'ipSource' in ('cf-connecting-ip','x-forwarded-for') then p_data->>'ipSource' else null end
+   )));
   return jsonb_build_object('store',v_store);
  end if;
  select store into v_store from store_monitor.sessions where token_hash=p_token_hash and expires>now();

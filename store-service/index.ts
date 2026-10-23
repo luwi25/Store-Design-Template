@@ -1,5 +1,17 @@
 // Supabase Dashboard -> Edge Functions -> quick-handler -> index.ts.
 // No third-party imports. Store passwords stay in Edge Function secrets.
+import { isIP } from 'node:net';
+
+// Connection metadata only, never an authorization or rate-limit identity.
+// Prefer the hosted gateway's single client address. Do not guess a client
+// from an ambiguous forwarded chain or accept an address from the login body.
+function signInAddress(request: Request) {
+ const gateway = request.headers.get('cf-connecting-ip')?.trim() || '';
+ if (isIP(gateway)) return { ipAddress: gateway, ipSource: 'cf-connecting-ip' };
+ const forwarded = request.headers.get('x-forwarded-for')?.trim() || '';
+ if (!forwarded.includes(',') && isIP(forwarded)) return { ipAddress: forwarded, ipSource: 'x-forwarded-for' };
+ return { ipAddress: null, ipSource: null };
+}
 // These are secret NAMES. Enter their password values in Supabase -> Edge Functions -> Secrets.
 const roles = {
  'home-express': 'HOME_EXPRESS_PASSWORD',
@@ -66,7 +78,7 @@ Deno.serve(async (request: Request) => {
    for (let i = 0; i < a.length; i++) difference |= a.charCodeAt(i) ^ b.charCodeAt(i);
    if (difference) throw new HttpError(401, 'Incorrect password.');
    const token = Array.from(crypto.getRandomValues(new Uint8Array(32)), b => b.toString(16).padStart(2, '0')).join('');
-   const result = await rpc('session_create', await hash(token), { store: data.store });
+   const result = await rpc('session_create', await hash(token), { store: data.store, ...signInAddress(request) });
    return reply({ ...result, token });
   }
   const token = request.headers.get('authorization')?.match(/^Bearer ([a-f0-9]{64})$/)?.[1];
