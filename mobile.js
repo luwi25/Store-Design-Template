@@ -9,7 +9,7 @@
  const homes=new Map();
  const closeMore=()=>{options.hidden=true;moreButton.setAttribute('aria-expanded','false')};
  function arrangeToolbar(){
-  for(const id of ['bgRemoverBtn','restorePublishedDefaults','installApp']){
+  for(const id of ['bgRemoverBtn','restorePublishedDefaults','publishCatalog','sharedCatalogUpdate','installApp']){
    const button=document.getElementById(id);if(!button)continue;
    if(!homes.has(button)){
     const home=document.createComment('Toolbar position: '+id);

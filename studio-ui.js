@@ -183,7 +183,7 @@ function bindProductNameSearch(input,slot){
  const commit=()=>{if(!dirty)return;const value=input.value.trim();if(!value){input.setAttribute('aria-invalid','true');return}input.removeAttribute('aria-invalid');dirty=false;
   let product=state.products.find(p=>p.id===slot.productId);
   if(!product){product={id:'catalog-'+Date.now()+'-'+Math.random().toString(36).slice(2,7),name:value,price:0,code:'',image:null};state.products.push(product);slot.productId=product.id;slot.discountPercent=0}
-  product.name=value;slot.details={...slot.details,name:value};renderCatalog();renderPoster();save();
+  window.catalogPublisher?.record(product,'name',value);product.name=value;slot.details={...slot.details,name:value};renderCatalog();renderPoster();save();
   if(!$('slotOriginalPrice')){renderSlotEditor();$('slotOriginalPrice')?.focus({preventScroll:true})}
  };
  input.addEventListener('input',()=>{dirty=true;input.removeAttribute('aria-invalid');show()});input.addEventListener('focus',()=>{if(!input.value.trim())show()});

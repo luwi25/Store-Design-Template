@@ -1,7 +1,8 @@
 {
   "private": true,
   "scripts": {
-    "test": "node browser-storage-review.cjs && node browser-model-review.cjs"
+    "test": "node browser-storage-review.cjs && node browser-model-review.cjs",
+    "test:catalog": "node shared-catalog-review.cjs && node shared-catalog-integration-review.cjs"
   },
   "devDependencies": {
     "fake-indexeddb": "6.2.5",

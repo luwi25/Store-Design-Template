@@ -51,7 +51,7 @@ assert html.count(startup) == 1
 html=html.replace(startup,
  " if(!parsed){parsed=await loadPublishedDefault();await StoreDatabase.save(parsed)}"
  " else if(typeof parsed.publishedProjectRevision==='number'){try{const latestRevision=await fetchPublishedRevision();"
- "if(typeof latestRevision==='number'&&latestRevision>parsed.publishedProjectRevision){parsed=await loadPublishedDefault();"
+ "if(typeof latestRevision==='number'&&latestRevision>parsed.publishedProjectRevision&&!parsed.sharedCatalogDraft?.changes?.length){parsed=await loadPublishedDefault();"
  "await StoreDatabase.save(parsed);showNotice('Catalog refreshed with the latest weekly top sellers.')}}"
  "catch(e){console.warn('Catalog update check failed',e)}}\n"
  +startup)
@@ -64,7 +64,7 @@ def external_image(match):
     return 'assets/'+name
 html=re.sub(r'data:image/(png|jpeg|webp|svg\+xml);base64,([A-Za-z0-9+/=]+)',external_image,html)
 (OUT/'index.html').write_text(html,encoding='utf-8')
-for name in ['default-project.js','browser-db.js','browser-background.js','background-worker.js','mobile.css','mobile.js','install-app.js','manifest.webmanifest','restore-defaults.css','download-menu.css','sidebar-spacing.css']:
+for name in ['default-project.js','browser-db.js','browser-background.js','background-worker.js','mobile.css','mobile.js','install-app.js','manifest.webmanifest','restore-defaults.css','download-menu.css','sidebar-spacing.css','shared-catalog.js','shared-catalog-ui.js','shared-catalog.css']:
     shutil.copy2(ROOT/name,OUT/name)
 # Ship current image references only, rather than every historical replacement.
 published=json.loads((ROOT/'defaults/project.json').read_text(encoding='utf-8'))

@@ -10,11 +10,23 @@ Run `python skills/product-image-finder/scripts/test_images.py` for offline work
 
 Home Express and PesoPlus template editor with independent product discounts, image uploads, browser background removal and print-ready PDF downloads.
 
-## GitHub Pages version: local data only
+## GitHub Pages version: private edits and optional admin publishing
 
 Run `python build_pages.py` to create `public/`. GitHub Actions builds and deploys this folder when Pages is enabled with GitHub Actions as the source.
 
-Every user's edits and product images are saved in IndexedDB in their own browser. No product photo or saved project is uploaded to GitHub or a shared API. The website only downloads bundled artwork, code and the background-removal model. Other browsers and computers start with the default templates. Clearing site data deletes local edits; use Download backup before clearing data or changing devices. Private browsing may discard saves when the session ends.
+Edits and product images are saved in IndexedDB in the user's browser. Individual-store editing stays private. All Stores admins can explicitly publish product names, original prices and photos to the shared catalog using a restricted GitHub token. Publishing uploads the listed edits and new photos to this public repository; ordinary saving does not upload them. Other browsers start with the published templates. Clearing site data deletes private edits; use Download backup before clearing data or changing devices. Private browsing may discard saves when the session ends.
+
+### Publish from All Stores
+
+1. Unlock All Stores and edit an existing product's name, original price or photo. These edits update its browser catalog entry and repeated occurrences of the same product. Discounts, text sizes and product placement are not included in publication.
+2. Open **Publish changes** in the toolbar (under **More** on mobile). Review the listed changes.
+3. Create a fine-grained token in GitHub Settings > Developer settings > Personal access tokens. Select the repository owner, restrict access to **Store-Design-Template**, choose an expiration, and grant **Contents: Read and write**. No workflow or administration permission is needed. Your GitHub account must already have permission to write to the repository.
+4. Enter that token in the app's publishing dialog and select **Publish changes**. Never put the token in source files, backups or chat. It is held only during that operation and cleared afterward.
+5. The app reports when the commit is saved and links to the deployment. Changes become live after GitHub Pages successfully deploys. Open browsers offer **Published catalog updated**, which opens the existing explicit restore options. Reloaded browsers follow the existing published-revision behavior; a pending publishing draft prevents automatic replacement on startup.
+
+The existing store passwords are view filters, not repository authorization. GitHub enforces write permissions. Photos and catalog changes are committed atomically; concurrent repository updates or conflicting product fields stop publication and retain the pending draft. Matching uses stable product IDs and unique store/stock-code matches, never product names alone. Newly created browser-only products without a published match cannot be published through this catalog-edit flow. **Clear pending list** removes the publishing draft while keeping local edits.
+
+Weekly sales sync keeps its current schedule, rankings and rules. It reads the updated catalog names/photos and continues taking current prices from UBEST. Published manual prices can therefore change in the next sync. Build with `python build_pages.py`, then run `npm run test:catalog` for publishing and editor integration checks using mocked GitHub requests; these checks do not publish real edits.
 
 Image data is deduplicated as blobs. Two prior saves and a legacy import are retained locally, with unused images reclaimed afterward. Concurrent-tab revision checks protect against overwriting a newer save. Backup export/import stays available.
 

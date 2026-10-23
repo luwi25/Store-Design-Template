@@ -1,5 +1,7 @@
 # Editor interaction conventions
 
+Shared catalog publishing uses the existing navy/teal buttons and native modal dialog pattern. Show Publish changes only in All Stores; place it in More on mobile. List the exact pending name, original-price and photo edits before asking for a restricted GitHub token. Keep that credential out of saved state, backups and logs, clear it after every attempt, and preserve publishing drafts on failure. Distinguish a saved GitHub commit from a successful live deployment. Reconcile same-product slot overrides when applying a shared catalog field while preserving discounts and typography. Publishing drafts prevent automatic startup replacement; the explicit Restore Published Defaults action still offers the user control. Sales automation files and schedules are outside this feature's scope.
+
 Preserve the approved template artwork. Editor controls use Outfit, navy #163b65 and teal #18a999.
 
 Published defaults seed empty browsers and refresh revision-tracked projects at startup when a newer snapshot is published. Do not show the old Load published project control above the preview. Backup/import controls remain available in Catalog.
