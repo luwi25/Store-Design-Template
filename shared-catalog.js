@@ -115,7 +115,7 @@
    const data=await request('/git/blobs','POST',{content:JSON.stringify(prepared.project),encoding:'utf-8'});
    tree.push({path:'defaults/project.json',mode:'100644',type:'blob',sha:data.sha});
    const newTree=await request('/git/trees','POST',{base_tree:commit.tree.sha,tree});
-   const saved=await request('/git/commits','POST',{message:'Publish shared catalog edits from All Stores',tree:newTree.sha,parents:[head]});
+   const saved=await request('/git/commits','POST',{message:'Publish shared catalog edits from Admin',tree:newTree.sha,parents:[head]});
    // force:false makes concurrent weekly-sync commits win instead of overwriting them.
    await request('/git/refs/heads/main','PATCH',{sha:saved.sha,force:false});
    return {sha:saved.sha,url:'https://github.com/'+REPO+'/commit/'+saved.sha,revision:prepared.project.sourceRevision};

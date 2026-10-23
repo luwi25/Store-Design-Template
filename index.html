@@ -494,7 +494,7 @@
     <div class="store-choice" id="storeChoiceButtons" role="group" aria-label="Store to show templates for">
       <button class="store-choice-btn" type="button" data-store="home-express" aria-pressed="false"><b>Home Express</b><span>Requires a password</span></button>
       <button class="store-choice-btn" type="button" data-store="pesoplus" aria-pressed="false"><b>PesoPlus</b><span>Requires a password</span></button>
-      <button class="store-choice-btn" type="button" data-store="all" aria-pressed="false"><b>All stores</b><span>Requires a password</span></button>
+      <button class="store-choice-btn" type="button" data-store="all" aria-pressed="false"><b>Admin</b><span>Requires a password</span></button>
     </div>
     <form id="storePasswordGate" class="store-password-gate" hidden>
       <div class="field"><label for="storePassword" id="storePasswordLabel">Password</label><input id="storePassword" type="password" autocomplete="off"><span class="error-line" id="storePasswordError"></span></div>
@@ -635,7 +635,7 @@ const STORE_FILTER_KEY='flashSaleStoreFilter';
 const STORE_PASSWORDS={'home-express':'homeexpress123','pesoplus':'pesoplus123','all':'admin123'};
 let storeFilter=null,pendingStoreChoice=null;
 try{if(!window.STORE_ACTIVITY_CONFIG?.enabled)storeFilter=localStorage.getItem(STORE_FILTER_KEY)}catch(e){console.warn('Store filter choice could not be read',e)}
-function storeFilterLabelText(value){return value==='home-express'?'Home Express':value==='pesoplus'?'PesoPlus':value==='all'?'All stores':'Locked'}
+function storeFilterLabelText(value){return value==='home-express'?'Home Express':value==='pesoplus'?'PesoPlus':value==='all'?'Admin':'Locked'}
 function applyStoreFilterToDOM(){
  window.catalogPublisher?.refresh();
  const wrap=$('templateList');if(!wrap)return;

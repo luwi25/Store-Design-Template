@@ -23,7 +23,7 @@ Open **Edge Functions → Secrets** in your Supabase project. Add these four sec
 | --- | --- |
 | `HOME_EXPRESS_PASSWORD` | A new password for Home Express, at least 12 characters |
 | `PESOPLUS_PASSWORD` | A different new password for PesoPlus, at least 12 characters |
-| `ADMIN_PASSWORD` | A separate new password for All Stores, at least 12 characters |
+| `ADMIN_PASSWORD` | A separate new password for Admin, at least 12 characters |
 | `ALLOWED_ORIGINS` | `https://luwi25.github.io` |
 
 Save the secrets. Enter the actual passwords **only in Supabase**. Keep them somewhere private and give each store only its own password. Use new passwords: the previous browser-only passwords are present in the public website source.
@@ -80,7 +80,7 @@ Publish the website changes to GitHub together: `index.html`, `build_pages.py`, 
 
 ### Admin
 
-1. Choose **All Stores** and enter the admin password.
+1. Choose **Admin** and enter the admin password.
 2. Open **Store activity** in the top toolbar. On mobile it is in **More**.
 3. In **Print approvals**, open a pending request, check its preview, optionally enter a comment, and approve or reject it.
 4. In **Activity logs**, filter by store, action, dates, or template. Dates use Philippine time. The panel also shows the last recorded activity for each store.
