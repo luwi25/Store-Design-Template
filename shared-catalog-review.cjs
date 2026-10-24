@@ -26,6 +26,20 @@ const change=()=>[edit({name:{before:'Paper',after:'Manila Paper'},price:{before
  await assert.rejects(core.prepare(fixture(),[edit({discountPercent:{before:0,after:50}})]),/Only names/);
  await assert.rejects(core.prepare(fixture(),[edit({image:{before:null,after:'data:image/png;base64,YWJj'}})]),/valid PNG/);
  await assert.rejects(core.prepare(fixture(),[edit({price:{before:10,after:-1}})]),/valid original price/);
+ const replacement={kind:'replacement',templateId:'home-back',slotIndex:0,slotCount:1,group:null,before:{...item},after:{...fixture().state.products[1]}};
+ const replaced=await core.prepare(fixture(),[replacement]);
+ assert.equal(replaced.count,1);assert.equal(replaced.project.state.homeBack.slots[0].productId,'sales-ppm-abc');
+ assert.equal(replaced.project.state.homeBack.slots[0].details,null);assert.equal(replaced.project.state.homeBack.slots[0].image,null);
+ assert.equal(replaced.project.state.homeBack.slots[0].discountPercent,20);assert.deepEqual(replaced.project.state.homeBack.slots[0].textSizes,{name:110});
+ assert.equal(replaced.project.state.homeCollection.slots[0].productId,item.id,'Other template positions unchanged');
+ assert.deepEqual(replaced.project.state.products,fixture().state.products,'Replacement does not rename original catalog entry');
+ assert.equal((await core.prepare(replaced.project,[replacement])).count,0,'Replacement retry is idempotent');
+ const moved=fixture();moved.state.homeBack.slots[0].productId='another-weekly-product';await assert.rejects(core.prepare(moved,[replacement]),/position changed/);
+ const layoutChanged=fixture();layoutChanged.state.homeBack.slots.push({productId:item.id});await assert.rejects(core.prepare(layoutChanged,[replacement]),/layout changed/);
+ await assert.rejects(core.prepare(fixture(),[{...replacement,templateId:'unknown'}]),/Invalid template replacement/);
+ await assert.rejects(core.prepare(fixture(),[{...replacement,after:{id:'missing',name:'Missing',code:''}}]),/not in the published catalog/);
+ const together=await core.prepare(fixture(),[replacement,edit({name:{before:'Other store',after:'New selected name'}},fixture().state.products[1])]);
+ assert.equal(together.project.state.products[1].name,'New selected name');assert.equal(together.project.state.homeBack.slots[0].details,null);
  const draft=fixture();draft.state.sharedCatalogDraft={private:'do not touch existing remote state'};
  const calls=[];
  async function transport(url,options){
@@ -52,7 +66,13 @@ const change=()=>[edit({name:{before:'Paper',after:'Manila Paper'},price:{before
  const publisher=w.setupSharedCatalogPublishing({getState:()=>uiState,getMode:()=>mode,save:()=>saves++,render:()=>{}});
  assert(w.document.getElementById('publishCatalog').hidden);
  publisher.record(uiState.products[0],'name','Private');assert(!uiState.sharedCatalogDraft);
+ publisher.recordReplacement('home-back',0,uiState.homeBack.slots[0],uiState.products[1]);assert(!uiState.sharedCatalogDraft,'Store mode replacements stay private');
  mode='all';publisher.refresh();assert(!w.document.getElementById('publishCatalog').hidden);
+ publisher.recordReplacement('home-back',0,uiState.homeBack.slots[0],uiState.products[1]);
+ assert.equal(uiState.sharedCatalogDraft.changes.length,1);assert.equal(uiState.sharedCatalogDraft.changes[0].kind,'replacement');
+ uiState.homeBack.slots[0].productId=uiState.products[1].id;
+ publisher.recordReplacement('home-back',0,uiState.homeBack.slots[0],uiState.products[0]);
+ assert.equal(uiState.sharedCatalogDraft.changes.length,0,'Returning to original product removes replacement');uiState.homeBack.slots[0].productId=uiState.products[0].id;
  publisher.record(uiState.products[0],'image',photo);publisher.record(uiState.products[0],'name','New Name');
  assert.equal(uiState.homeBack.slots[0].details.name,'New Name');assert.equal(uiState.products[0].image,photo);
  assert.equal(uiState.sharedCatalogDraft.changes.length,1);

@@ -4,7 +4,7 @@ window.setupSharedCatalogPublishing=function({getState,getMode,save,render}){
  const toolbar=document.querySelector('.top-actions');
  const button=document.createElement('button');button.id='publishCatalog';button.type='button';button.className='btn btn-dark';toolbar.append(button);
  const dialog=document.createElement('dialog');dialog.id='publishCatalogDialog';dialog.className='catalog-publish-dialog';dialog.setAttribute('aria-labelledby','publishCatalogTitle');
- dialog.innerHTML='<form class="catalog-publish-form"><h2 id="publishCatalogTitle">Publish catalog changes</h2><p>Share these product edits with everyone after the website finishes deploying. The next sales sync will still get prices from UBEST.</p><ul data-changes></ul><p class="helper">Only edits made in Admin are included. Product placement, discounts and text settings stay separate.</p><label for="catalogPublishToken">Restricted GitHub token</label><input id="catalogPublishToken" type="password" autocomplete="off" spellcheck="false" required placeholder="Enter token for this publication"><p class="helper">Use a fine-grained token for luwi25/Store-Design-Template with Contents: Read and write. It is cleared after use and never saved in your project.</p><a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener noreferrer">Create a restricted token on GitHub</a><p data-status role="status" aria-live="polite"></p><div data-result></div><div class="catalog-publish-actions"><button type="button" class="btn" data-discard>Clear pending list</button><button type="button" class="btn" data-close>Cancel</button><button type="submit" class="btn btn-dark" data-submit>Publish changes</button></div></form>';
+ dialog.innerHTML='<form class="catalog-publish-form"><h2 id="publishCatalogTitle">Publish catalog changes</h2><p>Share these product edits with everyone after the website finishes deploying. The next sales sync will still get prices from UBEST.</p><ul data-changes></ul><p class="helper">Saved Admin catalog edits and product replacements are included. Discounts, text settings and layouts stay separate.</p><label for="catalogPublishToken">Restricted GitHub token</label><input id="catalogPublishToken" type="password" autocomplete="off" spellcheck="false" required placeholder="Enter token for this publication"><p class="helper">Use a fine-grained token for luwi25/Store-Design-Template with Contents: Read and write. It is cleared after use and never saved in your project.</p><a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener noreferrer">Create a restricted token on GitHub</a><p data-status role="status" aria-live="polite"></p><div data-result></div><div class="catalog-publish-actions"><button type="button" class="btn" data-discard>Clear pending list</button><button type="button" class="btn" data-close>Cancel</button><button type="submit" class="btn btn-dark" data-submit>Publish changes</button></div></form>';
  document.body.append(dialog);
  const form=dialog.querySelector('form'),input=dialog.querySelector('input'),status=dialog.querySelector('[data-status]'),submit=dialog.querySelector('[data-submit]');
  let busy=false,trigger=null;
@@ -16,7 +16,7 @@ window.setupSharedCatalogPublishing=function({getState,getMode,save,render}){
   const state=getState();state.sharedCatalogDraft ||= {version:1,changes:[]};
   if(state.sharedCatalogDraft.version!==1||!Array.isArray(state.sharedCatalogDraft.changes))throw Error('Invalid publishing draft.');
   const list=state.sharedCatalogDraft.changes;
-  let entry=list.find(item=>item.identity.id===product.id);
+  let entry=list.find(item=>item.kind!=='replacement'&&item.identity.id===product.id);
   if(!entry){entry={identity:{id:product.id,name:product.name,code:product.code||'',templateId:product.templateId||''},fields:{}};list.push(entry)}
   const before=entry.fields[field]?entry.fields[field].before:structuredClone(product[field]??null);
   if(before===value)delete entry.fields[field];else entry.fields[field]={before,after:structuredClone(value)};
@@ -25,9 +25,33 @@ window.setupSharedCatalogPublishing=function({getState,getMode,save,render}){
   service.apply(state,product,field,value,true);
   refresh();
  }
+ function recordReplacement(templateId,slotIndex,beforeSlot,product){
+  if(getMode()!=='all'||beforeSlot.productId===product.id)return;
+  const state=getState(),slots=service.templateSlots(state,templateId);
+  if(!Array.isArray(slots)||slots[slotIndex]!==beforeSlot)throw Error('This template position cannot be published. Select the product again.');
+  state.sharedCatalogDraft ||= {version:1,changes:[]};
+  const draft=state.sharedCatalogDraft;if(draft.version!==1||!Array.isArray(draft.changes))throw Error('Invalid publishing draft.');
+  const list=draft.changes;
+  let entry=list.find(item=>item.kind==='replacement'&&item.templateId===templateId&&item.slotIndex===slotIndex);
+  const identity=p=>({id:p.id,name:p.name,code:p.code||'',templateId:p.templateId||''});
+  if(!entry){
+   const previous=state.products.find(p=>p.id===beforeSlot.productId);
+   entry={kind:'replacement',templateId,templateName:state.templateNames?.[templateId]||templateId,slotIndex,slotCount:slots.length,group:beforeSlot.group??null,before:previous?identity(previous):{id:beforeSlot.productId??null,name:'Empty position'}};
+   list.push(entry);
+  }
+  entry.after=identity(product);
+  if(entry.before.id===entry.after.id)list.splice(list.indexOf(entry),1);
+  refresh();
+ }
  function summary(){
   const list=dialog.querySelector('[data-changes]');list.replaceChildren();
   for(const edit of changes()){
+   if(edit.kind==='replacement'){
+    const item=document.createElement('li'),title=document.createElement('strong'),detail=document.createElement('div');
+    title.textContent=(edit.templateName||edit.templateId)+' · Product '+(edit.slotIndex+1);
+    detail.textContent='Replace '+edit.before.name+' → '+edit.after.name;
+    item.append(title,detail);list.append(item);continue;
+   }
    const item=document.createElement('li'),title=document.createElement('strong');title.textContent=edit.fields.name?.after||edit.identity.name;
    item.append(title);
    for(const [field,change] of Object.entries(edit.fields)){
@@ -38,7 +62,7 @@ window.setupSharedCatalogPublishing=function({getState,getMode,save,render}){
    list.append(item);
   }
   submit.disabled=!changes().length;
-  if(!changes().length)status.textContent='In Admin, edit a product name, original price or photo and click Save product first. Saved catalog edits will appear here.';
+  if(!changes().length)status.textContent='In Admin, edit a product or choose a replacement from the catalog, then click Save product. Saved changes will appear here.';
  }
  button.onclick=()=>{
   trigger=document.activeElement;input.value='';status.textContent='';dialog.querySelector('[data-result]').replaceChildren();summary();dialog.showModal();
@@ -79,5 +103,5 @@ window.setupSharedCatalogPublishing=function({getState,getMode,save,render}){
   checking=true;try{const latest=await window.fetchPublishedRevision();update.hidden=!(latest>current)}catch{}finally{checking=false}
  }
  setInterval(check,60000);window.addEventListener('online',check);document.addEventListener('visibilitychange',check);
- refresh();return {record,refresh};
+ refresh();return {record,recordReplacement,refresh};
 };

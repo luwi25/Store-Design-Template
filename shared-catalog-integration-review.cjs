@@ -11,7 +11,7 @@ const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
   w.HTMLDialogElement.prototype.showModal=function(){this.open=true};w.HTMLDialogElement.prototype.close=function(){this.open=false;this.dispatchEvent(new w.Event('close'))};
   w.HTMLCanvasElement.prototype.toDataURL=()=> 'data:image/png;base64,'+photo;
   w.HTMLCanvasElement.prototype.getContext=function(){return new Proxy({canvas:this,font:'',measureText:text=>({width:String(text).length*5}),createRadialGradient:()=>({addColorStop(){}}),createLinearGradient:()=>({addColorStop(){}})},{get:(object,key)=>key in object?object[key]:(()=>{})})};
-  const state=JSON.parse(fs.readFileSync('defaults/project.json','utf8')).state;state.templateId=templateId;
+  const state=JSON.parse(JSON.stringify(JSON.parse(fs.readFileSync('defaults/project.json','utf8')).state),(key,value)=>value&&value.__defaultImage?value.__defaultImage:value);state.templateId=templateId;
   const section=templateId==='home-collection'?'homeCollection':'homeBack';
   const slot=state[section].slots[0],id=slot.productId;
   const catalogProduct=state.products.find(p=>p.id===id),originalPrice=catalogProduct.price;
@@ -53,6 +53,20 @@ const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
    const bundleId=state.homeCollection.slots[2].productId;
    assert.equal(saved.products.find(p=>p.id===bundleId).name,'Updated coffee bundle','Zero-price bundle name must save');
    assert(saved.sharedCatalogDraft.changes.some(change=>change.identity.id===bundleId&&change.fields.name),'Saved bundle must enter publishing list');
+  }
+  if(templateId==='home-collection'){
+   w.flashSaleActions.openSlot(3);
+   const originalBundle=state.homeCollection.slots[3].productId;
+   const replacement=state.products.find(p=>p.id!==originalBundle&&p.name&&p.price>0);
+   const search=w.document.getElementById('slotName');search.value=replacement.name;search.dispatchEvent(new w.Event('input'));
+   const option=[...w.document.querySelectorAll('#slotNameResults [role=option]')].find(o=>o.querySelector('span').textContent===replacement.name);assert(option);option.click();
+   assert(!saved.sharedCatalogDraft.changes.some(edit=>edit.kind==='replacement'),'Selection alone does not create a pending replacement');
+   w.document.getElementById('saveProductEdit').click();await delay(450);
+   const pending=saved.sharedCatalogDraft.changes.find(edit=>edit.kind==='replacement');assert(pending,'Saved catalog suggestion must enter pending list');
+   assert.equal(pending.templateId,'home-collection');assert.equal(pending.slotIndex,3);assert.equal(pending.before.id,originalBundle);assert.equal(pending.after.id,replacement.id);
+   assert.equal(saved.homeCollection.slots[3].productId,replacement.id);
+   w.document.getElementById('publishCatalog').click();assert.match(w.document.querySelector('#publishCatalogDialog [data-changes]').textContent,/Replace/);
+   w.document.querySelector('#publishCatalogDialog [data-close]').click();
   }
   assert.equal(errors.length,0,errors.join('\n'));dom.window.close();
  }

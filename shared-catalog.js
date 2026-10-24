@@ -1,8 +1,10 @@
-/* Catalog-only publishing. Credentials are never part of a project or draft. */
+/* Catalog fields and saved template replacements. Credentials never enter drafts. */
 (function(root){
  'use strict';
  const REPO='luwi25/Store-Design-Template', API='https://api.github.com/repos/'+REPO;
  const fields=['name','price','image'];
+ const templateSections={'home-collection':'homeCollection','home-collection-front':'homeCollectionFront','home-back':'homeBack','home-everyday':'everyday','peso-back':'pesoBack','peso-plus':'peso','home-express':'approved','home-bestsellers':'bestsellers'};
+ function templateSlots(state,id){return Object.hasOwn(templateSections,id)?state[templateSections[id]]?.slots:null}
  const clone=value=>structuredClone(value);
  const code=p=>String(p.code||'').trim().toLowerCase();
  function store(p){
@@ -61,7 +63,7 @@
  async function prepare(project,changes){
   if(project.version!==1||!Array.isArray(project.state?.products)||!Number.isSafeInteger(project.sourceRevision))throw Error('The published catalog format is invalid.');
   const next=clone(project),images=new Map(),resolved=new Map();let count=0;
-  for(const change of changes){
+  for(const change of changes.filter(change=>change.kind!=='replacement')){
    if(!change.identity||!change.fields)throw Error('Invalid publishing draft.');
    const product=match(next.state.products,change.identity);
    for(const [field,edit] of Object.entries(change.fields)){
@@ -77,6 +79,19 @@
     if(field==='image'){const encoded=await encodeImage(value);value=encoded.value;if(encoded.path)images.set(encoded.path,encoded.content)}
     apply(next.state,product,field,value);count++;
    }
+  }
+  const replaced=new Set();
+  for(const change of changes.filter(change=>change.kind==='replacement')){
+   const list=templateSlots(next.state,change.templateId),index=change.slotIndex;
+   if(!Array.isArray(list)||!Number.isSafeInteger(index)||index<0||index>=list.length||!change.before||!change.after)throw Error('Invalid template replacement. Reload the published template and select the product again.');
+   const key=change.templateId+':'+index;
+   if(replaced.has(key))throw Error('Two replacements target the same template position. Save the product again.');
+   replaced.add(key);
+   const slot=list[index],replacement=match(next.state.products,change.after);
+   if(list.length!==change.slotCount||(slot.group??null)!==change.group)throw Error('The published template layout changed. Reload the latest template before replacing this product.');
+   if(slot.productId===replacement.id)continue;
+   if((slot.productId??null)!==(change.before.id??null))throw Error('The product in this published template position changed since your edit. Reload the latest template and reapply the replacement.');
+   slot.productId=replacement.id;slot.details=null;slot.image=null;slot.imageOriginal=null;count++;
   }
   if(count)next.sourceRevision++;
   return {project:next,images,count};
@@ -121,7 +136,7 @@
    return {sha:saved.sha,url:'https://github.com/'+REPO+'/commit/'+saved.sha,revision:prepared.project.sourceRevision};
   }finally{token=''}
  }
- const api={prepare,publish,apply,match,imageKey,fields};
+ const api={prepare,publish,apply,match,imageKey,fields,templateSlots};
  if(typeof module==='object'&&module.exports)module.exports=api;
  else root.SharedCatalog=api;
 })(globalThis);

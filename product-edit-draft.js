@@ -47,6 +47,7 @@ async function commitProductEdit(draft){
    const before=field==='image'?draft.baselineImage:draft.baseline?.[field];
    if(next!==before){window.catalogPublisher?.record(product,field,next);product[field]=next}
   }
+  window.catalogPublisher?.recordReplacement(draft.templateId,state.selectedSlot,draft.target,product);
   Object.assign(draft.target,structuredClone(draft.slot));
   if(!Object.hasOwn(draft.slot,'textSizes'))delete draft.target.textSizes;
   save();const ok=await flushDatabaseSave();
