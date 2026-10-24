@@ -157,12 +157,16 @@
   for(const id of Object.keys(templates)){const option=node('option',templateLabels[id]);option.value=id;filters.elements.template.append(option)}
   adminDialog.querySelector('[data-tab="requests"]').setAttribute('aria-pressed','true');
   function params(){const query=new URLSearchParams();for(const key of tab==='activity'?['store','action','from','to','template']:['store','status'])if(filters.elements[key].value)query.set(key,filters.elements[key].value);if(cursor&&tab==='activity')query.set('before',cursor);return query.toString()}
+  let dashboardLoad=0;
+  adminDialog.addEventListener('close',()=>{dashboardLoad++;adminDialog.removeAttribute('aria-busy')});
   async function loadDashboard(){
-   if(!authenticated()||getMode()!=='all')return;
-   setBusy(adminDialog,true);adminStatus.textContent='Loading…';
+   if(!authenticated()||getMode()!=='all'||!adminDialog.open)return;
+   const load=++dashboardLoad,requestTab=tab,query=params(),token=session.token;
+   const current=()=>load===dashboardLoad&&adminDialog.open&&authenticated()&&getMode()==='all'&&session.token===token;
+   adminDialog.setAttribute('aria-busy','true');items.replaceChildren();adminDialog.querySelector('[data-last-active]').replaceChildren();adminDialog.querySelector('[data-older]').hidden=true;adminStatus.textContent='Loading…';
    try{
-    const data=await api('/'+tab+'?'+params());items.replaceChildren();
-    if(tab==='activity'){
+    const data=await api('/'+requestTab+'?'+query);if(!current())return;
+    if(requestTab==='activity'){
      const last=adminDialog.querySelector('[data-last-active]');last.replaceChildren();for(const role of ['home-express','pesoplus'])last.append(node('p',names[role]+' · Last activity: '+timestamp(data.lastActive.find(item=>item.store===role)?.last_active)));
      for(const event of data.events.filter(event=>filters.elements.store.value||['home-express','pesoplus'].includes(event.store))){const card=node('article',undefined,'store-service-card');card.append(node('strong',(names[event.store]||event.store)+' · '+event.action.replaceAll('_',' ')),node('small',timestamp(event.created_at)),node('p',event.template_name||''));card.append(node('p','IP address: '+(event.details?.ipAddress||'Not recorded')));if(event.details.product)card.append(node('p',event.details.product));for(const change of event.details.changes||[])card.append(node('p',change.field+': '+change.before+' → '+change.after));if(event.details.comment)card.append(node('p',event.details.comment));items.append(card)}
      cursor=data.next;adminDialog.querySelector('[data-older]').hidden=!cursor;
@@ -171,11 +175,12 @@
      for(const request of data.requests){const card=node('article',undefined,'store-service-card');card.append(node('strong',names[request.store]+' · '+request.template_name),node('small',timestamp(request.created_at)+' · '+request.status));const open=node('button','Review request','btn');open.type='button';open.onclick=()=>openDetail(request.id);card.append(open);items.append(card)}
     }
     adminStatus.textContent=items.children.length?'Showing '+items.children.length+' records.':'No records match these filters.';
-   }catch(error){adminStatus.textContent=error.message}
-   finally{setBusy(adminDialog,false)}
+   }catch(error){if(current())adminStatus.textContent=error.message+' Use Refresh to retry.'}
+   finally{if(current())adminDialog.removeAttribute('aria-busy')}
   }
   dashboard.onclick=()=>{adminDialog.openFor();cursor=null;loadDashboard()};
   filters.onsubmit=event=>{event.preventDefault();cursor=null;loadDashboard()};
+  filters.addEventListener('change',event=>{if(event.target.matches('select,input[type="date"]')){cursor=null;loadDashboard()}});
   adminDialog.querySelector('[data-older]').onclick=loadDashboard;
   for(const button of adminDialog.querySelectorAll('[data-tab]'))button.onclick=()=>{
    tab=button.dataset.tab;cursor=null;

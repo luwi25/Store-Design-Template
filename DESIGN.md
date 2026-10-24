@@ -99,3 +99,5 @@ On mobile, More includes Switch store. It closes the menu and opens the existing
 Stores use Print poster as the single print control. A valid approval prints directly after server authorization; otherwise it opens the request overlay. Approvals expire five hours after the original approval time, enforced by Supabase on each print request. Repeated prints do not extend approval. The overlay displays the expiry in Philippine time; it has no separate approved-print button. Admin printing and exports retain their existing behavior.
 
 Store account display names are Home Express Basak and Pesoplus Mambaling in the chooser, password prompts, sidebar grouping and monitoring UI. Internal role IDs and Supabase secret names remain unchanged.
+
+Activity and approval filters apply on change and reset pagination. Filters remain usable during loading; only the latest response may render. Closing the dashboard invalidates pending responses. Refresh remains an optional reload/retry action.
