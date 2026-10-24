@@ -13,6 +13,9 @@ OUT.mkdir(exist_ok=True)
 (OUT/'assets').mkdir(exist_ok=True)
 html=(ROOT/'index.html').read_text(encoding='utf-8')
 html=embed_collection(html,ROOT)
+edit_start=html.index('// BEGIN PRODUCT EDITOR')
+edit_end=html.index('// END PRODUCT EDITOR',edit_start)+len('// END PRODUCT EDITOR')
+html=html[:edit_start]+'// BEGIN PRODUCT EDITOR\n'+(ROOT/'product-edit-draft.js').read_text(encoding='utf-8')+'\n'+(ROOT/'product-editor.js').read_text(encoding='utf-8')+'// END PRODUCT EDITOR'+html[edit_end:]
 # Always publish the maintained UI source, even if the standalone bundle is stale.
 ui_start=html.index('// Runs inside the editor closure;')
 ui_end=html.index('initTemplateSettings();',ui_start)

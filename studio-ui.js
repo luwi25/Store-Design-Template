@@ -1,5 +1,5 @@
 // Runs inside the editor closure; reuses its slot editor and save queue.
-function addSlotTextControls(slot,container){
+function addSlotTextControls(slot,container,onChange=()=>{renderPoster();save()}){
  const section=document.createElement('section');section.className='slot-text-controls';
  const heading=document.createElement('h3');heading.textContent='Text size · this product';
  const help=document.createElement('p');help.className='helper';help.textContent='Sizes apply only to this product in preview and print.';
@@ -14,10 +14,10 @@ function addSlotTextControls(slot,container){
   const stepButton=(direction)=>{const button=document.createElement('button');button.type='button';button.className='btn btn-sm';button.textContent=direction<0?'−':'+';button.setAttribute('aria-label',(direction<0?'Decrease ':'Increase ')+label.toLowerCase()+' size');button.onclick=()=>{input.value=Math.max(70,Math.min(140,Number(input.value)+direction*5));input.dispatchEvent(new Event('input',{bubbles:true}))};return button};
   controls.append(stepButton(-1),input,stepButton(1));field.append(text,controls);section.append(field);
   input.setAttribute('aria-valuetext',input.value+' percent');
-  input.addEventListener('input',()=>{slot.textSizes={...slot.textSizes,[key]:Number(input.value)};output.textContent=input.value+'%';input.setAttribute('aria-valuetext',input.value+' percent');renderPoster();save()});
+  input.addEventListener('input',()=>{slot.textSizes={...slot.textSizes,[key]:Number(input.value)};output.textContent=input.value+'%';input.setAttribute('aria-valuetext',input.value+' percent');onChange()});
  }
  const reset=document.createElement('button');reset.type='button';reset.className='btn btn-sm';reset.textContent='Use template text defaults';
- reset.onclick=()=>{delete slot.textSizes;renderSlotEditor();renderPoster();save()};section.append(reset);container.append(section);
+ reset.onclick=()=>{delete slot.textSizes;onChange();renderSlotEditor()};section.append(reset);container.append(section);
 }
 function syncStudioInspector(){
  updateProductSheetHeading();
@@ -39,12 +39,13 @@ function syncStudioInspector(){
   const original=$('slotOriginalPrice')?.closest('.field'),discountField=$('slotDiscount')?.closest('.field');
   if(original&&discountField){const row=document.createElement('div');row.className='two-col studio-price-fields';original.before(row);row.append(original,discountField);
    const heading=document.createElement('h3');heading.className='product-pricing-heading';heading.textContent='Pricing & discount';row.before(heading);
-   const scope=$('slotCatalogScope');if(scope){scope.textContent='Name and original price also update your catalog.';heading.before(scope)}
+   const scope=$('slotCatalogScope');if(scope){scope.textContent='Save product applies the name and original price to your catalog.';heading.before(scope)}
    for(const id of ['slotOriginalPrice','slotSalePrice','slotDiscount'])$(id)?.setAttribute('inputmode','decimal');
    const saleLabel=slotEditor.querySelector('label[for="slotSalePrice"]');if(saleLabel)saleLabel.textContent='Sale price on poster (₱)';
    const originalLabel=slotEditor.querySelector('label[for="slotOriginalPrice"]');if(originalLabel)originalLabel.textContent='Original price (₱)';
   }
  }
+ const editActions=$('saveProductEdit')?.closest('.product-edit-actions');if(editActions)slotEditor.append(editActions);
  const discount=$('slotDiscount');if(discount){
   const presets=document.createElement('div');presets.className='discount-presets';presets.setAttribute('role','group');presets.setAttribute('aria-label','Discount for selected product');
   for(const value of [0,10,20,30,50]){const b=document.createElement('button');b.type='button';b.className='btn btn-sm';b.textContent=value+'%';b.setAttribute('aria-pressed',String(Number(discount.value)===value));b.onclick=()=>{discount.value=value;discount.dispatchEvent(new Event('input',{bubbles:true}));for(const other of presets.children)other.setAttribute('aria-pressed',String(other===b))};presets.append(b)}
@@ -81,7 +82,7 @@ function renderStudioProducts(){
  const selection=$('studioSelection strong');const selected=slots[state.selectedSlot];if(selection&&selected)selection.textContent=productFor(selected)?.name||'Choose product';
 }
 function setupStudioUI(){
- document.body.classList.add('studio-editor');setupProductSheet();
+ document.body.classList.add('studio-editor');setupProductSheet();window.addEventListener('beforeunload',event=>{if(hasUnsavedProductEdit()){event.preventDefault();event.returnValue=''}});
  setupDownloadMenu();
  const left=document.querySelector('.left-rail'),right=document.querySelector('.right-rail');
  // Keep the shared rename control accessible in desktop and mobile settings.
@@ -96,7 +97,7 @@ function setupStudioUI(){
  for(const [id,label] of [['templates','Templates'],['products','Products'],['catalog','Catalog']]){const b=document.createElement('button');b.type='button';b.textContent=label;b.setAttribute('aria-pressed',String(id==='templates'));b.onclick=()=>{left.dataset.studioActive=id;for(const other of tabs.children)other.setAttribute('aria-pressed',String(other===b))};tabs.append(b)}
  const inspector=document.createElement('section');inspector.className='panel studio-inspector';inspector.innerHTML='<h2>Selected product</h2><div id="studioSelection" class="studio-selection"></div><div id="studioInspectorBody"></div>';right.prepend(inspector);
  const dialog=$('slotDialog'),home=$('slotEditor').parentElement;
- const dock=()=>{if(window.matchMedia('(min-width:821px)').matches){if(dialog.open)dialog.close();$('studioInspectorBody').append(slotEditor)}else{home.insertBefore(slotEditor,home.querySelector('.modal-actions'))}};
+ const dock=()=>{if(window.matchMedia('(min-width:821px)').matches){if(dialog.open){dialog.dataset.docking='true';dialog.close();}$('studioInspectorBody').append(slotEditor)}else{home.insertBefore(slotEditor,home.querySelector('.modal-actions'))}};
  window.matchMedia('(min-width:821px)').addEventListener('change',dock);dock();
  const template=document.createElement('select');template.id='studioTemplate';template.setAttribute('aria-label','Selected design template');template.onchange=()=>{const cards=$('templateList').querySelectorAll('.template-card');cards[Number(template.value)]?.click()};document.querySelector('.brand').after(template);template.after($('saveStatus'));
 
@@ -136,7 +137,7 @@ function updateProductSheetHeading(){
  const copy=document.createElement('div'),name=document.createElement('strong'),code=document.createElement('small');
  name.textContent=p?.name||'Choose a product';code.textContent=p?.code||'Product settings';copy.append(name,code);
  const price=document.createElement('b');price.textContent=p?money(salePrice(p,slot)):'';
- const close=document.createElement('button');close.type='button';close.className='sheet-close';close.textContent='\u00d7';close.setAttribute('aria-label','Close product settings');close.onclick=()=>$('slotDialog').close();heading.append(copy,price,close);
+ const close=document.createElement('button');close.type='button';close.className='sheet-close';close.textContent='\u00d7';close.setAttribute('aria-label','Close product settings');close.onclick=closeProductSettings;heading.append(copy,price,close);
 }
 function prepareProductSheet(){
  const dialog=$('slotDialog');dialog.dataset.sheetSize='compact';dialog.style.removeProperty('--sheet-drag-height');
@@ -157,10 +158,11 @@ function setupProductSheet(){
  handle.onpointermove=event=>{if(!drag||event.pointerId!==drag.id)return;const dy=event.clientY-drag.y;if(Math.abs(dy)>5)drag.moved=true;if(drag.moved){event.preventDefault();dialog.style.setProperty('--sheet-drag-height',Math.max(130,Math.min(viewport()*.92,drag.height-dy))+'px')}};
  const finish=(event,cancelled=false)=>{if(!drag||event.pointerId!==drag.id)return;const current=drag;drag=null;const dy=event.clientY-current.y;skipClick=current.moved;
   if(cancelled){snap(current.size);return}
-  if(current.moved&&dy>90&&current.size==='compact'){dialog.close();snap('compact')}
+  if(current.moved&&dy>90&&current.size==='compact'){closeProductSettings();snap('compact')}
   else if(dy < -35)snap('expanded');else if(dy>35)snap('compact');else snap(current.size);
  };
  handle.onpointerup=event=>finish(event);handle.onpointercancel=event=>finish(event,true);
+ dialog.addEventListener('cancel',event=>{event.preventDefault();closeProductSettings()});
  dialog.addEventListener('close',()=>{drag=null;skipClick=false;snap('compact')});
  slotEditor.addEventListener('focusin',event=>{if(!window.matchMedia('(min-width:821px)').matches&&event.target.matches('input:not([type=range]):not([type=file]),select'))snap('expanded')});
 }

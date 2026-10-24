@@ -32,14 +32,19 @@ const html=fs.readFileSync('public/index.html','utf8');
  const uniqueSearchCode=homeBackSlotProducts.find(p=>codeCounts.get(p.code)===1)?.code;
  w.flashSaleActions.openSlot(0);if(mobile){assert(w.document.querySelector('#slotDialog #slotEditor'));assert.equal(w.document.querySelector('#slotDialog').open,true)}else{assert(w.document.querySelector('#studioInspectorBody #slotEditor'));assert.equal(w.document.querySelector('#slotDialog').open,false)}
  const input=w.document.querySelector('#slotText-name');assert(input);input.value=140;input.dispatchEvent(new w.Event('input',{bubbles:true}));await new Promise(r=>setTimeout(r,400));
- assert.equal(saved.homeBack.slots[0].textSizes.name,140);assert.deepEqual(saved.homeBack.slots[1].textSizes||null,slot1OriginalTextSizes);
+ assert.notEqual(saved?.homeBack.slots[0].textSizes?.name,140,'Typing does not save product edits');w.document.querySelector('#saveProductEdit').click();await new Promise(r=>setTimeout(r,400));assert.equal(saved.homeBack.slots[0].textSizes.name,140);assert.deepEqual(saved.homeBack.slots[1].textSizes||null,slot1OriginalTextSizes);
  assert(draws.some(d=>d.text===slot0ExpectedName&&Math.abs(Number(d.font.match(/([\d.]+)px/)?.[1])-33.6)<.01), 'Selected product uses independent size in canvas');
  w.flashSaleActions.openSlot(1);assert.equal(w.document.querySelector('#slotText-name').value,slot1ExpectedNameValue);
  w.flashSaleActions.openSlot(0);assert.equal(w.document.querySelector('#slotText-name').value,'140');
  w.document.querySelector('#studioProductSearch').value=uniqueSearchCode;w.document.querySelector('#studioProductSearch').dispatchEvent(new w.Event('input'));assert.equal(w.document.querySelectorAll('.studio-product').length,1);
  w.document.querySelector('#studioProductSearch').value='';w.document.querySelector('#studioProductSearch').dispatchEvent(new w.Event('input'));
- const preset=[...w.document.querySelectorAll('.discount-presets button')].find(b=>b.textContent==='20%');preset.click();await new Promise(r=>setTimeout(r,400));assert.equal(saved.homeBack.slots[0].discountPercent,20);assert.equal(saved.homeBack.slots[1].discountPercent,0);
+ const preset=[...w.document.querySelectorAll('.discount-presets button')].find(b=>b.textContent==='20%');preset.click();w.document.querySelector('#saveProductEdit').click();await new Promise(r=>setTimeout(r,400));assert.equal(saved.homeBack.slots[0].discountPercent,20);assert.equal(saved.homeBack.slots[1].discountPercent,0);
+ const beforeCancel=structuredClone(saved);
+ w.document.querySelector('#slotName').value='Unsaved product name';w.document.querySelector('#slotName').dispatchEvent(new w.Event('input'));
+ w.confirm=()=>false;w.flashSaleActions.openSlot(1);assert.equal(w.document.querySelector('#slotName').value,'Unsaved product name');
+ w.confirm=()=>true;w.document.querySelector('#cancelProductEdit').click();assert.notEqual(w.document.querySelector('#slotName').value,'Unsaved product name');assert.deepEqual(saved,beforeCancel);
+ const invalid=w.document.querySelector('#slotOriginalPrice');invalid.value='';invalid.dispatchEvent(new w.Event('input'));w.document.querySelector('#saveProductEdit').click();await new Promise(r=>setTimeout(r,300));assert.deepEqual(saved,beforeCancel,'Invalid price cannot save');w.document.querySelector('#cancelProductEdit').click();
  // Every active template initializes and renders without a missing slot reference.
- for(let i=0;i<4;i++){w.document.querySelectorAll('.template-card')[i].click();await new Promise(r=>setTimeout(r,80));w.flashSaleActions.openSlot(0);const size=w.document.querySelector('#slotText-sale');size.value=120;size.dispatchEvent(new w.Event('input'));await new Promise(r=>setTimeout(r,80));}
+ for(let i=0;i<4;i++){w.document.querySelectorAll('.template-card')[i].click();await new Promise(r=>setTimeout(r,80));w.flashSaleActions.openSlot(0);const size=w.document.querySelector('#slotText-sale');size.value=120;size.dispatchEvent(new w.Event('input'));w.document.querySelector('#saveProductEdit').click();await new Promise(r=>setTimeout(r,80));}
  assert.equal(errors.length,0,errors.join('\n'));dom.window.close();console.log('PASS: independent text sizes, canvas sizes, saved overrides, sibling isolation, search, inspector, discount presets, all four templates.');
 })().catch(e=>{console.error(e);process.exitCode=1});

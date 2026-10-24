@@ -76,3 +76,11 @@
   .studio-editor .right-rail .template-text-defaults summary { min-height:44px; box-sizing:border-box; padding:12px 0; }
  }
 }
+
+@media screen {
+ .product-edit-actions{position:sticky;bottom:0;z-index:2;display:flex;flex-wrap:wrap;gap:8px;padding:12px 0 4px;margin-top:16px;border-top:1px solid #dce4ed;background:#fff;}
+ .product-edit-actions p{flex:0 0 100%;margin:0;color:#52677b;font-size:12px;line-height:1.4;}
+ .product-edit-actions button{flex:1;min-height:44px;}
+ .product-edit-actions .btn-dark{background:#163b65;color:#fff;}
+ .product-edit-actions button:disabled{opacity:.55;cursor:not-allowed;}
+}
