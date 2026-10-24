@@ -20,12 +20,14 @@ Two exceptions, both on Home Express's Back (homeBack):
     store-wide, so they stay varied rather than collapsing into a
     single department like the dynamic groups do.
 
-Home Express Template #2 is included in the same Monday run:
+Both stores' Template #2 designs are included in the same Monday run:
   - Front (homeCollectionFront): the eight highest-selling eligible products
     across the store, using the same last-completed-week period.
   - Back (homeCollection): four ranked department sections; section 0,
     Christmas Bundles, is preserved including its saved heading.
   - Template #2 department ranking is independent of Template #1.
+  - Pesoplus uses pesoCollectionFront / pesoCollectionBack with the same
+    best-seller front and ranked-category back rules, using only its own sales.
 
 Then public/ is rebuilt, the test suite runs, and the result is
 committed and pushed only if everything passes.
@@ -72,6 +74,8 @@ STORES = {
         "back_cross_category_positions": (1, 2), "back_cross_category_total": 10,
         "collection_front_key": "homeCollectionFront",
         "collection_back_key": "homeCollection",
+        "collection_front_template_id": "home-collection-front",
+        "collection_back_template_id": "home-collection",
     },
     "pesoplus-mambaling": {
         "prefix": "sales-ppm", "front_key": "peso", "back_key": "pesoBack",
@@ -81,6 +85,10 @@ STORES = {
         # department's whole lineup. Its label is set once and never touched again,
         # same as "Best Seller This Season"/"Top Product" never are.
         "front_cross_category_positions": (0,), "front_cross_category_total": 4,
+        "collection_front_key": "pesoCollectionFront",
+        "collection_back_key": "pesoCollectionBack",
+        "collection_front_template_id": "peso-collection-front",
+        "collection_back_template_id": "peso-collection-back",
     },
 }
 
@@ -576,7 +584,8 @@ def apply_side(repo, state, products_by_id, prefix, template_key, template_id, r
     return entries, departments_used
 
 
-def apply_home_collection(repo, state, products_by_id, prefix, rows, front_key, back_key):
+def apply_collection(repo, state, products_by_id, prefix, rows, front_key, back_key,
+                     front_template_id, back_template_id):
     """Fill Template #2; keep the Christmas row and its label exactly as saved.
 
     Front is the eight highest-selling products across the eligible store
@@ -584,7 +593,7 @@ def apply_home_collection(repo, state, products_by_id, prefix, rows, front_key, 
     departments independently so Template #1 does not consume its categories.
     """
     if front_key not in state or back_key not in state:
-        raise RuntimeError("Home Express Template #2 is missing from the published project.")
+        raise RuntimeError(f"Template #2 ({front_key} / {back_key}) is missing from the published project.")
     front = state[front_key]
     back = state[back_key]
     front_indices = sorted(range(len(front["slots"])),
@@ -605,7 +614,7 @@ def apply_home_collection(repo, state, products_by_id, prefix, rows, front_key, 
         item = ranked[offset]
         pid, status = upsert_product(repo, state, products_by_id, prefix,
                                     item["stockno"], item["name"], item["retail_price"],
-                                    item["image_url"], "home-collection-front")
+                                    item["image_url"], front_template_id)
         front["slots"][index] = {"productId": pid, "group": group, "discountPercent": 0}
         entries.append(("FRONT #2", "Best sellers", item["name"], item["units"], status))
 
@@ -623,7 +632,7 @@ def apply_home_collection(repo, state, products_by_id, prefix, rows, front_key, 
             continue  # Preserve every Christmas slot, image override, price and text setting.
         assignment = assignments.get(group)
         if assignment is None:
-            log(f"[Home Express #2] no ranked department for section {group}; clearing stale products")
+            log(f"[{back_template_id}] no ranked department for section {group}; clearing stale products")
             items = []
         else:
             department, items = assignment
@@ -635,7 +644,7 @@ def apply_home_collection(repo, state, products_by_id, prefix, rows, front_key, 
             item = items[offset]
             pid, status = upsert_product(repo, state, products_by_id, prefix,
                                         item["stockno"], item["name"], item["retail_price"],
-                                        item["image_url"], "home-collection")
+                                        item["image_url"], back_template_id)
             back["slots"][index] = {"productId": pid, "group": group, "discountPercent": 0}
             entries.append(("BACK #2", labels[group], item["name"], item["units"], status))
     return entries
@@ -671,6 +680,7 @@ def run(cmd, cwd):
 
 def run_tests(repo):
     checks = [
+        ["python", "scripts/weekly_sync_review.py"],
         ["python", "build_pages.py"],
         ["node", "studio-review.cjs"],
         ["node", "studio-review.cjs", "--mobile"],
@@ -720,9 +730,10 @@ def main():
         all_entries += [(store_id, "BACK", *e) for e in back_entries]
 
         if cfg.get("collection_front_key"):
-            collection_entries = apply_home_collection(
+            collection_entries = apply_collection(
                 REPO, state, products_by_id, cfg["prefix"], rows,
-                cfg["collection_front_key"], cfg["collection_back_key"])
+                cfg["collection_front_key"], cfg["collection_back_key"],
+                cfg["collection_front_template_id"], cfg["collection_back_template_id"])
             all_entries += [(store_id, *entry) for entry in collection_entries]
 
         referenced = referenced_product_ids(state)

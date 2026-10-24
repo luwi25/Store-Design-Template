@@ -4,7 +4,7 @@
  const base=String(window.STORE_ACTIVITY_CONFIG?.apiBase||'').replace(/\/$/,'');
  const enabled=window.STORE_ACTIVITY_CONFIG?.enabled===true&&Boolean(base),sessionKey='store-service-session';let session=null,expired=()=>{};
  const names={'home-express':'Home Express Basak',pesoplus:'Pesoplus Mambaling',all:'Admin'};
- const templates={'home-everyday':'everyday','home-back':'homeBack','home-collection':'homeCollection','home-collection-front':'homeCollectionFront','peso-plus':'peso','peso-back':'pesoBack'};
+ const templates={'home-everyday':'everyday','home-back':'homeBack','home-collection':'homeCollection','home-collection-front':'homeCollectionFront','peso-plus':'peso','peso-back':'pesoBack','peso-collection-front':'pesoCollectionFront','peso-collection-back':'pesoCollectionBack'};
  try{session=JSON.parse(sessionStorage.getItem(sessionKey)||'null')}catch{}
  function clear(){session=null;try{sessionStorage.removeItem(sessionKey)}catch{}}
  async function api(path,method='GET',data,authenticated=true){
@@ -109,7 +109,7 @@
   async function loadRequest(){const data=await api('/requests?template='+encodeURIComponent(activeTemplate.id));request=data.requests[0]||null;showRequest()}
   async function requestPrint(){
    if(!authenticated()){onExpired();return}
-   if(!templates[getTemplate().id]){alert('Print approval is available for the six Home Express Basak and Pesoplus Mambaling templates.');return}
+   if(!templates[getTemplate().id]){alert('Print approval is available for supported Home Express Basak and Pesoplus Mambaling templates.');return}
    if(printDialog.open||printBusy)return;
    if(getMode()==='all'){
     const info=getTemplate();printBusy=true;try{await api('/events','POST',{id:crypto.randomUUID(),action:'print_initiated',templateId:info.id,templateName:info.name});await directPrint()}catch(error){alert(error.message)}finally{printBusy=false}return;
@@ -153,7 +153,7 @@
    finally{printBusy=false;setBusy(printDialog,false)}
   };
   const filters=adminDialog.querySelector('[data-filters]'),items=adminDialog.querySelector('[data-items]'),adminStatus=adminDialog.querySelector('[data-admin-status]');
-  const templateLabels={'home-everyday':'Home Express Basak — Front','home-back':'Home Express Basak — Back','home-collection':'Home Express Basak — Back (Blue & Orange)','home-collection-front':'Home Express Basak — Front (Blue & Orange)','peso-plus':'Pesoplus Mambaling — Front','peso-back':'Pesoplus Mambaling — Back'};
+  const templateLabels={'peso-collection-back':'Pesoplus Mambaling - Template #2 Back','peso-collection-front':'Pesoplus Mambaling - Template #2 Front','home-everyday':'Home Express Basak — Front','home-back':'Home Express Basak — Back','home-collection':'Home Express Basak — Back (Blue & Orange)','home-collection-front':'Home Express Basak — Front (Blue & Orange)','peso-plus':'Pesoplus Mambaling — Front','peso-back':'Pesoplus Mambaling — Back'};
   for(const id of Object.keys(templates)){const option=node('option',templateLabels[id]);option.value=id;filters.elements.template.append(option)}
   adminDialog.querySelector('[data-tab="requests"]').setAttribute('aria-pressed','true');
   function params(){const query=new URLSearchParams();for(const key of tab==='activity'?['store','action','from','to','template']:['store','status'])if(filters.elements[key].value)query.set(key,filters.elements[key].value);if(cursor&&tab==='activity')query.set('before',cursor);return query.toString()}

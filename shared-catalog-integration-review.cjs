@@ -2,7 +2,7 @@ const fs=require('fs'),assert=require('assert/strict'),{JSDOM}=require('jsdom');
 const photo='iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jK1sAAAAASUVORK5CYII=';
 const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 (async()=>{
- for(const mobile of [false,true])for(const templateId of ['home-back','home-collection']){
+ for(const mobile of [false,true])for(const templateId of ['home-back','home-collection','peso-collection-front','peso-collection-back']){
   const dom=new JSDOM(fs.readFileSync('public/index.html','utf8'),{url:'https://example.test/',runScripts:'outside-only',pretendToBeVisual:true}),w=dom.window;
   const errors=[];let saved;
   w.console.error=(...items)=>errors.push(items.join(' '));w.console.warn=()=>{};
@@ -12,7 +12,7 @@ const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
   w.HTMLCanvasElement.prototype.toDataURL=()=> 'data:image/png;base64,'+photo;
   w.HTMLCanvasElement.prototype.getContext=function(){return new Proxy({canvas:this,font:'',measureText:text=>({width:String(text).length*5}),createRadialGradient:()=>({addColorStop(){}}),createLinearGradient:()=>({addColorStop(){}})},{get:(object,key)=>key in object?object[key]:(()=>{})})};
   const state=JSON.parse(JSON.stringify(JSON.parse(fs.readFileSync('defaults/project.json','utf8')).state),(key,value)=>value&&value.__defaultImage?value.__defaultImage:value);state.templateId=templateId;
-  const section=templateId==='home-collection'?'homeCollection':'homeBack';
+  const section=templateId==='peso-collection-back'?'pesoCollectionBack':templateId==='peso-collection-front'?'pesoCollectionFront':templateId==='home-collection'?'homeCollection':'homeBack';
   const slot=state[section].slots[0],id=slot.productId;
   const catalogProduct=state.products.find(p=>p.id===id),originalPrice=catalogProduct.price;
   if(templateId==='home-collection'){const zeroSlot=state.homeCollection.slots[2];const zeroProduct=state.products.find(p=>p.id===zeroSlot.productId);zeroProduct.price=0;zeroProduct.name='Coffee bundle fixture';zeroSlot.details=null;}

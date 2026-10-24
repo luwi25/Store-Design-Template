@@ -93,7 +93,7 @@ begin
 
  if v_tid<>'' then
   v_owner:=case when v_tid in ('home-everyday','home-back','home-collection','home-collection-front') then 'home-express'
-   when v_tid in ('peso-plus','peso-back') then 'pesoplus' else null end;
+   when v_tid in ('peso-plus','peso-back','peso-collection-front','peso-collection-back') then 'pesoplus' else null end;
   if v_owner is null or (v_store<>'all' and v_owner<>v_store) then
    return jsonb_build_object('error','This template is not available for your store.','status',403);
   end if;

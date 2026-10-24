@@ -24,7 +24,20 @@ def collection_source(root: Path) -> str:
     front = (root / "home-express-collection-front.js").read_text(encoding="utf-8").replace(
         "__HOME_COLLECTION_FRONT_ART__", json.dumps(front_artwork)
     ).replace("__HOME_COLLECTION_FRONT_SEEDS__", json.dumps(front_products, ensure_ascii=False))
-    return back + "\n" + front
+    peso_artwork = data_url(root / "template-artwork/pesoplus-collection-front.jpg", "image/jpeg")
+    peso_products = json.loads((root / "template-artwork/pesoplus-collection-front-products.json").read_text(encoding="utf-8"))
+    peso = (root / "pesoplus-collection-front.js").read_text(encoding="utf-8").replace(
+        "__PESO_COLLECTION_FRONT_ART__", json.dumps(peso_artwork)
+    ).replace("__PESO_COLLECTION_FRONT_SEEDS__", json.dumps(peso_products, ensure_ascii=False))
+    peso_back_art = data_url(root / "template-artwork/pesoplus-collection-back.png", "image/png")
+    peso_back_products = json.loads((root / "template-artwork/pesoplus-collection-back-products.json").read_text(encoding="utf-8"))
+    for product in peso_back_products:
+        marker = product["image"]
+        product["image"] = data_url(root / "defaults" / marker["__defaultImage"], marker["mime"])
+    peso_back = (root / "pesoplus-collection-back.js").read_text(encoding="utf-8").replace(
+        "__PESO_COLLECTION_BACK_ART__", json.dumps(peso_back_art)
+    ).replace("__PESO_COLLECTION_BACK_SEEDS__", json.dumps(peso_back_products, ensure_ascii=False))
+    return back + "\n" + front + "\n" + peso + "\n" + peso_back
 
 
 def embed_collection(html: str, root: Path) -> str:

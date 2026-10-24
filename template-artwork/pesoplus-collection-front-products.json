@@ -1,0 +1,98 @@
+[
+  {
+    "id": "peso-collection-front-0-0",
+    "templateId": "peso-collection-front",
+    "name": "Cookware Set",
+    "price": 0,
+    "code": "",
+    "image": {
+      "__defaultImage": "images/408b049a7e47709c98e421e068bef691a89e54f2eec5e89f708cccd51f8bda7f.svg",
+      "mime": "image/svg+xml"
+    },
+    "photoSource": "supplied-template"
+  },
+  {
+    "id": "peso-collection-front-0-1",
+    "templateId": "peso-collection-front",
+    "name": "Rice Cooker",
+    "price": 0,
+    "code": "",
+    "image": {
+      "__defaultImage": "images/d358a8fe057f5ddd822f8dbd09f93c579ff57422a5cb64659fcb400f4621202e.svg",
+      "mime": "image/svg+xml"
+    },
+    "photoSource": "supplied-template"
+  },
+  {
+    "id": "peso-collection-front-0-2",
+    "templateId": "peso-collection-front",
+    "name": "Electric Fan",
+    "price": 0,
+    "code": "",
+    "image": {
+      "__defaultImage": "images/30a4e0da13f9bf855c9ba3e13cb0c36b71f64cab23cd2f9db4ac4acb51f9e66a.svg",
+      "mime": "image/svg+xml"
+    },
+    "photoSource": "supplied-template"
+  },
+  {
+    "id": "peso-collection-front-0-3",
+    "templateId": "peso-collection-front",
+    "name": "Electric Kettle",
+    "price": 0,
+    "code": "",
+    "image": {
+      "__defaultImage": "images/5ef5b67a99d9f487b82411fd17950add2169aacd86e234123e1bfab5f8325c61.svg",
+      "mime": "image/svg+xml"
+    },
+    "photoSource": "supplied-template"
+  },
+  {
+    "id": "peso-collection-front-1-0",
+    "templateId": "peso-collection-front",
+    "name": "Storage Drawer",
+    "price": 0,
+    "code": "",
+    "image": {
+      "__defaultImage": "images/a5b54440c5339e0826722547407f3dcf7edcd457457771982a28e25b6989295a.svg",
+      "mime": "image/svg+xml"
+    },
+    "photoSource": "supplied-template"
+  },
+  {
+    "id": "peso-collection-front-1-1",
+    "templateId": "peso-collection-front",
+    "name": "Laundry Basket",
+    "price": 0,
+    "code": "",
+    "image": {
+      "__defaultImage": "images/2341fa06a730c0cc000304362328d75c30bd4d4a10920687d31b7d4c3016fa8e.svg",
+      "mime": "image/svg+xml"
+    },
+    "photoSource": "supplied-template"
+  },
+  {
+    "id": "peso-collection-front-1-2",
+    "templateId": "peso-collection-front",
+    "name": "School Bag",
+    "price": 0,
+    "code": "",
+    "image": {
+      "__defaultImage": "images/054d25880164f6f45f6214159920627a3f59c9ab8c191560acf2de2a1fb3a34a.svg",
+      "mime": "image/svg+xml"
+    },
+    "photoSource": "supplied-template"
+  },
+  {
+    "id": "peso-collection-front-1-3",
+    "templateId": "peso-collection-front",
+    "name": "Slippers",
+    "price": 0,
+    "code": "",
+    "image": {
+      "__defaultImage": "images/950993935720aa1cfd1f670df868e785f47338b56b14d5f5db2fccf4e13c3192.svg",
+      "mime": "image/svg+xml"
+    },
+    "photoSource": "supplied-template"
+  }
+]
