@@ -100,4 +100,4 @@ Stores use Print poster as the single print control. A valid approval prints dir
 
 Store account display names are Home Express Basak and Pesoplus Mambaling in the chooser, password prompts, sidebar grouping and monitoring UI. Internal role IDs and Supabase secret names remain unchanged.
 
-Activity and approval filters apply on change and reset pagination. Filters remain usable during loading; only the latest response may render. Closing the dashboard invalidates pending responses. Refresh remains an optional reload/retry action.
+Activity and approval filters apply on change and reset pagination. Filters remain usable during loading; only the latest response may render. Closing the dashboard invalidates pending responses. There is no manual Refresh button. On load failure, reopen the window or change a filter to retry.
