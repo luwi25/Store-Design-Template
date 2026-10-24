@@ -34,7 +34,7 @@ function addProductEditActions(draft){
 async function commitProductEdit(draft){
  if(productEditDraft!==draft||draft.busy||draft.saving||!draft.dirty)return;
  for(const input of slotEditor.querySelectorAll('input:not([type=file]),select')){
-  if(input.getAttribute('aria-invalid')==='true'||!input.checkValidity()){input.reportValidity();input.focus();return}
+  if(input.getAttribute('aria-invalid')==='true'||!input.checkValidity()){const label=slotEditor.querySelector('label[for="'+input.id+'"]')?.textContent||'this field';showNotice('Product not saved. Check '+label+' and click Save product again.');input.reportValidity();input.focus();return}
  }
  if(!draft.product?.name?.trim()){ $('slotName')?.focus();return }
  if(activeSlots()[state.selectedSlot]!==draft.target||state.templateId!==draft.templateId){showNotice('Select this product again before saving.');return}

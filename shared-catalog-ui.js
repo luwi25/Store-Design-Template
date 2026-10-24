@@ -38,7 +38,7 @@ window.setupSharedCatalogPublishing=function({getState,getMode,save,render}){
    list.append(item);
   }
   submit.disabled=!changes().length;
-  if(!changes().length)status.textContent='Edit a product name, original price or photo in Admin to prepare a publication.';
+  if(!changes().length)status.textContent='In Admin, edit a product name, original price or photo and click Save product first. Saved catalog edits will appear here.';
  }
  button.onclick=()=>{
   trigger=document.activeElement;input.value='';status.textContent='';dialog.querySelector('[data-result]').replaceChildren();summary();dialog.showModal();

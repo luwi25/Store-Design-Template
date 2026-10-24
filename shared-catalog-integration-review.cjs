@@ -2,7 +2,7 @@ const fs=require('fs'),assert=require('assert/strict'),{JSDOM}=require('jsdom');
 const photo='iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jK1sAAAAASUVORK5CYII=';
 const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 (async()=>{
- for(const mobile of [false,true]){
+ for(const mobile of [false,true])for(const templateId of ['home-back','home-collection']){
   const dom=new JSDOM(fs.readFileSync('public/index.html','utf8'),{url:'https://example.test/',runScripts:'outside-only',pretendToBeVisual:true}),w=dom.window;
   const errors=[];let saved;
   w.console.error=(...items)=>errors.push(items.join(' '));w.console.warn=()=>{};
@@ -11,9 +11,11 @@ const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
   w.HTMLDialogElement.prototype.showModal=function(){this.open=true};w.HTMLDialogElement.prototype.close=function(){this.open=false;this.dispatchEvent(new w.Event('close'))};
   w.HTMLCanvasElement.prototype.toDataURL=()=> 'data:image/png;base64,'+photo;
   w.HTMLCanvasElement.prototype.getContext=function(){return new Proxy({canvas:this,font:'',measureText:text=>({width:String(text).length*5}),createRadialGradient:()=>({addColorStop(){}}),createLinearGradient:()=>({addColorStop(){}})},{get:(object,key)=>key in object?object[key]:(()=>{})})};
-  const state=JSON.parse(fs.readFileSync('defaults/project.json','utf8')).state;state.templateId='home-back';
-  const slot=state.homeBack.slots[0],id=slot.productId;
+  const state=JSON.parse(fs.readFileSync('defaults/project.json','utf8')).state;state.templateId=templateId;
+  const section=templateId==='home-collection'?'homeCollection':'homeBack';
+  const slot=state[section].slots[0],id=slot.productId;
   const catalogProduct=state.products.find(p=>p.id===id),originalPrice=catalogProduct.price;
+  if(templateId==='home-collection'){const zeroSlot=state.homeCollection.slots[2];const zeroProduct=state.products.find(p=>p.id===zeroSlot.productId);zeroProduct.price=0;zeroProduct.name='Coffee bundle fixture';zeroSlot.details=null;}
   state.publishedProjectRevision=1;
   state.sharedCatalogDraft={version:1,changes:[{identity:{id,code:catalogProduct.code,templateId:catalogProduct.templateId,name:catalogProduct.name},fields:{price:{before:originalPrice,after:originalPrice+1}}}]};
   catalogProduct.price=originalPrice+1;
@@ -41,9 +43,17 @@ const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
   const draft=saved.sharedCatalogDraft.changes.find(edit=>edit.identity.id===id);
   assert.deepEqual(Object.keys(draft.fields).sort(),['image','name','price']);
   assert.equal(draft.fields.price.before,originalPrice);
-  assert.equal(saved.homeBack.slots[0].discountPercent,slot.discountPercent);
-  assert.deepEqual(saved.homeBack.slots[0].textSizes,slot.textSizes);
+  assert.equal(saved[section].slots[0].discountPercent,slot.discountPercent);
+  assert.deepEqual(saved[section].slots[0].textSizes,slot.textSizes);
   assert(!w.document.getElementById('publishCatalog').hidden);
+  if(templateId==='home-collection'){
+   w.flashSaleActions.openSlot(2);
+   const bundleName=w.document.getElementById('slotName');bundleName.value='Updated coffee bundle';bundleName.dispatchEvent(new w.Event('input'));
+   w.document.getElementById('saveProductEdit').click();await delay(450);
+   const bundleId=state.homeCollection.slots[2].productId;
+   assert.equal(saved.products.find(p=>p.id===bundleId).name,'Updated coffee bundle','Zero-price bundle name must save');
+   assert(saved.sharedCatalogDraft.changes.some(change=>change.identity.id===bundleId&&change.fields.name),'Saved bundle must enter publishing list');
+  }
   assert.equal(errors.length,0,errors.join('\n'));dom.window.close();
  }
  console.log('PASS: actual desktop/mobile editor name, price and photo hooks update catalog, repeated slots and saved publish drafts without altering discounts or text sizes.');
