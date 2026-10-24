@@ -14,7 +14,7 @@ function actionAddress(request: Request) {
 }
 // These are secret NAMES. Enter their password values in Supabase -> Edge Functions -> Secrets.
 const roles = {
- 'home-express': 'HOME_EXPRESS_PASSWORD',
+ 'home-express': 'HOME_EXPRESS_BASAK_PASSWORD',
  pesoplus: 'PESOPLUS_PASSWORD',
  all: 'ADMIN_PASSWORD'
 };

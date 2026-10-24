@@ -34,7 +34,7 @@ Open **Edge Functions → Secrets** in your Supabase project. Add these four sec
 
 | Name | Value you enter |
 | --- | --- |
-| `HOME_EXPRESS_PASSWORD` | A new password for Home Express, at least 12 characters |
+| `HOME_EXPRESS_BASAK_PASSWORD` | A new password for Home Express, at least 12 characters |
 | `PESOPLUS_PASSWORD` | A different new password for PesoPlus, at least 12 characters |
 | `ADMIN_PASSWORD` | A separate new password for Admin, at least 12 characters |
 | `ALLOWED_ORIGINS` | `https://luwi25.github.io` |
