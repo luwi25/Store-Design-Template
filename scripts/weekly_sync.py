@@ -27,7 +27,8 @@ Both stores' Template #2 designs are included in the same Monday run:
     Christmas Bundles, is preserved including its saved heading.
   - Template #2 department ranking is independent of Template #1.
   - Pesoplus uses pesoCollectionFront / pesoCollectionBack with the same
-    best-seller front and ranked-category back rules, using only its own sales.
+    best-seller front and five ranked-category back rows, using only its own
+    sales. Pesoplus Template #2 has no protected Christmas Bundles row.
 
 Then public/ is rebuilt, the test suite runs, and the result is
 committed and pushed only if everything passes.
@@ -586,7 +587,7 @@ def apply_side(repo, state, products_by_id, prefix, template_key, template_id, r
 
 def apply_collection(repo, state, products_by_id, prefix, rows, front_key, back_key,
                      front_template_id, back_template_id):
-    """Fill Template #2; keep the Christmas row and its label exactly as saved.
+    """Fill Template #2; only Home Express keeps its fixed Christmas row.
 
     Front is the eight highest-selling products across the eligible store
     catalog, not a one-product-per-category variety selection. Back ranks
@@ -619,16 +620,17 @@ def apply_collection(repo, state, products_by_id, prefix, rows, front_key, back_
         entries.append(("FRONT #2", "Best sellers", item["name"], item["units"], status))
 
     # Initialize legacy backups without labels, preserving any custom labels.
-    defaults = ["Christmas Bundles", "Kitchenware", "School Supplies", "Hardware", "Groceries"]
+    fixed_groups = set() if back_template_id == 'peso-collection-back' else {0}
+    defaults = ["Top category" if not fixed_groups else "Christmas Bundles", "Kitchenware", "School Supplies", "Hardware", "Groceries"]
     labels = back.setdefault("groupNames", [])
     labels.extend(defaults[len(labels):])
     by_group = defaultdict(list)
     for index, slot in enumerate(back["slots"]):
         by_group[slot["group"]].append(index)
     counts = [len(by_group[position]) for position in range(len(labels))]
-    assignments = assign_dynamic_departments(list(unique.values()), counts, {0})
+    assignments = assign_dynamic_departments(list(unique.values()), counts, fixed_groups)
     for group, indices in by_group.items():
-        if group == 0:
+        if group in fixed_groups:
             continue  # Preserve every Christmas slot, image override, price and text setting.
         assignment = assignments.get(group)
         if assignment is None:

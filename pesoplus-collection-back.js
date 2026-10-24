@@ -3,16 +3,37 @@ const PESO_COLLECTION_BACK_ID='peso-collection-back';
 const PESO_COLLECTION_BACK_ART=__PESO_COLLECTION_BACK_ART__;
 const pesoCollectionBackSeeds=__PESO_COLLECTION_BACK_SEEDS__;
 const pesoCollectionBackGroups=[
- {name:'Christmas Bundles',headerY:144,y:180,h:216},
- {name:'Kitchenware',headerY:401,y:438,h:199},
- {name:'School Supplies',headerY:643,y:678,h:199},
- {name:'Hardware',headerY:881,y:917,h:200},
- {name:'Groceries',headerY:1123,y:1159,h:198}
-].map((group,index)=>({...group,items:pesoCollectionBackSeeds.slice(index*5,index*5+5).map(p=>[p.name,0])}));
+ {name:'School Supplies',headerY:144,y:180,h:216},
+ {name:'Kitchenware & Tableware',headerY:401,y:438,h:199},
+ {name:'Hardware & Electrical',headerY:643,y:678,h:199},
+ {name:'Apparel',headerY:881,y:917,h:200},
+ {name:'Fashion & Accessories',headerY:1123,y:1159,h:198}
+].map((group,index)=>({...group,items:pesoCollectionBackSeeds.slice(index*5,index*5+5).map(p=>[p.name,p.price])}));
 let pesoCollectionBackArtwork=null;
 function pesoCollectionBackState(){
  if(!state.pesoCollectionBack)state.pesoCollectionBack={slots:pesoCollectionBackSeeds.map((p,index)=>({productId:p.id,group:Math.floor(index/5),discountPercent:0}))};
  if(!Array.isArray(state.pesoCollectionBack.groupNames))state.pesoCollectionBack.groupNames=pesoCollectionBackGroups.map(g=>g.name);
+ const back=state.pesoCollectionBack;
+ if(!back.rankedCategoriesVersion){
+  if(/^christmas\s+(?:gift\s+)?bundles$/i.test(back.groupNames[0]?.trim()||'')){
+   // Old saved projects keep four ranked rows. Replace only the retired bundle
+   // row with the missing ranked category, preserving edits in all other rows.
+   const existing=new Set(back.groupNames.slice(1).map(name=>name.trim().toLowerCase()));
+   const replacement=pesoCollectionBackGroups.findIndex(group=>!existing.has(group.name.toLowerCase()));
+   if(replacement>=0){
+    const products=pesoCollectionBackSeeds.slice(replacement*5,replacement*5+5);
+    let column=0;
+    back.slots=back.slots.map(slot=>{
+     if(slot.group!==0)return slot;
+     const next={...slot,productId:products[column++]?.id||null};
+     delete next.details;delete next.image;
+     return next;
+    });
+    back.groupNames[0]=pesoCollectionBackGroups[replacement].name;
+   }
+  }
+  back.rankedCategoriesVersion=1;
+ }
  return state.pesoCollectionBack;
 }
 function seedPesoCollectionBack(){

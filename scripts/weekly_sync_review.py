@@ -37,7 +37,7 @@ class CollectionSyncReview(unittest.TestCase):
                 cfg['prefix'], rows, cfg['collection_front_key'], cfg['collection_back_key'],
                 cfg['collection_front_template_id'], cfg['collection_back_template_id'])
 
-    def test_both_stores_rank_and_preserve_catalog_and_bundles(self):
+    def test_both_stores_rank_and_preserve_catalog_and_home_bundles(self):
         for store in sync.STORES:
             with self.subTest(store=store):
                 cfg, state, rows = self.scenario(store)
@@ -48,12 +48,14 @@ class CollectionSyncReview(unittest.TestCase):
                 front = state[cfg['collection_front_key']]['slots']
                 self.assertEqual([s['productId'] for s in front], [f"{cfg['prefix']}-sku{i}" for i in range(8)])
                 back = state[cfg['collection_back_key']]
-                self.assertEqual(back['slots'][:5], before[cfg['collection_back_key']]['slots'][:5])
-                self.assertEqual(back['groupNames'][0], 'Custom Christmas heading')
-                self.assertEqual(back['groupNames'][1:], [f'Department {i}' for i in range(4)])
-                for group in range(1, 5):
+                start = 0 if store == 'pesoplus-mambaling' else 1
+                if start:
+                    self.assertEqual(back['slots'][:5], before[cfg['collection_back_key']]['slots'][:5])
+                    self.assertEqual(back['groupNames'][0], 'Custom Christmas heading')
+                self.assertEqual(back['groupNames'][start:], [f'Department {i}' for i in range(5-start)])
+                for group in range(start, 5):
                     self.assertEqual([s['productId'] for s in back['slots'] if s['group'] == group],
-                        [f"{cfg['prefix']}-sku{i}" for i in range((group-1)*6, (group-1)*6+5)])
+                        [f"{cfg['prefix']}-sku{i}" for i in range((group-start)*6, (group-start)*6+5)])
                 products = {p['id']: p for p in state['products']}
                 first = products[front[0]['productId']]
                 self.assertEqual(first['name'], 'Approved catalog name 0')
@@ -66,13 +68,12 @@ class CollectionSyncReview(unittest.TestCase):
                 for key in ('collection_front_key', 'collection_back_key'):
                     self.assertEqual(state[other[key]], before[other[key]])
 
-    def test_short_rankings_clear_unfilled_slots_without_touching_bundles(self):
+    def test_short_pesoplus_rankings_clear_unfilled_slots_in_all_rows(self):
         cfg, state, rows = self.scenario('pesoplus-mambaling')
-        bundles = copy.deepcopy(state['pesoCollectionBack']['slots'][:5])
         self.apply(cfg, state, rows[:3])
         self.assertTrue(all(s['productId'] is None for s in state['pesoCollectionFront']['slots'][3:]))
-        self.assertEqual(state['pesoCollectionBack']['slots'][:5], bundles)
-        self.assertTrue(all(s['productId'] is None for s in state['pesoCollectionBack']['slots'][10:]))
+        self.assertEqual(state['pesoCollectionBack']['groupNames'][0], 'Department 0')
+        self.assertTrue(all(s['productId'] is None for s in state['pesoCollectionBack']['slots'][3:]))
 
     def test_missing_template_aborts(self):
         cfg, state, rows = self.scenario('pesoplus-mambaling')

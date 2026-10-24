@@ -21,6 +21,12 @@ const html=fs.readFileSync('public/index.html','utf8');
  const card=[...w.document.querySelectorAll('.template-card')].find(c=>c.textContent.includes(back?'Template #2 - PESOPLUS - BACK':'Template #2 - PESOPLUS - FRONT'));
  assert(card);assert.equal(card.dataset.storeGroup,'Pesoplus Mambaling');
  assert.equal(w.document.querySelectorAll('.duplex-hit').length,count);
+ if(back){
+  assert.equal(source.pesoCollectionBack.groupNames.length,5);
+  assert(!source.pesoCollectionBack.groupNames.some(name=>/christmas/i.test(name)));
+  assert(!draws.some(item=>/christmas/i.test(item.text)));
+  for(const name of source.pesoCollectionBack.groupNames)assert(draws.some(item=>item.text===name.toUpperCase()),`Missing rendered heading: ${name}`);
+ }
  for(const hit of w.document.querySelectorAll('.duplex-hit')){assert(parseFloat(hit.style.left)>=0);assert(parseFloat(hit.style.top)>=0);assert(parseFloat(hit.style.left)+parseFloat(hit.style.width)<=100);assert(parseFloat(hit.style.top)+parseFloat(hit.style.height)<=100)}
  const lastSlot=source[section].slots[count-1],lastProduct=source.products.find(p=>p.id===lastSlot.productId);
  w.flashSaleActions.openSlot(count-1);assert.equal(w.document.getElementById('slotName').value,lastSlot.details?.name||lastProduct.name);

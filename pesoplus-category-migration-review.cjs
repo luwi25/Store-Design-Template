@@ -1,0 +1,18 @@
+const fs=require('fs'),vm=require('vm'),assert=require('assert/strict');
+const seeds=JSON.parse(fs.readFileSync('template-artwork/pesoplus-collection-back-products.json','utf8'));
+const state={pesoCollectionBack:{groupNames:['Christmas Bundles','School Supplies','Kitchenware & Tableware','Hardware & Electrical','Apparel'],slots:Array.from({length:25},(_,i)=>({productId:'old-'+i,group:Math.floor(i/5),textSizes:{name:123},discountPercent:10}))}};
+const otherRows=JSON.stringify(state.pesoCollectionBack.slots.slice(5));
+const ctx=vm.createContext({state});
+const source=fs.readFileSync('pesoplus-collection-back.js','utf8').replace('__PESO_COLLECTION_BACK_ART__','null').replace('__PESO_COLLECTION_BACK_SEEDS__',JSON.stringify(seeds));
+vm.runInContext(source+';pesoCollectionBackState();',ctx);
+assert.equal(state.pesoCollectionBack.groupNames[0],'Fashion & Accessories');
+assert.deepEqual(state.pesoCollectionBack.slots.slice(0,5).map(s=>s.productId),seeds.slice(20).map(p=>p.id));
+assert.equal(JSON.stringify(state.pesoCollectionBack.slots.slice(5)),otherRows);
+assert(state.pesoCollectionBack.slots.slice(0,5).every(s=>s.textSizes.name===123));
+const migrated=JSON.stringify(state);
+vm.runInContext('pesoCollectionBackState();',ctx);
+assert.equal(JSON.stringify(state),migrated);
+state.pesoCollectionBack.groupNames[0]='My saved category';
+vm.runInContext('pesoCollectionBackState();',ctx);
+assert.equal(state.pesoCollectionBack.groupNames[0],'My saved category');
+console.log('PASS: saved Christmas row migrates once; other rows, text sizes and custom category names are preserved.');

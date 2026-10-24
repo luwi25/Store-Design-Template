@@ -1,302 +1,549 @@
 [
   {
-    "id": "peso-collection-back-0-0",
-    "templateId": "peso-collection-back",
-    "name": "Noche Buena Bundle",
-    "price": 0,
-    "code": "",
+    "id": "sales-ppm-8903-8905",
+    "templateId": "peso-plus",
+    "name": "Glue Stick Small",
+    "price": 3,
+    "code": "8903/8905",
     "image": {
-      "__defaultImage": "images/678c3572bce2a40686d640dbc589164e626f4edaceb1e9f7ab047e0bac874479.png",
+      "__defaultImage": "images/1c4a7ee76ddde1991467dd96c53abaf0dbcb4fdcf06ac35f4dfd398fae71aa2d.png",
       "mime": "image/png"
     },
-    "photoSource": "supplied-template"
+    "photoSource": "approved",
+    "photoApproval": {
+      "candidate": "659d3991b92c4662",
+      "sourceType": "user-photo",
+      "sourceImage": "images/94217e6678e60848790eaa6b5161c4a4891614cf997b1e5f1576fbc49cbca5f9.jpg",
+      "sha256": "1c4a7ee76ddde1991467dd96c53abaf0dbcb4fdcf06ac35f4dfd398fae71aa2d",
+      "processing": {
+        "remove_background": true,
+        "object_focus": true,
+        "sharpen": 1.06,
+        "upscale": false,
+        "method": "local rembg u2net with source-pixel crop/mask cleanup",
+        "inspection": "agent visual comparison, complete product retained",
+        "processed_at": "2026-10-20T01:48:25.433619+00:00"
+      }
+    }
   },
   {
-    "id": "peso-collection-back-0-1",
-    "templateId": "peso-collection-back",
-    "name": "Snack Bundle",
-    "price": 0,
-    "code": "",
+    "id": "sales-ppm-m-2",
+    "templateId": "peso-plus",
+    "name": "Mongol Pencil #2",
+    "price": 10,
+    "code": "M-2",
     "image": {
-      "__defaultImage": "images/639c54cac425752ca9983db248ca1759ab26ba64f584e05ed16233447e94db48.png",
+      "__defaultImage": "images/ade14fe55d3f6aea7acde3f18871c8241de786c6e5ce54bd5ab6bb85d9cb7b79.png",
       "mime": "image/png"
     },
-    "photoSource": "supplied-template"
+    "photoSource": "approved",
+    "photoApproval": {
+      "candidate": "11bf4b0861374cdc",
+      "sourceType": "user-photo",
+      "sourceImage": "images/4017fe963abd678ac07685250af64955e873221d40314e136367b42f70de146b.png",
+      "sha256": "ade14fe55d3f6aea7acde3f18871c8241de786c6e5ce54bd5ab6bb85d9cb7b79",
+      "processing": {
+        "remove_background": true,
+        "object_focus": true,
+        "sharpen": 1.06,
+        "upscale": false,
+        "method": "local rembg u2net with source-pixel crop/mask cleanup",
+        "inspection": "agent visual comparison, complete product retained",
+        "processed_at": "2026-10-20T01:48:25.750315+00:00"
+      }
+    }
   },
   {
-    "id": "peso-collection-back-0-2",
-    "templateId": "peso-collection-back",
-    "name": "Coffee & Mug Set",
-    "price": 0,
-    "code": "",
+    "id": "sales-ppm-tg-l0070",
+    "templateId": "peso-plus",
+    "name": "Scotch Tape Clear 12mm",
+    "price": 12,
+    "code": "TG-L0070",
     "image": {
-      "__defaultImage": "images/518a2c165c1f04ecfd5aabf5f53cc146cc2bd892f3fe6cea64c14618567cc97b.png",
+      "__defaultImage": "images/ae9e8396bb41acf4977cf4831a700760c39c2c739f2523da6a46073e576c45f1.png",
       "mime": "image/png"
     },
-    "photoSource": "supplied-template"
+    "photoSource": "approved",
+    "photoApproval": {
+      "candidate": "a54fa5c05e2e4b92",
+      "sourceType": "user-photo",
+      "sourceImage": "images/0699eb03e4476a3073cff29a70605996d33badf230af605af5e8e6f4e1296c21.png",
+      "sha256": "ae9e8396bb41acf4977cf4831a700760c39c2c739f2523da6a46073e576c45f1",
+      "processing": {
+        "remove_background": true,
+        "object_focus": true,
+        "sharpen": 1.06,
+        "upscale": false,
+        "method": "local rembg u2net with source-pixel crop/mask cleanup",
+        "inspection": "agent visual comparison, complete product retained",
+        "processed_at": "2026-10-20T01:48:27.659528+00:00"
+      }
+    }
   },
   {
-    "id": "peso-collection-back-0-3",
-    "templateId": "peso-collection-back",
-    "name": "Kitchen Gift Set",
-    "price": 0,
-    "code": "",
+    "id": "sales-ppm-7204",
+    "templateId": "peso-plus",
+    "name": "Gel Pen 0.5mm",
+    "price": 15,
+    "code": "7204",
     "image": {
-      "__defaultImage": "images/87c5dd2f20971ea514a31f2fcd1ea6681a02a1f0b2797b32fe64f92c3ab4e6dc.png",
+      "__defaultImage": "images/8fe95ae1c859af5e4ae2c000bd6c121af71704c5f4d455901f7e7ef9c960682b.png",
       "mime": "image/png"
     },
-    "photoSource": "supplied-template"
+    "photoSource": "approved",
+    "photoApproval": {
+      "candidate": "41f1e0ae7b014466",
+      "sourcePage": "https://www.fishionery.com/product/7204-k35-0-5mm-bullet-gel-pen-black/",
+      "imageUrl": "https://www.fishionery.com/wp-content/uploads/2025/02/10-1.jpg",
+      "sourceType": "web",
+      "approvedAt": "2026-10-19T08:47:38.562017+00:00",
+      "sha256": "8fe95ae1c859af5e4ae2c000bd6c121af71704c5f4d455901f7e7ef9c960682b"
+    }
   },
   {
-    "id": "peso-collection-back-0-4",
+    "id": "peso-ranked-sales-ppm-ms-300",
     "templateId": "peso-collection-back",
-    "name": "Bath Gift Set",
-    "price": 0,
-    "code": "",
+    "name": "Marker Pen",
+    "price": 7,
+    "code": "MS-300",
     "image": {
-      "__defaultImage": "images/0d1881537f343500bf640a1cda3e1fbffc3fcbda91fd7bc0241d07e101c29c64.png",
+      "__defaultImage": "images/c3221afacb8a349d9f37c105a83c3b57c9158a6e77f6092911179b1934562df7.png",
       "mime": "image/png"
     },
-    "photoSource": "supplied-template"
+    "photoSource": "approved",
+    "photoApproval": {
+      "candidate": "c64f95a488b14784",
+      "sourcePage": "https://shopee.ph/Ordinary-Permanent-MARKER-(MS-300)-i.294789415.29623320484",
+      "imageUrl": "https://down-ph.img.susercontent.com/file/ph-11134207-7rasl-m4wzz5tw8rke60",
+      "sourceType": "web",
+      "approvedAt": "2026-10-19T08:47:40.106540+00:00",
+      "sha256": "c3221afacb8a349d9f37c105a83c3b57c9158a6e77f6092911179b1934562df7"
+    }
   },
   {
-    "id": "peso-collection-back-1-0",
-    "templateId": "peso-collection-back",
-    "name": "Cookware Set",
-    "price": 0,
-    "code": "",
+    "id": "sales-ppm-nl030",
+    "templateId": "peso-plus",
+    "name": "NL030 Rice Spoon",
+    "price": 9,
+    "code": "NL030",
     "image": {
-      "__defaultImage": "images/06c373237ee96b7e347cbd543a7e89501565d8fa525cc6adf3b1fa7bd06a28c7.png",
+      "__defaultImage": "images/0fd152d886718814595a7ec81535ffe3a0192a437c2ec5e2a79a3f1f046e3d77.png",
       "mime": "image/png"
     },
-    "photoSource": "supplied-template"
+    "photoSource": "approved",
+    "photoApproval": {
+      "candidate": "2bf98f618cb94fa2",
+      "sourceType": "user-photo",
+      "sourceImage": "images/67e661e05e54b18ef1584b9b500fcc56c79bdde939a9dca2b65bd08da5792e2a.png",
+      "sha256": "0fd152d886718814595a7ec81535ffe3a0192a437c2ec5e2a79a3f1f046e3d77",
+      "processing": {
+        "remove_background": true,
+        "object_focus": true,
+        "sharpen": 1.06,
+        "upscale": false,
+        "method": "local rembg u2net with source-pixel crop/mask cleanup",
+        "inspection": "agent visual comparison, complete product retained",
+        "processed_at": "2026-10-20T01:48:26.386696+00:00"
+      }
+    }
   },
   {
-    "id": "peso-collection-back-1-1",
-    "templateId": "peso-collection-back",
-    "name": "Frying Pan",
-    "price": 0,
-    "code": "",
+    "id": "sales-ppm-90255",
+    "templateId": "peso-plus",
+    "name": "Plate Col 5.5",
+    "price": 22,
+    "code": "90255",
     "image": {
-      "__defaultImage": "images/74f150120fa8a2df4b5228e29d8b6c23356427dab4e1389b73a86580a1639f7b.png",
+      "__defaultImage": "images/9082d107915e2f119c7afe39d859d4fc10d1b3dfd5a70402e46aec34f4ba8bdf.png",
       "mime": "image/png"
     },
-    "photoSource": "supplied-template"
+    "photoSource": "approved",
+    "photoApproval": {
+      "candidate": "6014fb9404ce40bf",
+      "sourceType": "user-photo",
+      "sourceImage": "images/1ee0ee07262e7f4ffc3d6e8d8c3bd9eef37865937b137a8ed2c14a19a085dfce.png",
+      "sha256": "9082d107915e2f119c7afe39d859d4fc10d1b3dfd5a70402e46aec34f4ba8bdf",
+      "processing": {
+        "remove_background": false,
+        "object_focus": true,
+        "sharpen": 1,
+        "upscale": false,
+        "method": "existing alpha reframing",
+        "inspection": "agent visual comparison, complete product retained",
+        "processed_at": "2026-10-20T01:48:26.704512+00:00"
+      }
+    }
   },
   {
-    "id": "peso-collection-back-1-2",
-    "templateId": "peso-collection-back",
-    "name": "Dinner Plates",
-    "price": 0,
-    "code": "",
+    "id": "sales-ppm-10109-ad",
+    "templateId": "peso-plus",
+    "name": "Art Feather Fruit Plate 9\"",
+    "price": 39,
+    "code": "10109-AD",
     "image": {
-      "__defaultImage": "images/f51cc3cefc61ca8df3bf0729c6b0e9346176b8a0b266ac953aa04416cb7e3847.png",
+      "__defaultImage": "images/6676cc60eba27ae531712fa198f38b90662cd3830bf3f4b5c664baf67b8fc118.png",
       "mime": "image/png"
     },
-    "photoSource": "supplied-template"
+    "photoSource": "approved",
+    "photoApproval": {
+      "candidate": "bea59b7cafc34bc5",
+      "sourceType": "user-photo",
+      "sourceImage": "images/da861fabdc5406718d4f876462e270e8139e37047eb592d44c3d30a804badf60.png",
+      "sha256": "6676cc60eba27ae531712fa198f38b90662cd3830bf3f4b5c664baf67b8fc118",
+      "processing": {
+        "remove_background": false,
+        "object_focus": true,
+        "sharpen": 1,
+        "upscale": false,
+        "method": "existing alpha reframing",
+        "inspection": "agent visual comparison, complete product retained",
+        "processed_at": "2026-10-20T01:48:27.020292+00:00"
+      }
+    }
   },
   {
-    "id": "peso-collection-back-1-3",
-    "templateId": "peso-collection-back",
-    "name": "Food Containers",
-    "price": 0,
-    "code": "",
+    "id": "sales-ppm-32610-b",
+    "templateId": "peso-plus",
+    "name": "Soup Plate 10''",
+    "price": 49,
+    "code": "32610-B",
     "image": {
-      "__defaultImage": "images/287c6b52251177933a5114fa422ecc023e05cea5a8d59d5ff1330abff9f45b75.png",
+      "__defaultImage": "images/0a61ad475d8b0de206639ddd4f79d216d2e7db8b89689735d44655d4540f0c7b.png",
       "mime": "image/png"
     },
-    "photoSource": "supplied-template"
+    "photoSource": "approved",
+    "photoApproval": {
+      "candidate": "1aeb26fedeca4478",
+      "sourcePage": "https://shopee.ph/Melamine-10-Inches-Mocha-Round-Dinner-Soup-Plate-i.57844844.40558337630",
+      "imageUrl": "https://down-ph.img.susercontent.com/file/ph-11134207-7ra0u-mc4ltsuqkbwb0b",
+      "sourceType": "web",
+      "approvedAt": "2026-10-19T08:47:38.309256+00:00",
+      "sha256": "0a61ad475d8b0de206639ddd4f79d216d2e7db8b89689735d44655d4540f0c7b"
+    }
   },
   {
-    "id": "peso-collection-back-1-4",
-    "templateId": "peso-collection-back",
-    "name": "Utensil Set",
-    "price": 0,
-    "code": "",
+    "id": "sales-ppm-ec866",
+    "templateId": "peso-plus",
+    "name": "Tumbler Trans 300ml",
+    "price": 25,
+    "code": "EC866",
     "image": {
-      "__defaultImage": "images/87d4b9adf61f1ee6df459bc26961ff570d2ef59f4a70bd6c2f91e048173cadd8.png",
+      "__defaultImage": "images/33db08b85a0d5218a2e0f3111c64d6e2f5f8ccf6b1a0090904c7f75f7c84c5b8.png",
       "mime": "image/png"
     },
-    "photoSource": "supplied-template"
+    "photoSource": "approved",
+    "photoApproval": {
+      "candidate": "59edd43513c747b9",
+      "sourcePage": "https://shopee.ph/NIKKO-Tumbler-300ml-Sku.886-i.1357193795.46950157384",
+      "imageUrl": "https://down-ph.img.susercontent.com/file/ph-11134208-81zth-mg8utcxgktu08f",
+      "sourceType": "web",
+      "approvedAt": "2026-10-19T08:47:39.206215+00:00",
+      "sha256": "33db08b85a0d5218a2e0f3111c64d6e2f5f8ccf6b1a0090904c7f75f7c84c5b8"
+    }
   },
   {
-    "id": "peso-collection-back-2-0",
-    "templateId": "peso-collection-back",
-    "name": "Notebooks",
-    "price": 0,
-    "code": "",
+    "id": "sales-ppm-rfc16",
+    "templateId": "peso-back",
+    "name": "RFC16 Wire Black & White",
+    "price": 45,
+    "code": "RFC16",
     "image": {
-      "__defaultImage": "images/18effa962ea7c7e9bf50d897c4422daea1cc72b1ae87e5032a486bdde9514111.png",
+      "__defaultImage": "images/6a4c0c0ad9002054daeedad115f024f0f577ecfa8932988077abf71ee86edaa9.png",
       "mime": "image/png"
     },
-    "photoSource": "supplied-template"
+    "photoSource": "approved",
+    "photoApproval": {
+      "candidate": "7d1f81bf79944e5b",
+      "sourcePage": "https://shopee.ph/Philflex-TF-Wire-AWG-16-2-1.25mm-2C-Stranded-Hook-Up-Wire-Thermoplastic-Fixture-Wire-Black-White-i.453748770.15398986640",
+      "imageUrl": "https://down-ph.img.susercontent.com/file/ph-11134208-81ztn-mm8efne6pfcw5e",
+      "sourceType": "web",
+      "approvedAt": "2026-10-19T08:47:40.369714+00:00",
+      "sha256": "6a4c0c0ad9002054daeedad115f024f0f577ecfa8932988077abf71ee86edaa9"
+    }
   },
   {
-    "id": "peso-collection-back-2-1",
-    "templateId": "peso-collection-back",
-    "name": "Ballpens",
-    "price": 0,
-    "code": "",
+    "id": "sales-ppm-kingeagle2a",
+    "templateId": "peso-back",
+    "name": "King Eagle AA Battery",
+    "price": 19,
+    "code": "kingeagle2A",
     "image": {
-      "__defaultImage": "images/d411c3bce03fd9b69c2c8136b9843e054283c78f195e996acc6023efeb6c0fbc.png",
+      "__defaultImage": "images/bdba3c6c53d83d703753be0316e69c895678648ed9e137a640438a2f34f3e711.png",
       "mime": "image/png"
     },
-    "photoSource": "supplied-template"
+    "photoSource": "approved",
+    "photoApproval": {
+      "candidate": "5c56656b780a4bc7",
+      "sourcePage": "https://shopee.ph/Kingever-100-Original-AA-R6-2pcs-Pack-Extra-Heavy-Duty-Battery-classic-series-i.863898062.20168466787",
+      "imageUrl": "https://down-ph.img.susercontent.com/file/ph-11134207-23010-7h99ixkpndmvf6",
+      "sourceType": "web",
+      "approvedAt": "2026-10-19T08:47:39.591693+00:00",
+      "sha256": "bdba3c6c53d83d703753be0316e69c895678648ed9e137a640438a2f34f3e711"
+    }
   },
   {
-    "id": "peso-collection-back-2-2",
-    "templateId": "peso-collection-back",
-    "name": "Crayons",
-    "price": 0,
-    "code": "",
+    "id": "sales-ppm-07195",
+    "templateId": "peso-back",
+    "name": "07195 Plastic Screw Hook 1'1/4",
+    "price": 4,
+    "code": "07195",
     "image": {
-      "__defaultImage": "images/d042df3b53ddaf41d2c44bdc683a4962591a844e15ab6313f1d3ec50136525b6.png",
+      "__defaultImage": "images/2a91acbef653bd0827e8a5c823045b6844f4dd783e4427be642252d7b5fd3b7a.png",
       "mime": "image/png"
     },
-    "photoSource": "supplied-template"
+    "photoSource": "approved",
+    "photoApproval": {
+      "candidate": "36a5eb44cc4c4887",
+      "sourcePage": "https://hardentools.com.ph/products/4pcs-1-1-4-ring-hook-screw-set-plastic-coated",
+      "imageUrl": "https://hardentools.com.ph/cdn/shop/files/HARDENPRODUCT-Recoveredcopy_b0bb28b8-0915-4bd8-bb17-ecb9ecd35693_480x480.jpg?v=1758353156",
+      "sourceType": "web",
+      "approvedAt": "2026-10-19T08:47:37.648580+00:00",
+      "sha256": "2a91acbef653bd0827e8a5c823045b6844f4dd783e4427be642252d7b5fd3b7a"
+    }
   },
   {
-    "id": "peso-collection-back-2-3",
-    "templateId": "peso-collection-back",
-    "name": "Pencil Case",
-    "price": 0,
-    "code": "",
+    "id": "sales-ppm-kingeagle3a",
+    "templateId": "peso-back",
+    "name": "King Eagle AAA Battery",
+    "price": 19,
+    "code": "kingeagle3A",
     "image": {
-      "__defaultImage": "images/410dab6af416d2c6a3ab67e483c4be60c67e2827fa7f2c740f5905f84fef9363.png",
+      "__defaultImage": "images/d49fd6b83dafd76496bd5e07e407b5d508cc41b0c68817e0fd656af07e4703dd.png",
       "mime": "image/png"
     },
-    "photoSource": "supplied-template"
+    "photoSource": "approved",
+    "photoApproval": {
+      "candidate": "b011dc7db3be4876",
+      "sourcePage": "https://www.lazada.com.ph/products/kingever-battery-aa-aaa-extra-heavy-duty-2a-3a-i4419784140.html",
+      "imageUrl": "https://img.lazcdn.com/g/p/8ff15768fb09200f7ed11dea75febdd2.jpg_720x720q80.jpg",
+      "sourceType": "web",
+      "approvedAt": "2026-10-19T08:47:39.718416+00:00",
+      "sha256": "d49fd6b83dafd76496bd5e07e407b5d508cc41b0c68817e0fd656af07e4703dd"
+    }
   },
   {
-    "id": "peso-collection-back-2-4",
-    "templateId": "peso-collection-back",
-    "name": "School Bag",
-    "price": 0,
-    "code": "",
+    "id": "sales-ppm-rfc18",
+    "templateId": "peso-back",
+    "name": "RFC18 Wire Black & White",
+    "price": 29,
+    "code": "RFC18",
     "image": {
-      "__defaultImage": "images/aea1c634a35c32a8b52e1b423239dd2fb6a8546624df6bc1a312cf5e04d5465c.png",
+      "__defaultImage": "images/1fa8b1d8d3fb4532866f52ce3090832433159f20a8207e57633177b211f6961d.png",
       "mime": "image/png"
     },
-    "photoSource": "supplied-template"
+    "photoSource": "approved",
+    "photoApproval": {
+      "candidate": "9c64714923f941fc",
+      "sourcePage": "https://shopee.ph/-22-stranded-wire-Black-White-per.1roll-280php.-i.816324319.23767137708",
+      "imageUrl": "https://down-ph.img.susercontent.com/file/ph-11134207-7qul3-lggcbd0vz1wwdd",
+      "sourceType": "web",
+      "approvedAt": "2026-10-19T08:47:40.498029+00:00",
+      "sha256": "1fa8b1d8d3fb4532866f52ce3090832433159f20a8207e57633177b211f6961d"
+    }
   },
   {
-    "id": "peso-collection-back-3-0",
-    "templateId": "peso-collection-back",
-    "name": "Claw Hammer",
-    "price": 0,
-    "code": "",
+    "id": "sales-ppm-wq-4",
+    "templateId": "peso-back",
+    "name": "WQ-4 Socks",
+    "price": 19,
+    "code": "WQ-4",
     "image": {
-      "__defaultImage": "images/fc6c467dec4c01e247008f4cb0ee9389dc507a5570475a925a5c6913445174bc.png",
+      "__defaultImage": "images/818d963fca46b94af9b110d1a012385082fa67d4961ac3ca60df2de99a7cd7a9.png",
       "mime": "image/png"
     },
-    "photoSource": "supplied-template"
+    "photoSource": "approved",
+    "photoApproval": {
+      "candidate": "d3da351c80094a20",
+      "sourcePage": "https://shopee.ph/3pairs-6pairs-NEW-COTTON-socks-Black-White-COD-i.74285063.5458744505",
+      "imageUrl": "https://down-ph.img.susercontent.com/file/34f8b4c55ec30963e461082f8ebeec26",
+      "sourceType": "web",
+      "approvedAt": "2026-10-19T08:47:41.781144+00:00",
+      "sha256": "818d963fca46b94af9b110d1a012385082fa67d4961ac3ca60df2de99a7cd7a9"
+    }
   },
   {
-    "id": "peso-collection-back-3-1",
-    "templateId": "peso-collection-back",
-    "name": "Screwdriver Set",
-    "price": 0,
-    "code": "",
+    "id": "sales-ppm-1433-40",
+    "templateId": "peso-back",
+    "name": "CF0528 Needle 4's",
+    "price": 19,
+    "code": "1433-40",
     "image": {
-      "__defaultImage": "images/28ec1806ad611d0d1964c1fb17225bccdeeb18b351833b9ce85c03c33f5c2e29.png",
+      "__defaultImage": "images/60a27de5f7d81fca08092f3bfd2dfca1167efd72f11cb6c759eb6c7ad7a0b088.png",
       "mime": "image/png"
     },
-    "photoSource": "supplied-template"
+    "photoSource": "approved",
+    "photoApproval": {
+      "candidate": "ea8695b0011147ff",
+      "sourceType": "user-photo",
+      "sourceImage": "images/3a0a12bb66e00539bf08b09ee294a3d8bfd1e963c246b275373b572f7307f62f.png",
+      "sha256": "60a27de5f7d81fca08092f3bfd2dfca1167efd72f11cb6c759eb6c7ad7a0b088",
+      "processing": {
+        "remove_background": false,
+        "object_focus": true,
+        "sharpen": 1,
+        "upscale": false,
+        "method": "existing alpha reframing",
+        "inspection": "agent visual comparison, complete product retained",
+        "processed_at": "2026-10-20T01:48:28.282390+00:00"
+      }
+    }
   },
   {
-    "id": "peso-collection-back-3-2",
-    "templateId": "peso-collection-back",
-    "name": "Pliers",
-    "price": 0,
-    "code": "",
+    "id": "sales-ppm-cp187",
+    "templateId": "peso-back",
+    "name": "CP187 Lds Panty Short",
+    "price": 35,
+    "code": "CP187",
     "image": {
-      "__defaultImage": "images/a28102bc97b19ba95baa29598f48f94c4f707c229f02cd81046f42c5aad4552b.png",
+      "__defaultImage": "images/d07f75044b9e8056277c23fa146f680f7d2e353d5919cbd33dfe384e982e81a6.png",
       "mime": "image/png"
     },
-    "photoSource": "supplied-template"
+    "photoSource": "approved",
+    "photoApproval": {
+      "candidate": "4ae1baf186794754",
+      "sourceType": "user-photo",
+      "sourceImage": "images/18d7f5f64225a880c1aa66a08ddd092546cbd46f1e48ae5d9f0f534acabf960c.png",
+      "sha256": "d07f75044b9e8056277c23fa146f680f7d2e353d5919cbd33dfe384e982e81a6",
+      "processing": {
+        "remove_background": true,
+        "object_focus": true,
+        "sharpen": 1.06,
+        "upscale": false,
+        "method": "local rembg u2net with source-pixel crop/mask cleanup",
+        "inspection": "agent visual comparison, complete product retained",
+        "processed_at": "2026-10-20T01:48:28.597506+00:00"
+      }
+    }
   },
   {
-    "id": "peso-collection-back-3-3",
-    "templateId": "peso-collection-back",
-    "name": "Measuring Tape",
-    "price": 0,
-    "code": "",
+    "id": "sales-ppm-26-1478-36",
+    "templateId": "peso-back",
+    "name": "Sewing Kit",
+    "price": 59,
+    "code": "26-1478-36",
     "image": {
-      "__defaultImage": "images/5ef8688695ccde15e5a8144b35b6b0f48f7a1659a41620df1f78dd45c8145d6d.png",
+      "__defaultImage": "images/0ca9baa3d8c75a567370a0f36404d8727a17ea416faea4f0cf6a96e2d35e4929.png",
       "mime": "image/png"
     },
-    "photoSource": "supplied-template"
+    "photoSource": "approved",
+    "photoApproval": {
+      "candidate": "67c528fb5d0d449b",
+      "sourcePage": "https://shopee.ph/list/sewing+kit",
+      "imageUrl": "https://down-ph.img.susercontent.com/file/ph-11134207-81ztq-miwgss6hkpoge1",
+      "sourceType": "web",
+      "approvedAt": "2026-10-19T08:47:38.162870+00:00",
+      "sha256": "0ca9baa3d8c75a567370a0f36404d8727a17ea416faea4f0cf6a96e2d35e4929"
+    }
   },
   {
-    "id": "peso-collection-back-3-4",
+    "id": "sales-ppm-cp185",
     "templateId": "peso-collection-back",
-    "name": "LED Bulb",
-    "price": 0,
-    "code": "",
+    "name": "CP185 Lds Cycling",
+    "price": 35,
+    "code": "CP185",
     "image": {
-      "__defaultImage": "images/68131ced2ec26f21fb34a55e38d26a1ee91596cf1209769de78a8cd7ed016d54.png",
-      "mime": "image/png"
+      "__defaultImage": "images/f49a97ecfb217a604366470c7a6d613817db7b04cae74a127bacd1c23063f2e8.jpg",
+      "mime": "image/jpeg"
     },
-    "photoSource": "supplied-template"
+    "photoSource": "placeholder"
   },
   {
-    "id": "peso-collection-back-4-0",
-    "templateId": "peso-collection-back",
-    "name": "Rice",
-    "price": 0,
-    "code": "",
+    "id": "sales-ppm-vp-0416",
+    "templateId": "peso-back",
+    "name": "VP-0416 605 I'd Card W/sling",
+    "price": 25,
+    "code": "VP-0416",
     "image": {
-      "__defaultImage": "images/8b050218eea092849b8ce82bd2137dfac82a7771df3243f8bde623313ea7e1a2.png",
+      "__defaultImage": "images/ab2b5250e708f34599ffc76c093ddbdae5d57c496abf53fa8d8da6944ac0185b.png",
       "mime": "image/png"
     },
-    "photoSource": "supplied-template"
+    "photoSource": "approved",
+    "photoApproval": {
+      "candidate": "30e9a1a8ad4d443d",
+      "sourcePage": "https://shopee.ph/KomodoPH-Leather-ID-Card-Holder-with-Retractable-Sling-–-Free-Name-Engraving!-i.367102408.29963367392",
+      "imageUrl": "https://down-ph.img.susercontent.com/file/ph-11134207-7rash-m119e7pz9wdu4d",
+      "sourceType": "web",
+      "approvedAt": "2026-10-19T08:47:41.649989+00:00",
+      "sha256": "ab2b5250e708f34599ffc76c093ddbdae5d57c496abf53fa8d8da6944ac0185b"
+    }
   },
   {
-    "id": "peso-collection-back-4-1",
-    "templateId": "peso-collection-back",
-    "name": "Cooking Oil",
-    "price": 0,
-    "code": "",
+    "id": "sales-ppm-sun151",
+    "templateId": "peso-back",
+    "name": "SUN151 Lds Sunglass",
+    "price": 55,
+    "code": "SUN151",
     "image": {
-      "__defaultImage": "images/fcabd2a5dd8f6d4e30fb3da203aa736320c07d9aa57d2a0d4434c5b9adaee35a.png",
+      "__defaultImage": "images/4dd38cf6d19e38c09ef96be5c08877d74187bb95e862385bd5a2002dcd842411.png",
       "mime": "image/png"
     },
-    "photoSource": "supplied-template"
+    "photoSource": "approved",
+    "photoApproval": {
+      "candidate": "a7c40ef8300e48f5",
+      "sourceType": "user-photo",
+      "sourceImage": "images/a7e599d14d0b483551724b1cfefd5e446ac0847cf3d18336b3d7897092f90dfa.png",
+      "sha256": "4dd38cf6d19e38c09ef96be5c08877d74187bb95e862385bd5a2002dcd842411",
+      "processing": {
+        "remove_background": true,
+        "object_focus": true,
+        "sharpen": 1.06,
+        "upscale": false,
+        "method": "local rembg u2net with source-pixel crop/mask cleanup",
+        "inspection": "agent visual comparison, complete product retained",
+        "processed_at": "2026-10-20T01:48:28.908198+00:00"
+      }
+    }
   },
   {
-    "id": "peso-collection-back-4-2",
-    "templateId": "peso-collection-back",
-    "name": "Canned Goods",
-    "price": 0,
-    "code": "",
+    "id": "sales-ppm-500dt-001",
+    "templateId": "peso-back",
+    "name": "500DT-001 Hankies",
+    "price": 29,
+    "code": "500DT-001",
     "image": {
-      "__defaultImage": "images/428e7b94d3fa3f49f8ce10574e9310b76fa3659a7fb3c9a8df5ba1f37b80c7f2.png",
+      "__defaultImage": "images/9ea93052fa733c2584a9e8885c6fd3002625ed93d83c04fe8dae55ece4aa1562.png",
       "mime": "image/png"
     },
-    "photoSource": "supplied-template"
+    "photoSource": "approved",
+    "photoApproval": {
+      "candidate": "247b85edc5074932",
+      "sourcePage": "https://www.tattedwebs.com/product-page/hankies",
+      "imageUrl": "https://static.wixstatic.com/media/7f1048_4a70a1ba6588441ebd20f79b001dfd3b~mv2.jpg/v1/fit/w_500,h_500,q_90/file.jpg",
+      "sourceType": "web",
+      "approvedAt": "2026-10-19T08:47:38.434567+00:00",
+      "sha256": "9ea93052fa733c2584a9e8885c6fd3002625ed93d83c04fe8dae55ece4aa1562"
+    }
   },
   {
-    "id": "peso-collection-back-4-3",
-    "templateId": "peso-collection-back",
-    "name": "Instant Noodles",
-    "price": 0,
-    "code": "",
+    "id": "sales-ppm-ss53521",
+    "templateId": "peso-back",
+    "name": "Baby Turban",
+    "price": 29,
+    "code": "SS53521",
     "image": {
-      "__defaultImage": "images/afb7574e41564177056f2573a2dec81b2904f80cb1a62908d06bf1167aa9eb36.png",
+      "__defaultImage": "images/e15fd2ce7f76a2bb6572d591ea47bee9bf623a0f336238e8960cb3ffb39dcd48.png",
       "mime": "image/png"
     },
-    "photoSource": "supplied-template"
+    "photoSource": "approved",
+    "photoApproval": {
+      "candidate": "321f76ccd4034c1a",
+      "sourcePage": "https://shopee.ph/Payoe-Pearl-turban-for-baby-girls-baby-hat-for-girls-i.805042443.23365522386",
+      "imageUrl": "https://down-ph.img.susercontent.com/file/ph-11134211-7qul6-lft5l6lc7jw8c3",
+      "sourceType": "web",
+      "approvedAt": "2026-10-19T08:47:40.751201+00:00",
+      "sha256": "e15fd2ce7f76a2bb6572d591ea47bee9bf623a0f336238e8960cb3ffb39dcd48"
+    }
   },
   {
-    "id": "peso-collection-back-4-4",
+    "id": "sales-ppm-csrh2020",
     "templateId": "peso-collection-back",
-    "name": "Biscuits",
-    "price": 0,
-    "code": "",
+    "name": "CSRH2020 Rubber Bands",
+    "price": 15,
+    "code": "CSRH2020",
     "image": {
-      "__defaultImage": "images/41701d8315ee08042218b4126335baf1d7ab47e8b6b740d041f2d9fb6e7f0d85.png",
-      "mime": "image/png"
+      "__defaultImage": "images/f49a97ecfb217a604366470c7a6d613817db7b04cae74a127bacd1c23063f2e8.jpg",
+      "mime": "image/jpeg"
     },
-    "photoSource": "supplied-template"
+    "photoSource": "placeholder"
   }
 ]

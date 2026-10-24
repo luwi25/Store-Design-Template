@@ -33,7 +33,9 @@ def collection_source(root: Path) -> str:
     peso_back_products = json.loads((root / "template-artwork/pesoplus-collection-back-products.json").read_text(encoding="utf-8"))
     for product in peso_back_products:
         marker = product["image"]
-        product["image"] = data_url(root / "defaults" / marker["__defaultImage"], marker["mime"])
+        # Keep full-quality photos in the existing defaults assets instead of
+        # duplicating their base64 payloads in the already large editor HTML.
+        product["image"] = "defaults/" + marker["__defaultImage"]
     peso_back = (root / "pesoplus-collection-back.js").read_text(encoding="utf-8").replace(
         "__PESO_COLLECTION_BACK_ART__", json.dumps(peso_back_art)
     ).replace("__PESO_COLLECTION_BACK_SEEDS__", json.dumps(peso_back_products, ensure_ascii=False))
