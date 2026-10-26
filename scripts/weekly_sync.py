@@ -47,6 +47,7 @@ import urllib.error
 import urllib.request
 from collections import defaultdict
 from pathlib import Path
+from catalog_identity import stock_key, product_store, slot_lists, merge_catalog_duplicates
 
 REPO = Path(__file__).resolve().parent.parent  # store-design-template-github
 DATA = REPO / "data"
@@ -412,57 +413,47 @@ def placeholder_image_marker(repo):
 # ---------- Upsert directly against the published (dehydrated) state ----------
 
 def catalog_product_for_stockno(state, prefix, stockno, sales_product_id):
-    """Match the local editable catalog by stock number without crossing stores."""
-    normalized = str(stockno or "").strip().casefold()
+    """An exact stock number resolves to one shared catalog identity."""
+    normalized = stock_key(stockno)
     if not normalized:
         return None
-    matches = [p for p in state["products"]
-               if str(p.get("code") or "").strip().casefold() == normalized]
-    if not matches:
-        return None
-
-    # An existing sales record for this store is the most current local catalog
-    # entry for this stock number, including edits made since the last sync.
-    current = next((p for p in matches if p.get("id") == sales_product_id), None)
-    if current:
-        return current
-
-    other_sales_prefixes = {"sales-heb-", "sales-ppm-"} - {f"{prefix}-"}
-    matches = [p for p in matches
-               if not any(str(p.get("id", "")).startswith(other) for other in other_sales_prefixes)]
-    store_matches = [p for p in matches
-                     if str(p.get("templateId") or "").startswith("home-" if prefix == "sales-heb" else "peso-")]
-    if len(store_matches) == 1:
-        return store_matches[0]
-    if len(store_matches) > 1:
-        log(f"[{stockno}] multiple same-store catalog matches; using API name/photo")
-        return None
-
-    # A store-neutral catalog item is safe only when its code is unique.
-    neutral = [p for p in matches if not p.get("templateId")]
-    if len(neutral) == 1 and len(matches) == 1:
-        return neutral[0]
-    if matches:
-        log(f"[{stockno}] ambiguous or other-store catalog match; using API name/photo")
-    return None
+    matches = [p for p in state['products'] if stock_key(p.get('code')) == normalized]
+    if len(matches) > 1:
+        raise RuntimeError(f'Conflicting catalog records for stock number {stockno}; preserve records for review.')
+    return matches[0] if matches else None
 
 
 def upsert_product(repo, state, products_by_id, prefix, stockno, name, price, image_url, template_id):
     """Update one sales-ranked item using the matching local catalog entry.
 
-    An exact, store-appropriate Product code match supplies the local name and
+    An exact shared Product code match supplies the local name and
     image, preserving edits and approved image provenance. API sales ranking
     and current price remain authoritative. Without a usable local photo, keep
     approved assets, try the API image, then the existing web-search fallback.
-    Store prefixes keep Home Express and PesoPlus sales IDs distinct.
+    Store prices are separate; template slots carry the applicable store price.
     """
-    pid = f"{prefix}-{re.sub(r'[^A-Za-z0-9]+', '-', stockno).strip('-').lower()}"
-    existing = products_by_id.get(pid)
+    pid = 'catalog-' + hashlib.sha256(stock_key(stockno).encode()).hexdigest()[:20]
     catalog_product = catalog_product_for_stockno(state, prefix, stockno, pid)
+    if catalog_product:
+        pid = catalog_product['id']
+    existing = products_by_id.get(pid)
+    store = 'home-express-basak' if prefix == 'sales-heb' else 'pesoplus-mambaling'
+    store_prices = dict(existing.get('storePrices', {})) if existing else {}
+    if existing:
+        previous_store = product_store(existing)
+        if previous_store:
+            store_prices.setdefault(previous_store, existing.get('price', 0))
+        # Preserve all current placements before changing the catalog fallback price.
+        for slots in slot_lists(state):
+            for slot in slots:
+                if slot.get('productId') == pid:
+                    slot['details'] = dict(slot.get('details') or {})
+                    slot['details'].setdefault('price', existing.get('price', 0))
+    store_prices[store] = price if price is not None else 0
     placeholder = placeholder_image_marker(repo)
     current_source = existing.get("photoSource") if existing else None
 
-    # A unique local stock-code match supplies the catalog name and photo.
+    # A unique shared stock-code match supplies the catalog name and photo.
     # Existing local names are preserved as entered; API data remains the fallback.
     display_name = (catalog_product.get("name") or name) if catalog_product else name
     catalog_image = catalog_product.get("image") if catalog_product else None
@@ -513,7 +504,7 @@ def upsert_product(repo, state, products_by_id, prefix, stockno, name, price, im
         photo_status = "cached" if photo_source == current_source else f"web-sourced-{photo_source}"
 
     product = {
-        "id": pid, "templateId": template_id,
+        "id": pid, "templateId": "", "sharedCatalog": True, "storePrices": store_prices,
         "name": display_name if catalog_product else title_case(name),
         "price": price if price is not None else 0, "code": stockno, "image": image,
         "photoSource": photo_source,
@@ -563,7 +554,7 @@ def apply_side(repo, state, products_by_id, prefix, template_key, template_id, r
         departments_used.add(label)  # raw department name, so exclude_departments matching stays correct
         for idx, item in zip(by_idx.get(pos, []), items):
             pid, photo_status = upsert_product(repo, state, products_by_id, prefix, item["stockno"], item["name"], item["retail_price"], item["image_url"], template_id)
-            slots[idx] = {"productId": pid, "group": pos, "discountPercent": 0}
+            slots[idx] = {"productId": pid, "group": pos, "discountPercent": 0, "details": {"price": item["retail_price"] if item["retail_price"] is not None else 0}}
             entries.append((display_label, item["name"], item["units"], photo_status))
 
     if cross_category_positions:
@@ -575,7 +566,7 @@ def apply_side(repo, state, products_by_id, prefix, template_key, template_id, r
             cursor += count
             for idx, item in zip(by_idx.get(pos, []), chunk):
                 pid, photo_status = upsert_product(repo, state, products_by_id, prefix, item["stockno"], item["name"], item["retail_price"], item["image_url"], template_id)
-                slots[idx] = {"productId": pid, "group": pos, "discountPercent": 0}
+                slots[idx] = {"productId": pid, "group": pos, "discountPercent": 0, "details": {"price": item["retail_price"] if item["retail_price"] is not None else 0}}
                 entries.append((group_names[pos], item["name"], item["units"], photo_status))
 
     for pos, label in fixed_positions.items():
@@ -616,7 +607,7 @@ def apply_collection(repo, state, products_by_id, prefix, rows, front_key, back_
         pid, status = upsert_product(repo, state, products_by_id, prefix,
                                     item["stockno"], item["name"], item["retail_price"],
                                     item["image_url"], front_template_id)
-        front["slots"][index] = {"productId": pid, "group": group, "discountPercent": 0}
+        front["slots"][index] = {"productId": pid, "group": group, "discountPercent": 0, "details": {"price": item["retail_price"] if item["retail_price"] is not None else 0}}
         entries.append(("FRONT #2", "Best sellers", item["name"], item["units"], status))
 
     # Initialize legacy backups without labels, preserving any custom labels.
@@ -647,7 +638,7 @@ def apply_collection(repo, state, products_by_id, prefix, rows, front_key, back_
             pid, status = upsert_product(repo, state, products_by_id, prefix,
                                         item["stockno"], item["name"], item["retail_price"],
                                         item["image_url"], back_template_id)
-            back["slots"][index] = {"productId": pid, "group": group, "discountPercent": 0}
+            back["slots"][index] = {"productId": pid, "group": group, "discountPercent": 0, "details": {"price": item["retail_price"] if item["retail_price"] is not None else 0}}
             entries.append(("BACK #2", labels[group], item["name"], item["units"], status))
     return entries
 
@@ -682,6 +673,7 @@ def run(cmd, cwd):
 
 def run_tests(repo):
     checks = [
+        ["python", "scripts/catalog_identity_review.py"],
         ["python", "scripts/weekly_sync_review.py"],
         ["python", "build_pages.py"],
         ["node", "studio-review.cjs"],
@@ -705,6 +697,10 @@ def main():
     project_path = REPO / "defaults" / "project.json"
     project = json.loads(project_path.read_text(encoding="utf-8"))
     state = project["state"]
+    merge_report = merge_catalog_duplicates(state)
+    if merge_report['conflicts']:
+        raise RuntimeError('Conflicting catalog identities need review: ' + json.dumps(merge_report['conflicts']))
+    log(f"Merged {len(merge_report['merged'])} duplicate stock identities; retained catalog history.")
     products_by_id = {p["id"]: p for p in state["products"]}
     log(f"starting sourceRevision: {project['sourceRevision']}, products: {len(state['products'])}")
 
@@ -738,13 +734,8 @@ def main():
                 cfg["collection_front_template_id"], cfg["collection_back_template_id"])
             all_entries += [(store_id, *entry) for entry in collection_entries]
 
-        referenced = referenced_product_ids(state)
-        kept = [p for p in state["products"] if not p["id"].startswith(f"{cfg['prefix']}-") or p["id"] in referenced]
-        pruned = len(state["products"]) - len(kept)
-        state["products"] = kept
-        products_by_id = {product["id"]: product for product in kept}
-        if pruned:
-            log(f"[{store_id}] pruned {pruned} orphaned {cfg['prefix']}- product(s)")
+        # Catalog identities and approved photos outlive weekly template placements.
+        # Never delete a product merely because it dropped out of the sales ranking.
 
     placeholder_count = picked_count = ddgs_count = api_count = 0
     tags = {"placeholder": " [placeholder photo]",

@@ -11,7 +11,7 @@ const pesoCollectionBackGroups=[
 ].map((group,index)=>({...group,items:pesoCollectionBackSeeds.slice(index*5,index*5+5).map(p=>[p.name,p.price])}));
 let pesoCollectionBackArtwork=null;
 function pesoCollectionBackState(){
- if(!state.pesoCollectionBack)state.pesoCollectionBack={slots:pesoCollectionBackSeeds.map((p,index)=>({productId:p.id,group:Math.floor(index/5),discountPercent:0}))};
+ if(!state.pesoCollectionBack)state.pesoCollectionBack={slots:pesoCollectionBackSeeds.map((p,index)=>({productId:state.catalogAliases?.[p.id]||p.id,group:Math.floor(index/5),discountPercent:0}))};
  if(!Array.isArray(state.pesoCollectionBack.groupNames))state.pesoCollectionBack.groupNames=pesoCollectionBackGroups.map(g=>g.name);
  const back=state.pesoCollectionBack;
  if(!back.rankedCategoriesVersion){
@@ -25,7 +25,8 @@ function pesoCollectionBackState(){
     let column=0;
     back.slots=back.slots.map(slot=>{
      if(slot.group!==0)return slot;
-     const next={...slot,productId:products[column++]?.id||null};
+     const seedId=products[column++]?.id;
+     const next={...slot,productId:state.catalogAliases?.[seedId]||seedId||null};
      delete next.details;delete next.image;
      return next;
     });

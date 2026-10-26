@@ -8,6 +8,7 @@
  const clone=value=>structuredClone(value);
  const code=p=>String(p.code||'').trim().toLowerCase();
  function store(p){
+  if(p.sharedCatalog)return 'shared';
   if(String(p.id).startsWith('sales-heb-')||String(p.templateId).startsWith('home-'))return 'home';
   if(String(p.id).startsWith('sales-ppm-')||String(p.templateId).startsWith('peso-'))return 'peso';
   return 'shared';

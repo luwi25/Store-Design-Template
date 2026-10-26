@@ -61,7 +61,9 @@ class CollectionSyncReview(unittest.TestCase):
                 self.assertEqual(first['name'], 'Approved catalog name 0')
                 self.assertEqual(first['image']['__defaultImage'], 'images/catalog-0.png')
                 self.assertEqual(first['price'], 50)  # API price remains authoritative.
-                self.assertIn(first['templateId'], [cfg['collection_front_template_id'], cfg['collection_back_template_id']])
+                self.assertTrue(first['sharedCatalog'])
+                self.assertEqual(first['storePrices'][store],50)
+                self.assertEqual(front[0]['details']['price'],50)
                 for key in ('everyday', 'homeBack', 'peso', 'pesoBack'):
                     self.assertEqual(state[key], before[key], f'{key} is not changed by Template #2 filling')
                 other = sync.STORES['home-express-basak' if store == 'pesoplus-mambaling' else 'pesoplus-mambaling']
