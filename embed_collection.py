@@ -1,6 +1,7 @@
 """Embed the additional Home Express artwork for local and Pages builds."""
 import base64
 import json
+import hashlib
 from pathlib import Path
 
 
@@ -39,7 +40,12 @@ def collection_source(root: Path) -> str:
     peso_back = (root / "pesoplus-collection-back.js").read_text(encoding="utf-8").replace(
         "__PESO_COLLECTION_BACK_ART__", json.dumps(peso_back_art)
     ).replace("__PESO_COLLECTION_BACK_SEEDS__", json.dumps(peso_back_products, ensure_ascii=False))
-    return back + "\n" + front + "\n" + peso + "\n" + peso_back
+    alkeia_art = "defaults/images/" + hashlib.sha256((root / 'template-artwork/alkeia-talamban-front.jpg').read_bytes()).hexdigest() + '.jpg'
+    alkeia_products = json.loads((root / 'template-artwork/alkeia-talamban-front-products.json').read_text(encoding='utf-8'))
+    for product in alkeia_products:
+        product['image'] = 'defaults/' + product['image']['__defaultImage']
+    alkeia = (root / 'alkeia-front.js').read_text(encoding='utf-8').replace('__ALKEIA_FRONT_ART__',json.dumps(alkeia_art)).replace('__ALKEIA_FRONT_SEEDS__',json.dumps(alkeia_products))
+    return back + "\n" + front + "\n" + peso + "\n" + peso_back + "\n" + alkeia
 
 
 def embed_collection(html: str, root: Path) -> str:

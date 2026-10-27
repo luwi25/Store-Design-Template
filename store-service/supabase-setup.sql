@@ -6,7 +6,7 @@ revoke all on schema store_monitor from public, anon, authenticated;
 
 create table if not exists store_monitor.sessions (
  token_hash text primary key check(token_hash ~ '^[a-f0-9]{64}$'),
- store text not null check(store in ('home-express','pesoplus','all')),
+ store text not null check(store in ('home-express','pesoplus','alkeia-talamban','all')),
  expires timestamptz not null
 );
 create table if not exists store_monitor.login_limits (
@@ -22,13 +22,19 @@ create table if not exists store_monitor.activity (
 create index if not exists activity_store_seq on store_monitor.activity(store,seq desc);
 create table if not exists store_monitor.print_requests (
  seq bigint generated always as identity primary key,
- id text not null unique, store text not null check(store in ('home-express','pesoplus')),
+ id text not null unique, store text not null check(store in ('home-express','pesoplus','alkeia-talamban')),
  template_id text not null, template_name text not null,
  note text not null default '', preview text not null,
  status text not null default 'pending' check(status in ('pending','approved','rejected')),
  comment text not null default '', created_at timestamptz not null default now(),
  decided_at timestamptz
 );
+-- Update existing installations as well as fresh schemas.
+alter table store_monitor.sessions drop constraint if exists sessions_store_check;
+alter table store_monitor.sessions add constraint sessions_store_check check(store in ('home-express','pesoplus','alkeia-talamban','all'));
+alter table store_monitor.print_requests drop constraint if exists print_requests_store_check;
+alter table store_monitor.print_requests add constraint print_requests_store_check check(store in ('home-express','pesoplus','alkeia-talamban'));
+
 create unique index if not exists one_pending_request on store_monitor.print_requests(store,template_id) where status='pending';
 create index if not exists requests_store_template_seq on store_monitor.print_requests(store,template_id,seq desc);
 alter table store_monitor.sessions enable row level security;
@@ -77,7 +83,7 @@ begin
   return jsonb_build_object('allowed',v_attempts<=12);
  elsif p_action='session_create' then
   v_store:=p_data->>'store';
-  if v_store is null or v_store not in ('home-express','pesoplus','all') then
+  if v_store is null or v_store not in ('home-express','pesoplus','alkeia-talamban','all') then
    return jsonb_build_object('error','Invalid store.','status',400);
   end if;
   delete from store_monitor.sessions where expires<=now();
@@ -93,6 +99,7 @@ begin
 
  if v_tid<>'' then
   v_owner:=case when v_tid in ('home-everyday','home-back','home-collection','home-collection-front') then 'home-express'
+   when v_tid='alkeia-talamban-front' then 'alkeia-talamban'
    when v_tid in ('peso-plus','peso-back','peso-collection-front','peso-collection-back') then 'pesoplus' else null end;
   if v_owner is null or (v_store<>'all' and v_owner<>v_store) then
    return jsonb_build_object('error','This template is not available for your store.','status',403);
@@ -203,7 +210,7 @@ begin
   select coalesce(jsonb_agg((to_jsonb(a)-'seq')||jsonb_build_object('cursor',a.seq) order by a.seq desc),'[]'),count(*)
    into v_rows,v_count from (
     select * from store_monitor.activity where
-     ((coalesce(p_data->>'store','')='' and store in ('home-express','pesoplus'))
+     ((coalesce(p_data->>'store','')='' and store in ('home-express','pesoplus','alkeia-talamban'))
       or (coalesce(p_data->>'store','')<>'' and (store=p_data->>'store' or details->>'store'=p_data->>'store')))
      and (coalesce(p_data->>'action','')='' or action=p_data->>'action')
      and (v_tid='' or template_id=v_tid) and (v_from is null or created_at>=v_from)

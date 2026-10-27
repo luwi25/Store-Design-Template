@@ -1,0 +1,8 @@
+Alkeia Talamban setup
+
+1. In the existing Supabase project SQL Editor, run the full contents of add-alkeia-talamban.sql. This is rerunnable and preserves existing store data.
+2. Replace the code in the existing quick-handler Edge Function with the updated index.ts in this folder, then deploy it. Keep the existing function URL and gateway settings.
+3. Under Edge Functions > Secrets, add ALKEIA_TALAMBAN_PASSWORD with a strong password of at least 12 characters. Keep all other secrets.
+4. Reload the editor, choose Alkeia Talamban, and sign in. Check that its template is visible and that print requests appear in Admin.
+
+The template is available to Admin locally before the server setup. Alkeia store sign-in and server activity/approval support require the steps above. Sales sync and Monday schedules have not been changed.

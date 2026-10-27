@@ -16,6 +16,7 @@ function actionAddress(request: Request) {
 const roles = {
  'home-express': 'HOME_EXPRESS_BASAK_PASSWORD',
  pesoplus: 'PESOPLUS_PASSWORD',
+ 'alkeia-talamban': 'ALKEIA_TALAMBAN_PASSWORD',
  all: 'ADMIN_PASSWORD'
 };
 class HttpError extends Error {

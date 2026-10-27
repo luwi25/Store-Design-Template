@@ -1,0 +1,74 @@
+[
+  {
+    "id": "alkeia-front-0",
+    "templateId": "alkeia-talamban-front",
+    "name": "Cookware Set",
+    "price": 0,
+    "code": "",
+    "image": {
+      "__defaultImage": "images/2f9a6580b091176588a9f6bf302e8351c38a8551f511407f36c85157b22cac61.png",
+      "mime": "image/png"
+    },
+    "photoSource": "supplied-template"
+  },
+  {
+    "id": "alkeia-front-1",
+    "templateId": "alkeia-talamban-front",
+    "name": "Rice Cooker",
+    "price": 0,
+    "code": "",
+    "image": {
+      "__defaultImage": "images/6210c2cb2f428ffeb1393b0ad85c5a531c51a88d9344ad3f4fdc174af32c42f6.png",
+      "mime": "image/png"
+    },
+    "photoSource": "supplied-template"
+  },
+  {
+    "id": "alkeia-front-2",
+    "templateId": "alkeia-talamban-front",
+    "name": "Electric Kettle",
+    "price": 0,
+    "code": "",
+    "image": {
+      "__defaultImage": "images/c6f8ee0a7672afff0d29d891b0f651f637d50a917addd7c91101eb509bf0a9e1.png",
+      "mime": "image/png"
+    },
+    "photoSource": "supplied-template"
+  },
+  {
+    "id": "alkeia-front-3",
+    "templateId": "alkeia-talamban-front",
+    "name": "Storage Drawer",
+    "price": 0,
+    "code": "",
+    "image": {
+      "__defaultImage": "images/bdcca785bddc657bb19c15237618d3c1fd847b87a8c4621b827dc6bcef6ef674.png",
+      "mime": "image/png"
+    },
+    "photoSource": "supplied-template"
+  },
+  {
+    "id": "alkeia-front-4",
+    "templateId": "alkeia-talamban-front",
+    "name": "School Bag",
+    "price": 0,
+    "code": "",
+    "image": {
+      "__defaultImage": "images/d62514927464a897caf15c155c9b79c404a70b49692ba963d274cfdfb7937f3d.png",
+      "mime": "image/png"
+    },
+    "photoSource": "supplied-template"
+  },
+  {
+    "id": "alkeia-front-5",
+    "templateId": "alkeia-talamban-front",
+    "name": "Grocery Essentials",
+    "price": 0,
+    "code": "",
+    "image": {
+      "__defaultImage": "images/401df78497330dad9f8199c87972ecd6235ec9857dbfdb1b569496ada352bce1.png",
+      "mime": "image/png"
+    },
+    "photoSource": "supplied-template"
+  }
+]
