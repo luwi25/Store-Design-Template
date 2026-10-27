@@ -1,5 +1,5 @@
-"""Weekly sales-driven product sync for Home Express Basak and PesoPlus
-Mambaling.
+"""Weekly sales-driven product sync for Home Express Basak, PesoPlus
+Mambaling and Alkeia Talamban (when available in the API).
 
 Pulls last week's sales from the UBEST Store Catalog API and updates
 this repo's defaults/project.json directly -- the GitHub repo is the
@@ -69,6 +69,11 @@ DEPARTMENT_LABEL_OVERRIDES = {
 }
 
 STORES = {
+    "alkeia-talamban": {
+        "prefix": "sales-alt", "front_key": "alkeiaFront", "back_key": "alkeiaBack",
+        "front_template_id": "alkeia-talamban-front", "back_template_id": "alkeia-talamban-back",
+        "ranked_pair": True, "optional_api_store": True,
+    },
     "home-express-basak": {
         "prefix": "sales-heb", "front_key": "everyday", "back_key": "homeBack",
         "front_template_id": "home-everyday", "back_template_id": "home-back",
@@ -437,7 +442,9 @@ def upsert_product(repo, state, products_by_id, prefix, stockno, name, price, im
     if catalog_product:
         pid = catalog_product['id']
     existing = products_by_id.get(pid)
-    store = 'home-express-basak' if prefix == 'sales-heb' else 'pesoplus-mambaling'
+    store = next((store_id for store_id, cfg in STORES.items() if cfg['prefix'] == prefix), None)
+    if store is None:
+        raise ValueError(f'Unknown sales store prefix: {prefix}')
     store_prices = dict(existing.get('storePrices', {})) if existing else {}
     if existing:
         previous_store = product_store(existing)
@@ -519,6 +526,50 @@ def upsert_product(repo, state, products_by_id, prefix, stockno, name, price, im
         products_by_id[pid] = product
         state["products"].append(product)
     return pid, photo_status
+
+
+def optional_store_available(base_url, api_key, store_id):
+    """Do not disrupt existing stores while UBEST onboards a new branch."""
+    try:
+        available = api_get(base_url, api_key, '/stores')
+        if any(store.get('id') == store_id for store in available['stores']):
+            return True
+    except Exception:
+        log(f'[{store_id}] could not verify API availability; preserving current templates.')
+        return False
+    log(f'[{store_id}] not available in UBEST API; preserving current templates.')
+    return False
+
+
+def apply_ranked_pair(repo, state, products_by_id, cfg, rows):
+    """Alkeia's unlabelled grid: top six on Front, next twelve on Back."""
+    unique = {}
+    for row in rows:
+        code = stock_key(row['stockno'])
+        if code and (code not in unique or row['units'] > unique[code]['units']):
+            unique[code] = row
+    ranked = sorted(unique.values(), key=lambda row: (-row['units'], stock_key(row['stockno'])))
+    for side, count in [('front', 6), ('back', 12)]:
+        template = state.get(cfg[side+'_key'])
+        if not template or len(template.get('slots', [])) != count:
+            raise RuntimeError(f'Alkeia {side} template is missing or has unexpected slot count.')
+    if len(ranked) < 18:
+        log('[alkeia-talamban] fewer than 18 eligible ranked products; preserving both templates.')
+        return []
+    entries = []
+    cursor = 0
+    for side in ('front', 'back'):
+        slots = state[cfg[side+'_key']]['slots']
+        for index, slot in enumerate(slots):
+            item = ranked[cursor]; cursor += 1
+            pid, status = upsert_product(repo,state,products_by_id,cfg['prefix'],item['stockno'],
+                item['name'],item['retail_price'],item['image_url'],cfg[side+'_template_id'])
+            # Keep typography/geometry, but discard image/name overrides of the previous product.
+            replacement = {key:value for key,value in slot.items() if key not in ('productId','image','details','discountPercent')}
+            replacement.update(productId=pid,discountPercent=0,details={'price':item['retail_price'] if item['retail_price'] is not None else 0})
+            slots[index] = replacement
+            entries.append((side.upper(),'Best sellers',item['name'],item['units'],status))
+    return entries
 
 
 def apply_side(repo, state, products_by_id, prefix, template_key, template_id, rows,
@@ -707,9 +758,24 @@ def main():
     all_entries = []
     last_weeks = {}
     for store_id, cfg in STORES.items():
-        rows, last_week = fetch_catalog_and_last_week(base_url, api_key, store_id)
+        if cfg.get('optional_api_store') and not optional_store_available(base_url, api_key, store_id):
+            continue
+        try:
+            rows, last_week = fetch_catalog_and_last_week(base_url, api_key, store_id)
+        except Exception as error:
+            if not cfg.get('optional_api_store'):
+                raise
+            log(f'[{store_id}] sales data unavailable ({type(error).__name__}); preserving current templates.')
+            continue
         rows = [r for r in rows if r["department"] not in EXCLUDED_DEPARTMENTS]
         last_weeks[store_id] = last_week
+        if cfg.get('ranked_pair'):
+            if not last_week.get('complete'):
+                log(f'[{store_id}] no completed sales week; preserving current templates.')
+                continue
+            pair_entries = apply_ranked_pair(REPO, state, products_by_id, cfg, rows)
+            all_entries += [(store_id, *entry) for entry in pair_entries]
+            continue
         if len(rows) < 20:
             raise RuntimeError(f"[{store_id}] not enough last-week sales data; aborting without changes.")
 

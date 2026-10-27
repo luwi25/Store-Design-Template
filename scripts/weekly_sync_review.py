@@ -38,7 +38,9 @@ class CollectionSyncReview(unittest.TestCase):
                 cfg['collection_front_template_id'], cfg['collection_back_template_id'])
 
     def test_both_stores_rank_and_preserve_catalog_and_home_bundles(self):
-        for store in sync.STORES:
+        for store, config in sync.STORES.items():
+            if not config.get('collection_front_key'):
+                continue
             with self.subTest(store=store):
                 cfg, state, rows = self.scenario(store)
                 before = copy.deepcopy(state)
@@ -82,6 +84,46 @@ class CollectionSyncReview(unittest.TestCase):
         del state['pesoCollectionBack']
         with self.assertRaisesRegex(RuntimeError, 'missing'):
             self.apply(cfg, state, rows)
+
+
+class AlkeiaSyncReview(unittest.TestCase):
+    def test_ranked_pair_reuses_catalog_and_keeps_other_templates(self):
+        cfg = sync.STORES['alkeia-talamban']
+        state = json.loads((sync.REPO / 'defaults/project.json').read_text(encoding='utf-8'))['state']
+        before = copy.deepcopy(state)
+        rows = [dict(stockno=f'ALKEIA-TEST-{i}', name=f'API name {i}', units=100-i,
+                     retail_price=20+i, image_url='', department='Kitchenware', category='Plates') for i in range(20)]
+        for i, row in enumerate(rows):
+            state['products'].append(dict(id=f'test-alkeia-{i}', code=row['stockno'], name=f'Catalog name {i}',
+                price=99, image='approved-photo', photoSource='approved', storePrices={'pesoplus-mambaling':99}))
+        with patch.object(sync, 'placeholder_image_marker', return_value={}), \
+             patch.object(sync, 'find_and_enhance_product_image', side_effect=AssertionError('Reuse catalog image')):
+            sync.apply_ranked_pair(sync.REPO,state,{p['id']:p for p in state['products']},cfg,rows+[rows[0]])
+        slots=state['alkeiaFront']['slots']+state['alkeiaBack']['slots']
+        self.assertEqual([s['productId'] for s in slots],[f'test-alkeia-{i}' for i in range(18)])
+        product=next(p for p in state['products'] if p['id']=='test-alkeia-0')
+        self.assertEqual(product['name'],'Catalog name 0')
+        self.assertEqual(product['image'],'approved-photo')
+        self.assertEqual(product['storePrices'],{'pesoplus-mambaling':99,'alkeia-talamban':20})
+        for key in ['everyday','homeBack','peso','pesoBack','homeCollection','homeCollectionFront','pesoCollectionFront','pesoCollectionBack']:
+            self.assertEqual(state[key],before[key])
+
+    def test_unavailable_store_is_skipped(self):
+        with patch.object(sync,'api_get',return_value={'stores':[{'id':'home-express-basak'}]}):
+            self.assertFalse(sync.optional_store_available('url','key','alkeia-talamban'))
+        with patch.object(sync,'api_get',return_value={'stores':[{'id':'alkeia-talamban'}]}):
+            self.assertTrue(sync.optional_store_available('url','key','alkeia-talamban'))
+
+    def test_short_rankings_preserve_both_templates(self):
+        cfg=sync.STORES['alkeia-talamban']
+        state=json.loads((sync.REPO/'defaults/project.json').read_text(encoding='utf-8'))['state']
+        before=copy.deepcopy(state)
+        self.assertEqual(sync.apply_ranked_pair(sync.REPO,state,{},cfg,[]),[])
+        self.assertEqual(state,before)
+
+    def test_store_lookup_failure_is_safe(self):
+        with patch.object(sync,'api_get',side_effect=RuntimeError('offline')):
+            self.assertFalse(sync.optional_store_available('url','key','alkeia-talamban'))
 
 
 if __name__ == '__main__':

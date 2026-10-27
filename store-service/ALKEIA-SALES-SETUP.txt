@@ -1,0 +1,26 @@
+ALKEIA TALAMBAN WEEKLY SALES SYNC
+
+The existing Monday 05:00 Asia/Manila schedule is unchanged.
+After these code changes are pushed, the sync checks whether the UBEST API
+exposes alkeia-talamban under GET /stores. Currently it does not: its product
+and weekly-sales endpoints return 404 Store not found.
+
+The UBEST API administrator must add/authorize Alkeia Talamban for the same
+API key used by GitHub Actions, with these endpoints:
+GET /stores/alkeia-talamban/products
+GET /stores/alkeia-talamban/weekly-sales?weeks=2
+Use the same response format as the existing Home Express/Pesoplus endpoints.
+No Supabase changes or new automation schedule are required.
+
+Once available, the next Monday run uses Alkeia's completed previous-week sales:
+- Front: top six eligible products by units sold.
+- Back: the next twelve, with no repeated stock numbers across the two sides.
+- Existing department exclusions apply.
+- Exact stock-number catalog matches supply saved names and images.
+- API prices are stored separately for Alkeia; other stores' prices are retained.
+- Current typography and template geometry are preserved.
+
+Until the API is ready, or if fewer than 18 eligible products have sales, both
+Alkeia templates remain unchanged. The log explains the skip. Home Express and
+Pesoplus continue their existing synchronization. This setup does not run an
+immediate live sync or invoke the product-image-finder skill.

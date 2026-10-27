@@ -15,6 +15,8 @@ def product_store(product):
         return 'home-express-basak'
     if pid.startswith('sales-ppm-') or template.startswith('peso-'):
         return 'pesoplus-mambaling'
+    if pid.startswith('sales-alt-') or template.startswith('alkeia-talamban-'):
+        return 'alkeia-talamban'
     return None
 
 
