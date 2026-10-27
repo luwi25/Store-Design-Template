@@ -1,6 +1,22 @@
 // Supabase Dashboard -> Edge Functions -> quick-handler -> index.ts.
-// No third-party imports. Store passwords stay in Edge Function secrets.
+// Store passwords and VAPID private key stay in Edge Function secrets.
 import { isIP } from 'node:net';
+import webpush from 'npm:web-push@3.6.7';
+declare const EdgeRuntime: { waitUntil(promise: Promise<unknown>): void };
+
+function pushSubscription(value: any) {
+ let endpoint: URL;
+ try { endpoint = new URL(value?.endpoint); } catch { throw new HttpError(400, 'Invalid notification endpoint.'); }
+ const host = endpoint.hostname;
+ const allowed = host === 'fcm.googleapis.com' || host === 'updates.push.services.mozilla.com' ||
+  host === 'web.push.apple.com' || host.endsWith('.push.apple.com') || host.endsWith('.notify.windows.com');
+ if (endpoint.protocol !== 'https:' || endpoint.port || endpoint.username || endpoint.password || endpoint.hash || !allowed || endpoint.href.length > 2048)
+  throw new HttpError(400, 'This notification provider is not supported.');
+ const keys=value?.keys;
+ if (!/^[A-Za-z0-9_-]{87}$/.test(keys?.p256dh || '') || !/^[A-Za-z0-9_-]{22}$/.test(keys?.auth || ''))
+  throw new HttpError(400, 'Invalid notification keys.');
+ return { endpoint:endpoint.href, keys:{p256dh:keys.p256dh,auth:keys.auth} };
+}
 
 // Connection metadata only, never an authorization or rate-limit identity.
 // Prefer the hosted gateway's single client address. Do not guess a client
@@ -54,11 +70,11 @@ Deno.serve(async (request: Request) => {
   if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: { ...headers, 'Access-Control-Allow-Methods': 'GET,POST,OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type,Authorization', 'Access-Control-Max-Age': '600' } });
   const url = Deno.env.get('SUPABASE_URL'), key = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
   if (!url || !key) throw new HttpError(503, 'The store database is not configured.');
-  async function rpc(action: string, tokenHash = '', data: Record<string, unknown> = {}) {
-   const response = await fetch(url + '/rest/v1/rpc/store_monitor_api', {
+  async function rpc(action: string, tokenHash = '', data: Record<string, unknown> = {}, push = false) {
+   const response = await fetch(url + '/rest/v1/rpc/'+(push?'store_push_api':'store_monitor_api'), {
     method: 'POST', signal: AbortSignal.timeout(15000),
     headers: { 'Content-Type': 'application/json', apikey: key!, Authorization: 'Bearer ' + key },
-    body: JSON.stringify({ p_action: action, p_token_hash: tokenHash, p_data: { ...data, ...actionAddress(request) } })
+    body: JSON.stringify({ p_action: action, p_token_hash: tokenHash, p_data: push?data:{ ...data, ...actionAddress(request) } })
    });
    if (!response.ok) throw new HttpError(503, 'The shared database is unavailable. Check the SQL setup and retry.');
    const result = await response.json();
@@ -85,13 +101,50 @@ Deno.serve(async (request: Request) => {
   const token = request.headers.get('authorization')?.match(/^Bearer ([a-f0-9]{64})$/)?.[1];
   if (!token) throw new HttpError(401, 'Please sign in to your store again.');
   const tokenHash = await hash(token);
+  const publicKey=Deno.env.get('VAPID_PUBLIC_KEY')||'',privateKey=Deno.env.get('VAPID_PRIVATE_KEY')||'';
+  const subject=Deno.env.get('VAPID_SUBJECT')||'';
+  const pushReady=Boolean(publicKey&&privateKey&&/^(mailto:|https:\/\/)/.test(subject));
+  if(path.startsWith('/push/') && ['GET','POST'].includes(request.method)){
+   const actor=await rpc('session',tokenHash);
+   if(actor.store!=='all')throw new HttpError(403,'Admin access is required.');
+   if(path==='/push/config'&&request.method==='GET')return reply({configured:pushReady,publicKey:pushReady?publicKey:null});
+   if(request.method==='POST'&&['/push/subscribe','/push/unsubscribe','/push/status'].includes(path)){
+    const body=await readBody(request);
+    if(path==='/push/subscribe'&&!pushReady)throw new HttpError(503,'Admin notifications need setup in Supabase.');
+    const data=path==='/push/subscribe'?pushSubscription(body):{endpoint:String(body.endpoint||'').slice(0,2048)};
+    return reply(await rpc(path.slice(6),tokenHash,data,true));
+   }
+  }
+  async function notifyAdmin(id: string){
+   try{
+    const batch=await rpc('claim',tokenHash,{id},true);
+    const names:Record<string,string>={'home-express':'Home Express Basak',pesoplus:'Pesoplus Mambaling','alkeia-talamban':'Alkeia Talamban'};
+    const payload=JSON.stringify({requestId:batch.requestId,store:names[batch.store]||'Store',template:batch.template});
+    const rows=batch.subscriptions||[];
+    for(let i=0;i<rows.length;i+=5)await Promise.all(rows.slice(i,i+5).map(async (raw:any)=>{
+     try{
+      const subscription=pushSubscription(raw);
+      // Use the library's encryption/signing with fetch for a hard total timeout and no redirects.
+      const details=webpush.generateRequestDetails(subscription,payload,{TTL:3600,urgency:'high',vapidDetails:{subject,publicKey,privateKey}});
+      const response=await fetch(details.endpoint,{method:'POST',headers:details.headers,body:details.body,redirect:'error',signal:AbortSignal.timeout(10000)});
+      if(response.status===404||response.status===410)await rpc('expired','',{endpoint:raw.endpoint,subscription:raw},true);
+      else if(!response.ok)console.warn('Admin push delivery failed',response.status);
+      await response.body?.cancel();
+     }catch{console.warn('Admin push delivery failed');}
+    }));
+   }catch{console.warn('Admin push unavailable; print request remains saved.');}
+  }
   const getRoutes: Record<string, string> = { '/session': 'session', '/requests': 'requests', '/activity': 'activity' };
   const postRoutes: Record<string, string> = { '/logout': 'logout', '/events': 'event', '/requests': 'request_create' };
   if (request.method === 'GET' && getRoutes[path]) {
    const data = Object.fromEntries(parsed.searchParams); data.templateId = data.template || '';
    return reply(await rpc(getRoutes[path], tokenHash, data));
   }
-  if (request.method === 'POST' && postRoutes[path]) return reply(await rpc(postRoutes[path], tokenHash, path === '/logout' ? {} : await readBody(request)));
+  if (request.method === 'POST' && postRoutes[path]) {
+   const result=await rpc(postRoutes[path],tokenHash,path==='/logout'?{}:await readBody(request));
+   if(path==='/requests'&&result.id&&pushReady)EdgeRuntime.waitUntil(notifyAdmin(result.id));
+   return reply(result);
+  }
   const route = path.match(/^\/requests\/([a-zA-Z0-9_-]{8,80})(?:\/(decision|print))?$/);
   if (route) {
    if (!route[2] && request.method === 'GET') return reply(await rpc('request_get', tokenHash, { id: route[1] }));

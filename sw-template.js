@@ -4,6 +4,26 @@ const FILES=__FILES__;
 const HASHES=__HASHES__;
 const scoped=path=>new URL(path,self.registration.scope).href;
 const ALLOWED=new Set(FILES.map(scoped));
+self.addEventListener('push',event=>{
+ let data={};try{data=event.data?.json()||{}}catch{}
+ const requestId=/^[a-zA-Z0-9_-]{8,80}$/.test(data.requestId||'')?data.requestId:'';
+ event.waitUntil(self.registration.showNotification('Print approval requested',{
+  body:data.store?String(data.store).slice(0,80)+' · '+String(data.template||'Poster').slice(0,160):'A store is waiting for Admin approval.',
+  tag:requestId?'print-request-'+requestId:'print-request',
+  icon:scoped('icons/icon-192.png'),data:{requestId}
+ }));
+});
+self.addEventListener('notificationclick',event=>{
+ event.notification.close();
+ const id=event.notification.data?.requestId||'';
+ const url=scoped('./')+(/^[a-zA-Z0-9_-]{8,80}$/.test(id)?'?printRequest='+encodeURIComponent(id):'');
+ event.waitUntil((async()=>{
+  const windows=await self.clients.matchAll({type:'window',includeUncontrolled:true});
+  const client=windows.find(item=>item.url.startsWith(self.registration.scope));
+  if(client){client.postMessage({type:'open-print-request',requestId:id});await client.focus()}
+  else await self.clients.openWindow(url);
+ })());
+});
 self.addEventListener('install',event=>{
  event.waitUntil((async()=>{
   const cache=await caches.open(CACHE);

@@ -19,6 +19,12 @@
   const old=session;
   const result=await api('/login','POST',{store,password},false);
   if(result.store!==store||!/^[a-f0-9]{64}$/.test(result.token))throw Error('Invalid sign-in response.');
+  // A device switched to a store account must stop receiving Admin alerts.
+  if(store!=='all'&&navigator.serviceWorker){
+   try{const reg=await navigator.serviceWorker.getRegistration(),sub=await reg?.pushManager?.getSubscription();
+    if(sub){await sub.unsubscribe();if(old?.store==='all')fetch(base+'/push/unsubscribe',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+old.token},body:JSON.stringify({endpoint:sub.endpoint}),signal:AbortSignal.timeout(10000)}).catch(()=>{})}
+   }catch{}
+  }
   session={store:result.store,token:result.token};
   try{sessionStorage.setItem(sessionKey,JSON.stringify(session))}catch{}
   if(old?.token)fetch(base+'/logout',{method:'POST',headers:{Authorization:'Bearer '+old.token},signal:AbortSignal.timeout(10000)}).catch(()=>{});
@@ -41,6 +47,54 @@
   const adminDialog=node('dialog',undefined,'store-service-dialog store-service-admin');adminDialog.id='storeAdminDashboard';adminDialog.setAttribute('aria-labelledby','storeAdminTitle');
   adminDialog.innerHTML='<div class="store-service-body"><div class="store-service-heading"><h2 id="storeAdminTitle">Store activity and print approvals</h2><button type="button" class="store-service-close" data-close aria-label="Close activity logs and print approvals" title="Close">&times;</button></div><div class="store-service-tabs"><button type="button" class="btn" data-tab="requests">Print approvals</button><button type="button" class="btn" data-tab="activity">Activity logs</button></div><form data-filters class="store-service-filters"><label>Store<select name="store"><option value="">All stores</option><option value="home-express">Home Express Basak</option><option value="pesoplus">Pesoplus Mambaling</option><option value="alkeia-talamban">Alkeia Talamban</option><option value="all">Admin</option></select></label><label data-request-filter>Status<select name="status"><option value="pending">Pending</option><option value="approved">Approved</option><option value="rejected">Rejected</option><option value="">All statuses</option></select></label><label data-log-filter hidden>Action<select name="action"><option value="">All actions</option><option value="sign_in">Sign-in</option><option value="template_opened">Template opened</option><option value="product_edited">Product edits saved</option><option value="print_requested">Print requested</option><option value="approved">Approved</option><option value="rejected">Rejected</option><option value="print_initiated">Print initiated</option></select></label><label data-log-filter hidden>From<input type="date" name="from"></label><label data-log-filter hidden>To<input type="date" name="to"></label><label data-log-filter hidden>Template<select name="template"><option value="">All templates</option></select></label></form><p data-admin-status role="status" aria-live="polite"></p><div data-last-active></div><div data-items></div><button type="button" class="btn" data-older hidden>Older activity</button><button type="button" class="btn" data-close>Close</button></div>';
   document.body.append(adminDialog);
+  const notifications=node('div',undefined,'store-push-settings');
+  const notificationButton=node('button','Enable notifications','btn');notificationButton.type='button';notificationButton.id='adminPushNotifications';
+  const notificationStatus=node('p','Get an alert on this device when a store requests print approval.');notificationStatus.setAttribute('role','status');notificationStatus.setAttribute('aria-live','polite');
+  notifications.append(notificationButton,notificationStatus);adminDialog.querySelector('.store-service-tabs').before(notifications);
+  let pushEnabled=false,pushBusy=false;
+  const pushSupported=()=>window.isSecureContext&&'Notification' in window&&'serviceWorker' in navigator&&'PushManager' in window;
+  async function pushRegistration(){
+   const reg=await navigator.serviceWorker.getRegistration();
+   if(!reg?.active)throw Error('The app is still preparing. Reload after its offline download finishes, then try again.');
+   return reg;
+  }
+  async function checkNotifications(){
+   if(pushBusy)return;
+   if(!pushSupported()){notificationButton.disabled=true;notificationStatus.textContent='Notifications are unavailable here. On iPhone or iPad, add this site to the Home Screen and open the installed app.';return}
+   notificationButton.disabled=true;
+   try{const reg=await pushRegistration(),sub=await reg.pushManager.getSubscription();
+    pushEnabled=Boolean(sub&&(await api('/push/status','POST',{endpoint:sub.endpoint})).enabled);
+    notificationButton.textContent=pushEnabled?'Disable notifications':'Enable notifications';
+    notificationStatus.textContent=pushEnabled?'Print-request alerts are enabled on this device.':Notification.permission==='denied'?'Notifications are blocked. Allow them in your browser settings, then try again.':'Get an alert on this device when a store requests print approval.';
+   }catch(error){notificationStatus.textContent=error.message}
+   finally{notificationButton.disabled=false}
+  }
+  notificationButton.onclick=async()=>{
+   if(pushBusy||!authenticated()||getMode()!=='all')return;
+   pushBusy=true;notificationButton.disabled=true;
+   const actor=session.token;
+   // Ask directly within the click gesture (required by Safari).
+   const permission=!pushEnabled?Notification.requestPermission():Promise.resolve(Notification.permission);
+   notificationStatus.textContent=pushEnabled?'Turning notifications off…':'Enabling notifications…';
+   let created=null;
+   try{
+    if(await permission!=='granted'&&!pushEnabled)throw Error('Notifications were not allowed. You can enable them in browser settings.');
+    const reg=await pushRegistration();let sub=await reg.pushManager.getSubscription();
+    if(pushEnabled){
+     await api('/push/unsubscribe','POST',{endpoint:sub?.endpoint||''});await sub?.unsubscribe();pushEnabled=false;
+    }else{
+     const config=await api('/push/config');if(!config.configured)throw Error('Notifications are not ready yet. Complete the Admin notification setup, then try again.');
+     const key=Uint8Array.from(atob(config.publicKey.replace(/-/g,'+').replace(/_/g,'/')),c=>c.charCodeAt(0));
+     if(sub&&sub.options.applicationServerKey&&Array.from(new Uint8Array(sub.options.applicationServerKey)).join()!==Array.from(key).join()){await sub.unsubscribe();sub=null}
+     if(!sub){sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:key});created=sub}
+     if(session?.token!==actor||getMode()!=='all')throw Error('Sign in as Admin to enable notifications.');
+     await api('/push/subscribe','POST',sub.toJSON());pushEnabled=true;
+    }
+    notificationButton.textContent=pushEnabled?'Disable notifications':'Enable notifications';
+    notificationStatus.textContent=pushEnabled?'Print-request alerts are enabled on this device.':'Notifications are off on this device.';
+   }catch(error){if(created)await created.unsubscribe().catch(()=>{});notificationStatus.textContent=error.message}
+   finally{pushBusy=false;notificationButton.disabled=false}
+  };
   const detail=node('dialog',undefined,'store-service-dialog');detail.setAttribute('aria-label','Review print request');
   detail.innerHTML='<div class="store-service-body"><h2>Review print request</h2><p data-summary></p><img data-preview alt="Submitted poster preview"><p data-note></p><label>Comment (optional)<textarea data-comment rows="3" maxlength="1000"></textarea></label><p data-status role="status" aria-live="polite"></p><div class="store-service-actions"><button type="button" class="btn" data-close>Close</button><button type="button" class="btn" data-decision="rejected">Reject</button><button type="button" class="btn btn-dark" data-decision="approved">Approve</button></div></div>';
   document.body.append(detail);
@@ -73,6 +127,7 @@
   sync.onclick=flush;
   function view(){
    dashboard.hidden=!authenticated()||getMode()!=='all';
+   if(authenticated()&&getMode()==='all'&&pendingPushRequest){const id=pendingPushRequest;pendingPushRequest='';const url=new URL(location.href);url.searchParams.delete('printRequest');history.replaceState(null,'',url);openDetail(id)}
    if(!authenticated()){sync.hidden=true;printButton.textContent='Print poster';viewKey='';baseline=null;return}
    const info=getTemplate(),key=session.store+':'+info.id;
    if(!baseline||!viewKey.startsWith(session.store+':'))baseline=capture(getState());
@@ -178,7 +233,7 @@
    }catch(error){if(current())adminStatus.textContent=error.message+' Reopen this window or change a filter to retry.'}
    finally{if(current())adminDialog.removeAttribute('aria-busy')}
   }
-  dashboard.onclick=()=>{adminDialog.openFor();cursor=null;loadDashboard()};
+  dashboard.onclick=()=>{adminDialog.openFor();cursor=null;loadDashboard();checkNotifications()};
   filters.onsubmit=event=>{event.preventDefault();cursor=null;loadDashboard()};
   filters.addEventListener('change',event=>{if(event.target.matches('select,input[type="date"]')){cursor=null;loadDashboard()}});
   adminDialog.querySelector('[data-older]').onclick=loadDashboard;
@@ -212,6 +267,13 @@
    }catch{}finally{polling=false}
   }
   setInterval(()=>{poll();flush()},30000);window.addEventListener('online',()=>{poll();flush()});document.addEventListener('visibilitychange',()=>{if(!document.hidden)poll()});
+  let pendingPushRequest=new URL(location.href).searchParams.get('printRequest')||'';
+  if(!/^[a-zA-Z0-9_-]{8,80}$/.test(pendingPushRequest))pendingPushRequest='';
+  navigator.serviceWorker?.addEventListener('message',event=>{
+   if(event.data?.type!=='open-print-request'||!/^[a-zA-Z0-9_-]{8,80}$/.test(event.data.requestId||''))return;
+   pendingPushRequest=event.data.requestId;
+   if(authenticated()&&getMode()==='all'){const id=pendingPushRequest;pendingPushRequest='';openDetail(id)}
+  });
   return {view,saved,requestPrint};
  }
 })();

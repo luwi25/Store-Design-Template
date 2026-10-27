@@ -11,3 +11,5 @@ __pycache__/
 
 public/
 node_modules/
+
+store-service/.push-secrets.env

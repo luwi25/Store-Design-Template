@@ -6,6 +6,9 @@
 .store-service-body h2,.store-service-body p{margin:0;line-height:1.5}
 .store-service-body h2{font-size:20px;color:#163b65}
 .store-service-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.store-push-settings{display:flex;align-items:center;flex-wrap:wrap;gap:10px 16px;padding:12px;border:1px solid #d5e0eb;border-radius:10px;background:#f7f8fc}
+.store-push-settings p{flex:1 1 220px;margin:0;line-height:1.5}
+.store-push-settings button{min-height:44px;white-space:normal}
 .store-service-heading h2{flex:1;min-width:0}
 .store-service-close{display:grid;place-items:center;flex:0 0 44px;width:44px;height:44px;padding:0;border:1px solid #d5e0eb;border-radius:10px;background:#f7f8fc;color:#163b65;font:28px/1 sans-serif;cursor:pointer}
 .store-service-close:hover{background:#e9f5f3}
