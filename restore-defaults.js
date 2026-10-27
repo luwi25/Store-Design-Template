@@ -1,6 +1,6 @@
 // Embedded in the editor closure by the browser build.
 function restoredTemplateProject(current, published, templateId) {
-  const keys = {'home-everyday':'everyday','home-back':'homeBack','home-collection':'homeCollection','home-collection-front':'homeCollectionFront','peso-plus':'peso','peso-back':'pesoBack','peso-collection-front':'pesoCollectionFront','peso-collection-back':'pesoCollectionBack','alkeia-talamban-front':'alkeiaFront'};
+  const keys = {'home-everyday':'everyday','home-back':'homeBack','home-collection':'homeCollection','home-collection-front':'homeCollectionFront','peso-plus':'peso','peso-back':'pesoBack','peso-collection-front':'pesoCollectionFront','peso-collection-back':'pesoCollectionBack','alkeia-talamban-front':'alkeiaFront','alkeia-talamban-back':'alkeiaBack'};
   const key = keys[templateId];
   if (!key || !Array.isArray(published[key]?.slots)) {
     throw Error('This template has no published default. Choose a store template.');

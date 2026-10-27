@@ -1,0 +1,146 @@
+[
+  {
+    "id": "alkeia-back-0",
+    "templateId": "alkeia-talamban-back",
+    "name": "Stand Mixer",
+    "price": 0,
+    "code": "",
+    "image": {
+      "__defaultImage": "images/9fed688de53bcef2b3640f3c4af3edb3fa5897bde947a146b10bbd3d7c0e26a0.png",
+      "mime": "image/png"
+    },
+    "photoSource": "supplied-template"
+  },
+  {
+    "id": "alkeia-back-1",
+    "templateId": "alkeia-talamban-back",
+    "name": "Hand Mixer",
+    "price": 0,
+    "code": "",
+    "image": {
+      "__defaultImage": "images/bc5ff9ad9b3c91c44c80d2719bf7400d67f0dbb3867ad43ec9ef0d213ddd47c1.png",
+      "mime": "image/png"
+    },
+    "photoSource": "supplied-template"
+  },
+  {
+    "id": "alkeia-back-2",
+    "templateId": "alkeia-talamban-back",
+    "name": "Blender",
+    "price": 0,
+    "code": "",
+    "image": {
+      "__defaultImage": "images/912f94a19c5ab0530fbf2403beb320cf2d5d8350242d0a5a0cb8d82f37cd4d98.png",
+      "mime": "image/png"
+    },
+    "photoSource": "supplied-template"
+  },
+  {
+    "id": "alkeia-back-3",
+    "templateId": "alkeia-talamban-back",
+    "name": "Personal Blender",
+    "price": 0,
+    "code": "",
+    "image": {
+      "__defaultImage": "images/84c8275addbe2683c413fb76f9eb4d9598d50040ae2344e414f0fa8ae2c5d5b6.png",
+      "mime": "image/png"
+    },
+    "photoSource": "supplied-template"
+  },
+  {
+    "id": "alkeia-back-4",
+    "templateId": "alkeia-talamban-back",
+    "name": "Coffee Maker",
+    "price": 0,
+    "code": "",
+    "image": {
+      "__defaultImage": "images/ceffec5cf609767624b0b07bf713966a787ac59d4238ede1a3c0bd7378c92f53.png",
+      "mime": "image/png"
+    },
+    "photoSource": "supplied-template"
+  },
+  {
+    "id": "alkeia-back-5",
+    "templateId": "alkeia-talamban-back",
+    "name": "Hair Clipper",
+    "price": 0,
+    "code": "",
+    "image": {
+      "__defaultImage": "images/9c84a9f8b309f713baa9b55d9e91cf8d9e8e663309b53974d8e0d585fe3b07e6.png",
+      "mime": "image/png"
+    },
+    "photoSource": "supplied-template"
+  },
+  {
+    "id": "alkeia-back-6",
+    "templateId": "alkeia-talamban-back",
+    "name": "Grinder Blender",
+    "price": 0,
+    "code": "",
+    "image": {
+      "__defaultImage": "images/149db004737c96d8119b3fcbf0c75d35337547985e27ea1232ac55a2b0d7407b.png",
+      "mime": "image/png"
+    },
+    "photoSource": "supplied-template"
+  },
+  {
+    "id": "alkeia-back-7",
+    "templateId": "alkeia-talamban-back",
+    "name": "Espresso Machine",
+    "price": 0,
+    "code": "",
+    "image": {
+      "__defaultImage": "images/bf49fe450c0829f910f9281f07e28de48892203151754a0167e00a75897918bb.png",
+      "mime": "image/png"
+    },
+    "photoSource": "supplied-template"
+  },
+  {
+    "id": "alkeia-back-8",
+    "templateId": "alkeia-talamban-back",
+    "name": "Steam Iron",
+    "price": 0,
+    "code": "",
+    "image": {
+      "__defaultImage": "images/068f7d3cc55ff1eaf7a752cb360c7057e061ae6a171540b184771a66b510bc86.png",
+      "mime": "image/png"
+    },
+    "photoSource": "supplied-template"
+  },
+  {
+    "id": "alkeia-back-9",
+    "templateId": "alkeia-talamban-back",
+    "name": "Rice Cooker",
+    "price": 0,
+    "code": "",
+    "image": {
+      "__defaultImage": "images/d8af68394d40a3f4d4a0a0bb0e6ebef7606910cf417c822eada35097d7a516dc.png",
+      "mime": "image/png"
+    },
+    "photoSource": "supplied-template"
+  },
+  {
+    "id": "alkeia-back-10",
+    "templateId": "alkeia-talamban-back",
+    "name": "Electric Kettle",
+    "price": 0,
+    "code": "",
+    "image": {
+      "__defaultImage": "images/f08824ba9cdb6109ac6278f5c7912cb59573068f062ca10f6cb8575444d66ba2.png",
+      "mime": "image/png"
+    },
+    "photoSource": "supplied-template"
+  },
+  {
+    "id": "alkeia-back-11",
+    "templateId": "alkeia-talamban-back",
+    "name": "Sandwich Maker",
+    "price": 0,
+    "code": "",
+    "image": {
+      "__defaultImage": "images/3d3a577f07c7879a724354dda2150c58087eba3f4f68ac146783685ab259de5d.png",
+      "mime": "image/png"
+    },
+    "photoSource": "supplied-template"
+  }
+]

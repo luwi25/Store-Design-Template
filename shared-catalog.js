@@ -3,7 +3,7 @@
  'use strict';
  const REPO='luwi25/Store-Design-Template', API='https://api.github.com/repos/'+REPO;
  const fields=['name','price','image'];
- const templateSections={'home-collection':'homeCollection','home-collection-front':'homeCollectionFront','home-back':'homeBack','home-everyday':'everyday','peso-back':'pesoBack','peso-collection-front':'pesoCollectionFront','peso-collection-back':'pesoCollectionBack','alkeia-talamban-front':'alkeiaFront','peso-plus':'peso','home-express':'approved','home-bestsellers':'bestsellers'};
+ const templateSections={'home-collection':'homeCollection','home-collection-front':'homeCollectionFront','home-back':'homeBack','home-everyday':'everyday','peso-back':'pesoBack','peso-collection-front':'pesoCollectionFront','peso-collection-back':'pesoCollectionBack','alkeia-talamban-front':'alkeiaFront','alkeia-talamban-back':'alkeiaBack','peso-plus':'peso','home-express':'approved','home-bestsellers':'bestsellers'};
  function templateSlots(state,id){return Object.hasOwn(templateSections,id)?state[templateSections[id]]?.slots:null}
  const clone=value=>structuredClone(value);
  const code=p=>String(p.code||'').trim().toLowerCase();

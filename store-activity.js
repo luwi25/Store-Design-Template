@@ -4,7 +4,7 @@
  const base=String(window.STORE_ACTIVITY_CONFIG?.apiBase||'').replace(/\/$/,'');
  const enabled=window.STORE_ACTIVITY_CONFIG?.enabled===true&&Boolean(base),sessionKey='store-service-session';let session=null,expired=()=>{};
  const names={'home-express':'Home Express Basak',pesoplus:'Pesoplus Mambaling','alkeia-talamban':'Alkeia Talamban',all:'Admin'};
- const templates={'home-everyday':'everyday','home-back':'homeBack','home-collection':'homeCollection','home-collection-front':'homeCollectionFront','peso-plus':'peso','peso-back':'pesoBack','peso-collection-front':'pesoCollectionFront','peso-collection-back':'pesoCollectionBack','alkeia-talamban-front':'alkeiaFront'};
+ const templates={'home-everyday':'everyday','home-back':'homeBack','home-collection':'homeCollection','home-collection-front':'homeCollectionFront','peso-plus':'peso','peso-back':'pesoBack','peso-collection-front':'pesoCollectionFront','peso-collection-back':'pesoCollectionBack','alkeia-talamban-front':'alkeiaFront','alkeia-talamban-back':'alkeiaBack'};
  try{session=JSON.parse(sessionStorage.getItem(sessionKey)||'null')}catch{}
  function clear(){session=null;try{sessionStorage.removeItem(sessionKey)}catch{}}
  async function api(path,method='GET',data,authenticated=true){
@@ -153,7 +153,7 @@
    finally{printBusy=false;setBusy(printDialog,false)}
   };
   const filters=adminDialog.querySelector('[data-filters]'),items=adminDialog.querySelector('[data-items]'),adminStatus=adminDialog.querySelector('[data-admin-status]');
-  const templateLabels={'alkeia-talamban-front':'Alkeia Talamban - Template #1 Front','peso-collection-back':'Pesoplus Mambaling - Template #2 Back','peso-collection-front':'Pesoplus Mambaling - Template #2 Front','home-everyday':'Home Express Basak — Front','home-back':'Home Express Basak — Back','home-collection':'Home Express Basak — Back (Blue & Orange)','home-collection-front':'Home Express Basak — Front (Blue & Orange)','peso-plus':'Pesoplus Mambaling — Front','peso-back':'Pesoplus Mambaling — Back'};
+  const templateLabels={'alkeia-talamban-back':'Alkeia Talamban - Template #1 Back','alkeia-talamban-front':'Alkeia Talamban - Template #1 Front','peso-collection-back':'Pesoplus Mambaling - Template #2 Back','peso-collection-front':'Pesoplus Mambaling - Template #2 Front','home-everyday':'Home Express Basak — Front','home-back':'Home Express Basak — Back','home-collection':'Home Express Basak — Back (Blue & Orange)','home-collection-front':'Home Express Basak — Front (Blue & Orange)','peso-plus':'Pesoplus Mambaling — Front','peso-back':'Pesoplus Mambaling — Back'};
   for(const id of Object.keys(templates)){const option=node('option',templateLabels[id]);option.value=id;filters.elements.template.append(option)}
   adminDialog.querySelector('[data-tab="requests"]').setAttribute('aria-pressed','true');
   function params(){const query=new URLSearchParams();for(const key of tab==='activity'?['store','action','from','to','template']:['store','status'])if(filters.elements[key].value)query.set(key,filters.elements[key].value);if(cursor&&tab==='activity')query.set('before',cursor);return query.toString()}

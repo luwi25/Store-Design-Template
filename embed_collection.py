@@ -45,7 +45,12 @@ def collection_source(root: Path) -> str:
     for product in alkeia_products:
         product['image'] = 'defaults/' + product['image']['__defaultImage']
     alkeia = (root / 'alkeia-front.js').read_text(encoding='utf-8').replace('__ALKEIA_FRONT_ART__',json.dumps(alkeia_art)).replace('__ALKEIA_FRONT_SEEDS__',json.dumps(alkeia_products))
-    return back + "\n" + front + "\n" + peso + "\n" + peso_back + "\n" + alkeia
+    alkeia_back_art = "defaults/images/" + hashlib.sha256((root / 'template-artwork/alkeia-talamban-back.png').read_bytes()).hexdigest() + '.png'
+    alkeia_back_products = json.loads((root / 'template-artwork/alkeia-talamban-back-products.json').read_text(encoding='utf-8'))
+    for product in alkeia_back_products:
+        product['image'] = 'defaults/' + product['image']['__defaultImage']
+    alkeia_back = (root / 'alkeia-back.js').read_text(encoding='utf-8').replace('__ALKEIA_BACK_ART__',json.dumps(alkeia_back_art)).replace('__ALKEIA_BACK_SEEDS__',json.dumps(alkeia_back_products))
+    return back + "\n" + front + "\n" + peso + "\n" + peso_back + "\n" + alkeia + "\n" + alkeia_back
 
 
 def embed_collection(html: str, root: Path) -> str:
