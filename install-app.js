@@ -3,8 +3,9 @@
  document.querySelector('.top-actions').append(button);
  let deferred;
  const standalone=()=>matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
- button.hidden=standalone();
- window.addEventListener('beforeinstallprompt',event=>{event.preventDefault();deferred=event;button.hidden=standalone()});
+ // Installation stays available through the browser menu; hide the in-page control.
+ button.hidden=true;
+ window.addEventListener('beforeinstallprompt',event=>{event.preventDefault();deferred=event;button.hidden=true});
  window.addEventListener('appinstalled',()=>{deferred=null;button.hidden=true});
  const dialog=document.createElement('dialog');dialog.className='install-dialog';dialog.setAttribute('aria-labelledby','installHeading');
  const heading=document.createElement('h2');heading.id='installHeading';heading.textContent='Install Store Design';
