@@ -638,6 +638,7 @@ let storeFilter=null,pendingStoreChoice=null;
 try{if(!window.STORE_ACTIVITY_CONFIG?.enabled)storeFilter=localStorage.getItem(STORE_FILTER_KEY)}catch(e){console.warn('Store filter choice could not be read',e)}
 function storeFilterLabelText(value){return value==='alkeia-talamban'?'Alkeia Talamban':value==='home-express'?'Home Express Basak':value==='pesoplus'?'Pesoplus Mambaling':value==='all'?'Admin':'Locked'}
 function applyStoreFilterToDOM(){
+ syncStoreDownloadMenu();
  window.catalogPublisher?.refresh();
  const wrap=$('templateList');if(!wrap)return;
  wrap.querySelectorAll('.template-store-group').forEach(section=>{
@@ -1888,11 +1889,20 @@ function setupStudioUI(){
  buttons[0].onclick=()=>{scale=Math.max(.5,scale-.1);apply()};buttons[1].onclick=()=>{scale=Math.min(2,scale+.1);apply()};buttons[2].onclick=()=>{scale=1;apply()};window.addEventListener('resize',apply);apply();
 }
 
+function syncStoreDownloadMenu(){
+ const wrap=document.querySelector('.download-dropdown');if(!wrap)return;
+ wrap.hidden=storeFilter!=='all';
+ if(wrap.hidden){
+  const options=$('downloadOptions');if(options)options.hidden=true;
+  $('downloadMenuButton')?.setAttribute('aria-expanded','false');
+  if(wrap.contains(document.activeElement))$('printBtn')?.focus();
+ }
+}
 function setupDownloadMenu(){
  const pdf=$('pdfBtn'),png=$('pngBtn');if(!pdf||!png)return;
  const backup=$('downloadDatabaseBackup');
  const downloadButtons=[pdf,png,backup].filter(Boolean);
- const wrap=document.createElement('div');wrap.className='download-dropdown';
+ const wrap=document.createElement('div');wrap.className='download-dropdown';wrap.hidden=true;
  const toggle=document.createElement('button');toggle.id='downloadMenuButton';toggle.type='button';toggle.className='btn';toggle.textContent='Download ▾';
  toggle.setAttribute('aria-expanded','false');toggle.setAttribute('aria-controls','downloadOptions');
  const options=document.createElement('div');options.id='downloadOptions';options.className='download-options';options.hidden=true;options.setAttribute('role','group');options.setAttribute('aria-label','Download format');

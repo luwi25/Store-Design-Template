@@ -106,11 +106,20 @@ function setupStudioUI(){
  buttons[0].onclick=()=>{scale=Math.max(.5,scale-.1);apply()};buttons[1].onclick=()=>{scale=Math.min(2,scale+.1);apply()};buttons[2].onclick=()=>{scale=1;apply()};window.addEventListener('resize',apply);apply();
 }
 
+function syncStoreDownloadMenu(){
+ const wrap=document.querySelector('.download-dropdown');if(!wrap)return;
+ wrap.hidden=storeFilter!=='all';
+ if(wrap.hidden){
+  const options=$('downloadOptions');if(options)options.hidden=true;
+  $('downloadMenuButton')?.setAttribute('aria-expanded','false');
+  if(wrap.contains(document.activeElement))$('printBtn')?.focus();
+ }
+}
 function setupDownloadMenu(){
  const pdf=$('pdfBtn'),png=$('pngBtn');if(!pdf||!png)return;
  const backup=$('downloadDatabaseBackup');
  const downloadButtons=[pdf,png,backup].filter(Boolean);
- const wrap=document.createElement('div');wrap.className='download-dropdown';
+ const wrap=document.createElement('div');wrap.className='download-dropdown';wrap.hidden=true;
  const toggle=document.createElement('button');toggle.id='downloadMenuButton';toggle.type='button';toggle.className='btn';toggle.textContent='Download ▾';
  toggle.setAttribute('aria-expanded','false');toggle.setAttribute('aria-controls','downloadOptions');
  const options=document.createElement('div');options.id='downloadOptions';options.className='download-options';options.hidden=true;options.setAttribute('role','group');options.setAttribute('aria-label','Download format');
