@@ -1,8 +1,23 @@
-ADMIN PRINT-REQUEST NOTIFICATIONS
+PRINT-REQUEST AND APPROVAL NOTIFICATIONS
+
+UPDATING AN EXISTING NOTIFICATION SETUP
+Run the updated push-notifications.sql again and run notification-inbox.sql, then redeploy quick-handler using
+the updated index.ts. Keep your existing VAPID secrets; no new keys are needed.
+Publish the website changes to GitHub Pages and reload. Existing Admin device
+enrollments are preserved. The bell icon opens saved notifications for Admin and
+stores. Its badge shows unread notifications; opening an item marks it read.
+Mark all as read clears the current account's unread count. Notifications and read
+state are stored in Supabase and shared across devices using that store account.
+The inbox works without browser notification permission. Open Push notification
+settings inside the inbox to enable optional alerts. Approving a request sends an alert only
+to enrolled devices for that store. Clicking it opens the submitted poster preview
+and checks its current approval status; it never prints automatically. Use the
+existing Print poster button to print within the five-hour approval window.
 
 One-time setup (GitHub Pages does not deploy the Supabase backend):
 1. In Supabase SQL Editor, run the whole store-service/push-notifications.sql.
    Existing store-service/supabase-setup.sql must already have been run.
+   Then run store-service/notification-inbox.sql to enable saved notifications.
 2. Keys have already been generated for this installation. If setting up a fresh
    checkout without them, run: node store-service/generate-push-keys.cjs
    Open store-service/.push-secrets.env privately. Save its three values as
@@ -12,11 +27,14 @@ One-time setup (GitHub Pages does not deploy the Supabase backend):
 3. Replace quick-handler's index.ts with the full store-service/index.ts and deploy.
    Keep existing passwords, ALLOWED_ORIGINS and JWT gateway settings unchanged.
 4. Publish the website changes to GitHub Pages. Reload the app, sign in as Admin,
-   open Store activity, click Enable notifications, and allow the browser prompt.
+   open the bell icon, expand Push notification settings, click Enable notifications,
+   and allow the browser prompt.
    Repeat once per Admin device. There is no automatic permission prompt.
 5. From a store account on another browser/device, submit a NEW print request.
    Admin receives an alert. Clicking it opens that request (Admin sign-in is
-   still required). Approve/reject and the five-hour printing rule work as before.
+   still required). Sign in to the store and enable Notifications there as well.
+   Approve the request as Admin: the store device receives Print request approved.
+   Approve/reject and the five-hour printing rule work as before.
 
 Notifications work without the poster editor tab open when the browser/OS allows
 background delivery. They are best-effort: offline devices, focus modes, browser
@@ -25,15 +43,19 @@ in Store activity. A request retry will not send another notification.
 
 iPhone/iPad: install the website using Safari > Share > Add to Home Screen, then
 open that installed app before enabling notifications (iOS/iPadOS 16.4 or newer).
-Use the live HTTPS site; an unbuilt local editor does not have the published worker.
+The live HTTPS site and localhost use notification-worker.js for quick notification
+activation. This lightweight worker does not wait for offline app/image downloads.
+Existing subscriptions on the original offline worker continue working. If setup
+fails, check that notification-worker.js is deployed and the browser permits service
+workers; the notification control reports the failure and can be retried.
 
-Disable notifications in Store activity to remove this device's subscription.
-Switching this browser to a store account unsubscribes the device. Enrollment lasts
+Disable push notifications in the bell's Push notification settings to remove
+this device's subscription. Switching accounts unsubscribes the device. Enrollment lasts
 90 days; disable and enable again to renew. Expired sessions still require sign-in
-to review requests, but do not stop alerts on an enrolled Admin device.
+to review requests, but do not stop alerts on an enrolled device.
 
 If alerts fail: confirm the page says notifications are enabled, the SQL migration
-ran, and all three secrets exist. Check quick-handler logs for 'Admin push'.
+ran, and all three secrets exist. Check quick-handler logs for 'Print push'.
 Delivery failures do not roll back or block print requests. After changing VAPID
 keys, enable notifications again on every device. No sales schedule changes needed.
 

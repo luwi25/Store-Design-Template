@@ -6,6 +6,13 @@
 .store-service-body h2,.store-service-body p{margin:0;line-height:1.5}
 .store-service-body h2{font-size:20px;color:#163b65}
 .store-service-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+#storeNotifications.notification-bell{position:relative;display:inline-flex;align-items:center;justify-content:center;width:44px;min-width:44px;min-height:44px;flex:0 0 44px;padding:10px;justify-self:end}
+#storeNotifications[hidden]{display:none!important}
+.notification-count{position:absolute;top:-5px;right:-5px;min-width:19px;padding:2px 4px;border-radius:12px;background:#b42318;color:#fff;font-size:11px;font-weight:700;line-height:15px;border:2px solid #fff}
+.notification-item{display:flex;flex-direction:column;gap:6px;width:100%;text-align:left;padding:14px;margin-bottom:8px;border:1px solid #d5e0eb;border-radius:10px;background:#fff;color:#163b65;font:inherit;cursor:pointer}
+.notification-item.is-unread{background:#e9f5f3;border-left:4px solid #18a999}
+.notification-item small{color:#596f84}
+.notification-item:focus-visible{outline:3px solid #18a999;outline-offset:2px}
 .store-push-settings{display:flex;align-items:center;flex-wrap:wrap;gap:10px 16px;padding:12px;border:1px solid #d5e0eb;border-radius:10px;background:#f7f8fc}
 .store-push-settings p{flex:1 1 220px;margin:0;line-height:1.5}
 .store-push-settings button{min-height:44px;white-space:normal}

@@ -148,7 +148,7 @@ class Handler(BaseHTTPRequestHandler):
             return self.reply(403, {'error': 'Open this app directly on this computer.'})
         relative = unquote(path).lstrip('/') or 'index.html'
         target = (ROOT / relative).resolve()
-        public = {'index.html', 'db-config.js', 'local-db.js'}
+        public = {'index.html', 'db-config.js', 'local-db.js', 'notification-worker.js'}
         if not target.is_relative_to(ROOT) or (relative not in public and not relative.startswith('assets/')) or not target.is_file():
             return self.reply(404, {'error': 'Not found.'})
         self.send_bytes(200, target.read_bytes(), mimetypes.guess_type(target.name)[0] or 'application/octet-stream')

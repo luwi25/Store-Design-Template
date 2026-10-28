@@ -19,10 +19,12 @@
   const old=session;
   const result=await api('/login','POST',{store,password},false);
   if(result.store!==store||!/^[a-f0-9]{64}$/.test(result.token))throw Error('Invalid sign-in response.');
-  // A device switched to a store account must stop receiving Admin alerts.
-  if(store!=='all'&&navigator.serviceWorker){
-   try{const reg=await navigator.serviceWorker.getRegistration(),sub=await reg?.pushManager?.getSubscription();
-    if(sub){await sub.unsubscribe();if(old?.store==='all')fetch(base+'/push/unsubscribe',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+old.token},body:JSON.stringify({endpoint:sub.endpoint}),signal:AbortSignal.timeout(10000)}).catch(()=>{})}
+  // Stop the previous account's notifications when a shared device changes account.
+  if(old?.store!==store&&navigator.serviceWorker){
+   try{const registrations=new Set(await Promise.all([navigator.serviceWorker.getRegistration(),navigator.serviceWorker.getRegistration(new URL('notifications/',document.baseURI).href)]));
+    for(const reg of registrations){const sub=await reg?.pushManager?.getSubscription();
+     if(sub){await sub.unsubscribe();if(old?.token)fetch(base+'/push/unsubscribe',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+old.token},body:JSON.stringify({endpoint:sub.endpoint}),signal:AbortSignal.timeout(10000)}).catch(()=>{})}
+    }
    }catch{}
   }
   session={store:result.store,token:result.token};
@@ -36,7 +38,7 @@
  window.StoreActivity={enabled,login,restore,setup};
  function setup({getState,getMode,getTemplate,renderPreview,directPrint,onExpired}){
   if(!enabled)return null;
-  expired=()=>{for(const dialog of [printDialog,adminDialog,detail])if(dialog.open)dialog.close();items.replaceChildren();detail.querySelector('[data-preview]').removeAttribute('src');detailRow=null;viewKey='';baseline=null;onExpired()};
+  expired=()=>{for(const dialog of [printDialog,adminDialog,detail,notificationDialog,approvalDialog])if(dialog.open)dialog.close();items.replaceChildren();detail.querySelector('[data-preview]').removeAttribute('src');detailRow=null;viewKey='';baseline=null;onExpired()};
   const toolbar=document.querySelector('.top-actions'),printButton=document.getElementById('printBtn');
   const dashboard=node('button','Store activity','btn');dashboard.id='storeActivityDashboard';dashboard.type='button';dashboard.hidden=true;toolbar.append(dashboard);
   const sync=node('button','Activity sync pending — retry','btn btn-sm');sync.id='storeActivitySync';sync.type='button';sync.hidden=true;toolbar.append(sync);
@@ -47,15 +49,67 @@
   const adminDialog=node('dialog',undefined,'store-service-dialog store-service-admin');adminDialog.id='storeAdminDashboard';adminDialog.setAttribute('aria-labelledby','storeAdminTitle');
   adminDialog.innerHTML='<div class="store-service-body"><div class="store-service-heading"><h2 id="storeAdminTitle">Store activity and print approvals</h2><button type="button" class="store-service-close" data-close aria-label="Close activity logs and print approvals" title="Close">&times;</button></div><div class="store-service-tabs"><button type="button" class="btn" data-tab="requests">Print approvals</button><button type="button" class="btn" data-tab="activity">Activity logs</button></div><form data-filters class="store-service-filters"><label>Store<select name="store"><option value="">All stores</option><option value="home-express">Home Express Basak</option><option value="pesoplus">Pesoplus Mambaling</option><option value="alkeia-talamban">Alkeia Talamban</option><option value="all">Admin</option></select></label><label data-request-filter>Status<select name="status"><option value="pending">Pending</option><option value="approved">Approved</option><option value="rejected">Rejected</option><option value="">All statuses</option></select></label><label data-log-filter hidden>Action<select name="action"><option value="">All actions</option><option value="sign_in">Sign-in</option><option value="template_opened">Template opened</option><option value="product_edited">Product edits saved</option><option value="print_requested">Print requested</option><option value="approved">Approved</option><option value="rejected">Rejected</option><option value="print_initiated">Print initiated</option></select></label><label data-log-filter hidden>From<input type="date" name="from"></label><label data-log-filter hidden>To<input type="date" name="to"></label><label data-log-filter hidden>Template<select name="template"><option value="">All templates</option></select></label></form><p data-admin-status role="status" aria-live="polite"></p><div data-last-active></div><div data-items></div><button type="button" class="btn" data-older hidden>Older activity</button><button type="button" class="btn" data-close>Close</button></div>';
   document.body.append(adminDialog);
+  const storeNotifications=node('button',undefined,'btn notification-bell');storeNotifications.id='storeNotifications';storeNotifications.type='button';storeNotifications.hidden=true;storeNotifications.title='Notifications';storeNotifications.setAttribute('aria-label','Notifications');storeNotifications.setAttribute('aria-haspopup','dialog');
+  storeNotifications.innerHTML='<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9Z"/><path d="M10 21h4"/></svg><span class="notification-count" hidden aria-hidden="true"></span>';toolbar.append(storeNotifications);
+  const notificationDialog=node('dialog',undefined,'store-service-dialog');notificationDialog.setAttribute('aria-label','Notifications');
+  notificationDialog.innerHTML='<div class="store-service-body"><div class="store-service-heading"><h2>Notifications</h2><button type="button" class="store-service-close" data-close aria-label="Close notifications">&times;</button></div><button type="button" class="btn" data-read-all>Mark all as read</button><p data-inbox-status role="status" aria-live="polite"></p><div data-inbox-list></div><button type="button" class="btn" data-inbox-older hidden>Older notifications</button><details><summary>Push notification settings</summary><div data-settings></div></details></div>';document.body.append(notificationDialog);
+  const approvalDialog=node('dialog',undefined,'store-service-dialog');approvalDialog.setAttribute('aria-label','Print request status');
+  approvalDialog.innerHTML='<div class="store-service-body"><h2>Print request status</h2><p data-summary></p><img data-preview alt="Submitted poster"><p data-status role="status" aria-live="polite"></p><button type="button" class="btn" data-close>Close</button></div>';document.body.append(approvalDialog);
   const notifications=node('div',undefined,'store-push-settings');
   const notificationButton=node('button','Enable notifications','btn');notificationButton.type='button';notificationButton.id='adminPushNotifications';
   const notificationStatus=node('p','Get an alert on this device when a store requests print approval.');notificationStatus.setAttribute('role','status');notificationStatus.setAttribute('aria-live','polite');
   notifications.append(notificationButton,notificationStatus);adminDialog.querySelector('.store-service-tabs').before(notifications);
-  let pushEnabled=false,pushBusy=false;
+  let pushEnabled=false,pushBusy=false,pushRole=null;
+  const pushHelp=()=>getMode()==='all'?'Get an alert on this device when a store requests print approval.':'Get an alert on this device when Admin approves your print request.';
+  const pushOn=()=>getMode()==='all'?'Print-request alerts are enabled on this device.':'Approval alerts are enabled on this device for '+(names[getMode()]||'your store')+'.';
+  let inboxCursor=null,inboxLoad=0;
+  const inboxList=notificationDialog.querySelector('[data-inbox-list]'),inboxStatus=notificationDialog.querySelector('[data-inbox-status]'),readAll=notificationDialog.querySelector('[data-read-all]');
+  function showUnread(count){const badge=storeNotifications.querySelector('.notification-count');badge.hidden=!count;badge.textContent=count>99?'99+':String(count);storeNotifications.setAttribute('aria-label',count?'Notifications, '+count+' unread':'Notifications, no unread items');readAll.disabled=!count}
+  async function loadInbox(older=false){
+   if(!authenticated())return;const actor=session.token,version=++inboxLoad;
+   inboxStatus.textContent='Loading notifications…';if(!older){inboxCursor=null;inboxList.replaceChildren()}
+   try{const data=await api('/notifications'+(older&&inboxCursor?'?before='+encodeURIComponent(inboxCursor):''));
+    if(session?.token!==actor||version!==inboxLoad)return;
+    showUnread(data.unread);for(const item of data.notifications){
+     const button=node('button',undefined,'notification-item'+(item.read_at?'':' is-unread'));button.type='button';
+     button.append(node('strong',(item.read_at?'':'Unread · ')+(item.kind==='approved'?'Print request approved':'Print approval requested')),node('span',item.template_name),node('small',timestamp(item.created_at)));
+     button.onclick=async()=>{button.disabled=true;try{const result=await api('/notifications/read','POST',{id:item.id});if(session?.token!==actor)return;showUnread(result.unread);notificationDialog.close();openNotificationRequest(item.request_id)}catch(error){inboxStatus.textContent=error.message}finally{button.disabled=false}};
+     inboxList.append(button);
+    }
+    inboxCursor=data.notifications.at(-1)?.id||null;notificationDialog.querySelector('[data-inbox-older]').hidden=data.notifications.length<50;
+    inboxStatus.textContent=inboxList.children.length?'Opening a notification marks it as read.':'No notifications yet.';
+   }catch(error){if(session?.token===actor&&version===inboxLoad)inboxStatus.textContent=error.message}
+  }
+  readAll.onclick=async()=>{readAll.disabled=true;const actor=session?.token;try{const result=await api('/notifications/read-all','POST',{});if(session?.token!==actor)return;showUnread(result.unread);await loadInbox()}catch(error){inboxStatus.textContent=error.message;readAll.disabled=false}};
+  notificationDialog.querySelector('[data-inbox-older]').onclick=()=>loadInbox(true);
+  storeNotifications.onclick=()=>{notificationDialog.openFor();loadInbox();checkNotifications()};
   const pushSupported=()=>window.isSecureContext&&'Notification' in window&&'serviceWorker' in navigator&&'PushManager' in window;
   async function pushRegistration(){
-   const reg=await navigator.serviceWorker.getRegistration();
-   if(!reg?.active)throw Error('The app is still preparing. Reload after its offline download finishes, then try again.');
+   // Preserve existing enrolled devices. New enrollment uses a worker with no offline cache install.
+   const legacy=await navigator.serviceWorker.getRegistration();
+   if(legacy?.active&&await legacy.pushManager?.getSubscription())return legacy;
+   const scope=new URL('notifications/',document.baseURI).href;
+   let reg=await navigator.serviceWorker.getRegistration(scope);
+   if(reg?.scope!==scope){
+    try{reg=await navigator.serviceWorker.register(new URL('notification-worker.js',document.baseURI).href,{scope,updateViaCache:'none'})}
+    catch(error){
+     let diagnosis='';
+     try{const response=await fetch(new URL('notification-worker.js',document.baseURI),{cache:'no-store',signal:AbortSignal.timeout(5000)});
+      if(!response.ok)diagnosis='The notification file is unavailable (HTTP '+response.status+'). Restart the local app or deploy the latest website files, then retry.';
+     }catch{}
+     throw Error(diagnosis||'The browser could not start notifications: '+(error.message||error.name||'Unknown error')+'. Check this site’s browser permissions and retry.');
+    }
+   }
+   if(reg.active&&reg.active.state==='activated')return reg;
+   notificationStatus.textContent='Starting notifications…';
+   await new Promise((resolve,reject)=>{
+    const worker=reg.installing||reg.waiting||reg.active;
+    if(!worker){reject(Error('Notifications could not start. Please retry.'));return}
+    const finish=error=>{clearTimeout(timer);worker.removeEventListener('statechange',check);error?reject(error):resolve()};
+    const check=()=>{if(worker.state==='activated')finish();else if(worker.state==='redundant')finish(Error('Notification setup failed. Check your connection and retry.'))};
+    const timer=setTimeout(()=>finish(Error('Notification setup is taking longer than expected. Check your connection and try again.')),15000);
+    worker.addEventListener('statechange',check);check();
+   });
    return reg;
   }
   async function checkNotifications(){
@@ -65,12 +119,12 @@
    try{const reg=await pushRegistration(),sub=await reg.pushManager.getSubscription();
     pushEnabled=Boolean(sub&&(await api('/push/status','POST',{endpoint:sub.endpoint})).enabled);
     notificationButton.textContent=pushEnabled?'Disable notifications':'Enable notifications';
-    notificationStatus.textContent=pushEnabled?'Print-request alerts are enabled on this device.':Notification.permission==='denied'?'Notifications are blocked. Allow them in your browser settings, then try again.':'Get an alert on this device when a store requests print approval.';
+    notificationStatus.textContent=pushEnabled?pushOn():Notification.permission==='denied'?'Notifications are blocked. Allow them in your browser settings, then try again.':pushHelp();
    }catch(error){notificationStatus.textContent=error.message}
    finally{notificationButton.disabled=false}
   }
   notificationButton.onclick=async()=>{
-   if(pushBusy||!authenticated()||getMode()!=='all')return;
+   if(pushBusy||!authenticated())return;
    pushBusy=true;notificationButton.disabled=true;
    const actor=session.token;
    // Ask directly within the click gesture (required by Safari).
@@ -87,18 +141,18 @@
      const key=Uint8Array.from(atob(config.publicKey.replace(/-/g,'+').replace(/_/g,'/')),c=>c.charCodeAt(0));
      if(sub&&sub.options.applicationServerKey&&Array.from(new Uint8Array(sub.options.applicationServerKey)).join()!==Array.from(key).join()){await sub.unsubscribe();sub=null}
      if(!sub){sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:key});created=sub}
-     if(session?.token!==actor||getMode()!=='all')throw Error('Sign in as Admin to enable notifications.');
+     if(session?.token!==actor||!authenticated())throw Error('Sign in again to enable notifications.');
      await api('/push/subscribe','POST',sub.toJSON());pushEnabled=true;
     }
     notificationButton.textContent=pushEnabled?'Disable notifications':'Enable notifications';
-    notificationStatus.textContent=pushEnabled?'Print-request alerts are enabled on this device.':'Notifications are off on this device.';
+    notificationStatus.textContent=pushEnabled?pushOn():'Notifications are off on this device.';
    }catch(error){if(created)await created.unsubscribe().catch(()=>{});notificationStatus.textContent=error.message}
    finally{pushBusy=false;notificationButton.disabled=false}
   };
   const detail=node('dialog',undefined,'store-service-dialog');detail.setAttribute('aria-label','Review print request');
   detail.innerHTML='<div class="store-service-body"><h2>Review print request</h2><p data-summary></p><img data-preview alt="Submitted poster preview"><p data-note></p><label>Comment (optional)<textarea data-comment rows="3" maxlength="1000"></textarea></label><p data-status role="status" aria-live="polite"></p><div class="store-service-actions"><button type="button" class="btn" data-close>Close</button><button type="button" class="btn" data-decision="rejected">Reject</button><button type="button" class="btn btn-dark" data-decision="approved">Approve</button></div></div>';
   document.body.append(detail);
-  for(const dialog of [printDialog,adminDialog,detail]){
+  for(const dialog of [printDialog,adminDialog,detail,notificationDialog,approvalDialog]){
    let trigger;for(const close of dialog.querySelectorAll('[data-close]'))close.onclick=()=>dialog.close();
    dialog.addEventListener('close',()=>trigger?.focus());dialog.addEventListener('cancel',event=>{if(dialog.getAttribute('aria-busy')==='true')event.preventDefault()});
    dialog.openFor=()=>{trigger=document.activeElement;dialog.showModal()};
@@ -126,8 +180,16 @@
   }
   sync.onclick=flush;
   function view(){
+   if(pushRole!==getMode()){
+    pushRole=getMode();pushEnabled=false;notificationButton.textContent='Enable notifications';notificationStatus.textContent=pushHelp();
+    inboxLoad++;inboxList.replaceChildren();inboxCursor=null;showUnread(0);
+    if(notificationDialog.open)notificationDialog.close();if(approvalDialog.open)approvalDialog.close();
+   }
    dashboard.hidden=!authenticated()||getMode()!=='all';
-   if(authenticated()&&getMode()==='all'&&pendingPushRequest){const id=pendingPushRequest;pendingPushRequest='';const url=new URL(location.href);url.searchParams.delete('printRequest');history.replaceState(null,'',url);openDetail(id)}
+   storeNotifications.hidden=!authenticated();
+   const parent=notificationDialog.querySelector('[data-settings]');
+   if(notifications.parentElement!==parent){parent.append(notifications);pushEnabled=false;notificationButton.textContent='Enable notifications';notificationStatus.textContent=pushHelp()}
+   if(authenticated()&&pendingPushRequest){const id=pendingPushRequest;pendingPushRequest='';const url=new URL(location.href);url.searchParams.delete('printRequest');history.replaceState(null,'',url);openNotificationRequest(id)}
    if(!authenticated()){sync.hidden=true;printButton.textContent='Print poster';viewKey='';baseline=null;return}
    const info=getTemplate(),key=session.store+':'+info.id;
    if(!baseline||!viewKey.startsWith(session.store+':'))baseline=capture(getState());
@@ -258,6 +320,9 @@
    if(polling||document.hidden||!authenticated()||navigator.onLine===false)return;polling=true;
    const identity=session.store,tid=getTemplate().id;
    try{
+    const token=session.token;const counts=await api('/notifications/count').catch(()=>null);if(counts&&session?.token===token)showUnread(counts.unread);
+    if(!authenticated())return;
+    if(notificationDialog.open&&inboxList.children.length<=50)loadInbox();
     if(identity==='all'){const data=await api('/requests?status=pending');if(session?.store===identity)dashboard.textContent='Store activity'+(data.requests.length?' · '+data.requests.length+' pending':'')}
     else if(templates[tid]){
      const data=await api('/requests?template='+encodeURIComponent(tid));if(session?.store!==identity||getTemplate().id!==tid)return;
@@ -267,12 +332,24 @@
    }catch{}finally{polling=false}
   }
   setInterval(()=>{poll();flush()},30000);window.addEventListener('online',()=>{poll();flush()});document.addEventListener('visibilitychange',()=>{if(!document.hidden)poll()});
+  async function openNotificationRequest(id){
+   const viewer=session?.token;
+   try{const counts=await api('/notifications/read','POST',{requestId:id});if(session?.token===viewer)showUnread(counts.unread)}catch{}
+   if(session?.token!==viewer||!authenticated())return;
+   if(getMode()==='all'){openDetail(id);return}
+   const actor=session?.token;approvalDialog.openFor();approvalDialog.querySelector('[data-summary]').textContent='';approvalDialog.querySelector('[data-preview]').removeAttribute('src');
+   const status=approvalDialog.querySelector('[data-status]');status.textContent='Checking approval…';
+   try{const row=await api('/requests/'+id);if(session?.token!==actor||!authenticated()){approvalDialog.close();return}
+    approvalDialog.querySelector('[data-summary]').textContent=row.template_name;approvalDialog.querySelector('[data-preview]').src=row.preview;
+    status.textContent=row.status==='approved'?(row.can_print?'Approved until '+timestamp(row.expires_at)+'. Close this notice, select this template and use Print poster.':'This approval has expired. Send a new print request.') :row.status==='rejected'?'This print request was rejected.':'This print request is waiting for Admin approval.';
+   }catch(error){status.textContent=error.message}
+  }
   let pendingPushRequest=new URL(location.href).searchParams.get('printRequest')||'';
   if(!/^[a-zA-Z0-9_-]{8,80}$/.test(pendingPushRequest))pendingPushRequest='';
   navigator.serviceWorker?.addEventListener('message',event=>{
    if(event.data?.type!=='open-print-request'||!/^[a-zA-Z0-9_-]{8,80}$/.test(event.data.requestId||''))return;
    pendingPushRequest=event.data.requestId;
-   if(authenticated()&&getMode()==='all'){const id=pendingPushRequest;pendingPushRequest='';openDetail(id)}
+   if(authenticated()){const id=pendingPushRequest;pendingPushRequest='';openNotificationRequest(id)}
   });
   return {view,saved,requestPrint};
  }

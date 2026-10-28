@@ -70,8 +70,8 @@ Deno.serve(async (request: Request) => {
   if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: { ...headers, 'Access-Control-Allow-Methods': 'GET,POST,OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type,Authorization', 'Access-Control-Max-Age': '600' } });
   const url = Deno.env.get('SUPABASE_URL'), key = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
   if (!url || !key) throw new HttpError(503, 'The store database is not configured.');
-  async function rpc(action: string, tokenHash = '', data: Record<string, unknown> = {}, push = false) {
-   const response = await fetch(url + '/rest/v1/rpc/'+(push?'store_push_api':'store_monitor_api'), {
+  async function rpc(action: string, tokenHash = '', data: Record<string, unknown> = {}, push = false, inbox = false) {
+   const response = await fetch(url + '/rest/v1/rpc/'+(inbox?'store_inbox_api':push?'store_push_api':'store_monitor_api'), {
     method: 'POST', signal: AbortSignal.timeout(15000),
     headers: { 'Content-Type': 'application/json', apikey: key!, Authorization: 'Bearer ' + key },
     body: JSON.stringify({ p_action: action, p_token_hash: tokenHash, p_data: push?data:{ ...data, ...actionAddress(request) } })
@@ -101,25 +101,29 @@ Deno.serve(async (request: Request) => {
   const token = request.headers.get('authorization')?.match(/^Bearer ([a-f0-9]{64})$/)?.[1];
   if (!token) throw new HttpError(401, 'Please sign in to your store again.');
   const tokenHash = await hash(token);
+  if(path==='/notifications'&&request.method==='GET')return reply(await rpc('list',tokenHash,Object.fromEntries(parsed.searchParams),false,true));
+  if(path==='/notifications/count'&&request.method==='GET')return reply(await rpc('count',tokenHash,{},false,true));
+  if(path==='/notifications/read'&&request.method==='POST')return reply(await rpc('read',tokenHash,await readBody(request),false,true));
+  if(path==='/notifications/read-all'&&request.method==='POST')return reply(await rpc('read_all',tokenHash,{},false,true));
   const publicKey=Deno.env.get('VAPID_PUBLIC_KEY')||'',privateKey=Deno.env.get('VAPID_PRIVATE_KEY')||'';
   const subject=Deno.env.get('VAPID_SUBJECT')||'';
   const pushReady=Boolean(publicKey&&privateKey&&/^(mailto:|https:\/\/)/.test(subject));
   if(path.startsWith('/push/') && ['GET','POST'].includes(request.method)){
    const actor=await rpc('session',tokenHash);
-   if(actor.store!=='all')throw new HttpError(403,'Admin access is required.');
+   if(!Object.hasOwn(roles,actor.store))throw new HttpError(403,'Store sign-in is required.');
    if(path==='/push/config'&&request.method==='GET')return reply({configured:pushReady,publicKey:pushReady?publicKey:null});
    if(request.method==='POST'&&['/push/subscribe','/push/unsubscribe','/push/status'].includes(path)){
     const body=await readBody(request);
-    if(path==='/push/subscribe'&&!pushReady)throw new HttpError(503,'Admin notifications need setup in Supabase.');
+    if(path==='/push/subscribe'&&!pushReady)throw new HttpError(503,'Notifications need setup in Supabase.');
     const data=path==='/push/subscribe'?pushSubscription(body):{endpoint:String(body.endpoint||'').slice(0,2048)};
     return reply(await rpc(path.slice(6),tokenHash,data,true));
    }
   }
-  async function notifyAdmin(id: string){
+  async function notifyPrintAccount(id: string, approval = false){
    try{
-    const batch=await rpc('claim',tokenHash,{id},true);
+    const batch=await rpc(approval?'claim_approval':'claim',tokenHash,{id},true);
     const names:Record<string,string>={'home-express':'Home Express Basak',pesoplus:'Pesoplus Mambaling','alkeia-talamban':'Alkeia Talamban'};
-    const payload=JSON.stringify({requestId:batch.requestId,store:names[batch.store]||'Store',template:batch.template});
+    const payload=JSON.stringify({requestId:batch.requestId,store:names[batch.store]||'Store',template:batch.template,type:approval?'approved':'requested'});
     const rows=batch.subscriptions||[];
     for(let i=0;i<rows.length;i+=5)await Promise.all(rows.slice(i,i+5).map(async (raw:any)=>{
      try{
@@ -128,11 +132,11 @@ Deno.serve(async (request: Request) => {
       const details=webpush.generateRequestDetails(subscription,payload,{TTL:3600,urgency:'high',vapidDetails:{subject,publicKey,privateKey}});
       const response=await fetch(details.endpoint,{method:'POST',headers:details.headers,body:details.body,redirect:'error',signal:AbortSignal.timeout(10000)});
       if(response.status===404||response.status===410)await rpc('expired','',{endpoint:raw.endpoint,subscription:raw},true);
-      else if(!response.ok)console.warn('Admin push delivery failed',response.status);
+      else if(!response.ok)console.warn('Print push delivery failed',response.status);
       await response.body?.cancel();
-     }catch{console.warn('Admin push delivery failed');}
+     }catch{console.warn('Print push delivery failed');}
     }));
-   }catch{console.warn('Admin push unavailable; print request remains saved.');}
+   }catch{console.warn('Print push unavailable; print request remains saved.');}
   }
   const getRoutes: Record<string, string> = { '/session': 'session', '/requests': 'requests', '/activity': 'activity' };
   const postRoutes: Record<string, string> = { '/logout': 'logout', '/events': 'event', '/requests': 'request_create' };
@@ -142,7 +146,7 @@ Deno.serve(async (request: Request) => {
   }
   if (request.method === 'POST' && postRoutes[path]) {
    const result=await rpc(postRoutes[path],tokenHash,path==='/logout'?{}:await readBody(request));
-   if(path==='/requests'&&result.id&&pushReady)EdgeRuntime.waitUntil(notifyAdmin(result.id));
+   if(path==='/requests'&&result.id&&pushReady)EdgeRuntime.waitUntil(notifyPrintAccount(result.id));
    return reply(result);
   }
   const route = path.match(/^\/requests\/([a-zA-Z0-9_-]{8,80})(?:\/(decision|print))?$/);
@@ -150,7 +154,9 @@ Deno.serve(async (request: Request) => {
    if (!route[2] && request.method === 'GET') return reply(await rpc('request_get', tokenHash, { id: route[1] }));
    if (route[2] && request.method === 'POST') {
     const data = await readBody(request);
-    return reply(await rpc(route[2], tokenHash, { ...data, eventId: data.id, id: route[1] }));
+    const result=await rpc(route[2], tokenHash, { ...data, eventId: data.id, id: route[1] });
+    if(route[2]==='decision'&&data.status==='approved'&&pushReady)EdgeRuntime.waitUntil(notifyPrintAccount(route[1],true));
+    return reply(result);
    }
   }
   throw new HttpError(404, 'Endpoint not found.');

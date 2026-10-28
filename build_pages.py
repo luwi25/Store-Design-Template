@@ -67,7 +67,7 @@ def external_image(match):
     return 'assets/'+name
 html=re.sub(r'data:image/(png|jpeg|webp|svg\+xml);base64,([A-Za-z0-9+/=]+)',external_image,html)
 (OUT/'index.html').write_text(html,encoding='utf-8')
-for name in ['default-project.js','browser-db.js','browser-background.js','background-worker.js','mobile.css','mobile.js','install-app.js','manifest.webmanifest','restore-defaults.css','download-menu.css','sidebar-spacing.css','shared-catalog.js','shared-catalog-ui.js','shared-catalog.css','store-activity-config.js','store-activity.js','store-activity.css']:
+for name in ['default-project.js','browser-db.js','browser-background.js','background-worker.js','mobile.css','mobile.js','install-app.js','manifest.webmanifest','restore-defaults.css','download-menu.css','sidebar-spacing.css','shared-catalog.js','shared-catalog-ui.js','shared-catalog.css','store-activity-config.js','store-activity.js','store-activity.css','notification-worker.js']:
     shutil.copy2(ROOT/name,OUT/name)
 # Ship current image references only, rather than every historical replacement.
 published=json.loads((ROOT/'defaults/project.json').read_text(encoding='utf-8'))
