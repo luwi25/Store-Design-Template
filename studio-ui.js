@@ -34,7 +34,7 @@ function syncStudioInspector(){
   for(const id of ['slotPhoto']){const field=$(id)?.closest('.field');if(field)advanced.append(field)}
   const tools=slotEditor.querySelector('.background-tools');if(tools)advanced.append(tools);
   const remove=slotEditor.querySelector('.remove-product');
-  slotEditor.append(advanced);
+  const nameField=$('slotName')?.closest('.field');if(nameField)nameField.after(advanced);else slotEditor.append(advanced);
   if(remove){const actions=document.createElement('div');actions.className='product-remove-action';actions.append(remove);slotEditor.append(actions)}
   const original=$('slotOriginalPrice')?.closest('.field'),discountField=$('slotDiscount')?.closest('.field');
   if(original&&discountField){const row=document.createElement('div');row.className='two-col studio-price-fields';original.before(row);row.append(original,discountField);
