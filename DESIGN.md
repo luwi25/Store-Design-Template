@@ -123,3 +123,5 @@ Alkeia Talamban Template #1 Back (alkeia-talamban-back / alkeiaBack) preserves t
 
 ## Admin print-request notifications
 Admin can enable or disable web push per device inside Store activity, using the existing navy/teal controls, a wrapping settings row, 44px targets and an accessible status message. Permission is requested only on click. Notification clicks open the request after Admin authentication; stores never see notification settings. Supabase sends alerts after successful request creation, with atomic duplicate prevention and independent failure handling. Enrollment is private and device-based; switching to a store unsubscribes. Existing print approval rules and sales schedules remain unchanged.
+
+Template navigation groups each store by Template #1, Template #2, etc., with Front and Back cards selectable within each group. Built-in series use stable template IDs so renamed designs stay paired. The native template dropdown uses Store ? Template # headings and retains full editable design names. Custom unnumbered templates appear in Other templates. Group spacing belongs in sidebar-spacing.css; selection and store permissions remain unchanged.

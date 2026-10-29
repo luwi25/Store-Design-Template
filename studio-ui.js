@@ -77,7 +77,7 @@ function renderStudioProducts(){
   const names=[...$('templateList').querySelectorAll('.template-card b')].map(b=>b.textContent);
   const cards=[...$('templateList').querySelectorAll('.template-card')];
   selector.replaceChildren();const groups=new Map();
-  cards.forEach((card,index)=>{if(card.closest('.template-store-group.is-store-hidden'))return;const label=card.dataset.storeGroup||'Other templates';let group=groups.get(label);if(!group){group=document.createElement('optgroup');group.label=label;groups.set(label,group);selector.append(group)}const option=new Option(names[index],String(index));option.selected=card.getAttribute('aria-pressed')==='true';group.append(option)})
+  cards.forEach((card,index)=>{if(card.closest('.template-store-group.is-store-hidden'))return;const label=[card.dataset.storeGroup||'Other templates',card.dataset.templateSeries].filter(Boolean).join(' / ');let group=groups.get(label);if(!group){group=document.createElement('optgroup');group.label=label;groups.set(label,group);selector.append(group)}const option=new Option(names[index],String(index));option.selected=card.getAttribute('aria-pressed')==='true';group.append(option)})
  }
  const selection=$('studioSelection strong');const selected=slots[state.selectedSlot];if(selection&&selected)selection.textContent=productFor(selected)?.name||'Choose product';
 }

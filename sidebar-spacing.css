@@ -39,6 +39,9 @@
  .studio-editor .template-store-group { display:grid; gap:10px; min-width:0; }
  .studio-editor .template-store-group.is-store-hidden { display:none; }
  .studio-editor .template-store-group + .template-store-group { margin-top:8px; padding-top:14px; border-top:1px solid #e5e9ef; }
+ .studio-editor .template-series-group { display:grid; gap:8px; min-width:0; }
+ .studio-editor .template-series-group + .template-series-group { margin-top:6px; }
+ .studio-editor .template-series-heading { margin:0; padding:7px 10px; border-radius:6px; background:#f7f8fc; color:#56637c; font-size:11px; font-weight:700; line-height:1.4; }
  .studio-editor .template-store-heading { margin:0; font-size:12px; font-weight:700; line-height:1.5; color:#163b65; }
  .studio-editor .left-rail .template-card { box-sizing:border-box; margin:0; padding:10px; gap:10px; min-height:76px; }
  .studio-editor .left-rail .template-thumb { width:38px; height:54px; }
