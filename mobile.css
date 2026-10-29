@@ -64,6 +64,10 @@
  .studio-editor .brand{min-width:0;font-size:16px}
  .studio-editor .brand small{font-size:11px;line-height:1.4}
  .studio-editor #studioTemplate{grid-column:1/-1;grid-row:2;width:100%;min-height:44px;padding:10px 12px;font-size:16px;box-sizing:border-box}
+ .studio-editor .mobile-template-row{grid-column:1/-1;grid-row:2;display:grid;grid-template-columns:minmax(0,1fr);align-items:center;gap:8px;min-width:0}
+ .studio-editor .mobile-template-row:has(#storeNotifications:not([hidden])){grid-template-columns:minmax(0,1fr) 44px}
+ .studio-editor .mobile-template-row #studioTemplate{grid-column:1;grid-row:1;min-width:0}
+ .studio-editor .mobile-template-row #storeNotifications{grid-column:2;grid-row:1;margin:0}
  .studio-editor .saving-status{grid-column:2;grid-row:1;max-width:120px;font-size:10px;padding:6px 8px;line-height:1.4;overflow-wrap:anywhere}
  .studio-editor .top-actions{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:8px;width:100%;margin:0}
  .studio-editor .top-actions .btn{flex:1 1 100px;min-height:44px;font-size:12px;line-height:1.3;padding:10px 8px}

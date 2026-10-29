@@ -7,6 +7,7 @@
  const options=document.createElement('div');options.id='mobileMoreOptions';options.className='mobile-more-options';options.hidden=true;options.setAttribute('role','group');options.setAttribute('aria-label','More actions');
  more.append(moreButton,options);toolbar.append(more);
  const homes=new Map();
+ let templateRow=null,templateHome=null;
  const closeMore=()=>{options.hidden=true;moreButton.setAttribute('aria-expanded','false')};
  const switchStore=document.createElement('button');
  switchStore.id='mobileSwitchStore';switchStore.type='button';switchStore.className='btn';switchStore.textContent='Switch store';
@@ -14,6 +15,21 @@
  switchStore.onclick=()=>{closeMore();moreButton.focus();window.flashSaleActions?.openStoreChooser()};
  options.append(switchStore);
  function arrangeToolbar(){
+  const bell=document.getElementById('storeNotifications'),template=document.getElementById('studioTemplate');
+  if(bell&&template){
+   if(!homes.has(bell)){const home=document.createComment('Notification toolbar position');bell.before(home);homes.set(bell,home)}
+   if(!templateHome){templateHome=document.createComment('Template dropdown position');template.before(templateHome)}
+   if(mobileWidth.matches){
+    if(!templateRow){templateRow=document.createElement('div');templateRow.className='mobile-template-row'}
+    if(!templateRow.isConnected)templateHome.after(templateRow);
+    if(template.parentElement!==templateRow)templateRow.append(template);
+    if(bell.parentElement!==templateRow)templateRow.append(bell);
+   }else{
+    if(templateRow?.contains(template))templateHome.after(template);
+    if(templateRow?.contains(bell))homes.get(bell).after(bell);
+    templateRow?.remove();
+   }
+  }
   for(const id of ['bgRemoverBtn','restorePublishedDefaults','publishCatalog','sharedCatalogUpdate','storeActivityDashboard','storeActivitySync','installApp']){
    const button=document.getElementById(id);if(!button)continue;
    if(!homes.has(button)){

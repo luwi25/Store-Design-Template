@@ -12,6 +12,8 @@ OUT=ROOT/'public'
 OUT.mkdir(exist_ok=True)
 (OUT/'assets').mkdir(exist_ok=True)
 html=(ROOT/'index.html').read_text(encoding='utf-8')
+# Local editor shares the mobile UI; inject each asset only once in the Pages build.
+html=html.replace('<link rel="stylesheet" href="mobile.css">','').replace('<script src="mobile.js" defer></script>','')
 html=embed_collection(html,ROOT)
 edit_start=html.index('// BEGIN PRODUCT EDITOR')
 edit_end=html.index('// END PRODUCT EDITOR',edit_start)+len('// END PRODUCT EDITOR')
