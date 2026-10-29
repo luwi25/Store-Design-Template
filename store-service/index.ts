@@ -110,9 +110,25 @@ Deno.serve(async (request: Request) => {
   const pushReady=Boolean(publicKey&&privateKey&&/^(mailto:|https:\/\/)/.test(subject));
   const larkWebhook=Deno.env.get('LARK_WEBHOOK_URL')||'';
   const larkReady=(()=>{try{const u=new URL(larkWebhook);return u.protocol==='https:'&&(u.hostname==='open.larksuite.com'||u.hostname==='open.feishu.cn');}catch{return false;}})();
-  async function notifyLark(text:string){
+  const ADMIN_URL='https://luwi25.github.io/Store-Design-Template/';
+  function larkPrintCard(kind:'requested'|'print_initiated',storeName:string,template:string){
+   const title=kind==='requested'?'New Print Request':'Printing Started';
+   const time=new Intl.DateTimeFormat('en-PH',{timeZone:'Asia/Manila',dateStyle:'medium',timeStyle:'short'}).format(new Date());
+   return{msg_type:'interactive',card:{config:{wide_screen_mode:true},
+    header:{title:{tag:'plain_text',content:`\u{1F5A8}️ ${title}`},template:kind==='requested'?'blue':'green'},
+    elements:[
+     {tag:'div',fields:[
+      {is_short:false,text:{tag:'lark_md',content:`**Store**\n${storeName}`}},
+      {is_short:false,text:{tag:'lark_md',content:`**Template**\n${template||'-'}`}},
+      {is_short:false,text:{tag:'lark_md',content:`**Time**\n${time}`}}
+     ]},
+     {tag:'hr'},
+     {tag:'action',actions:[{tag:'button',text:{tag:'plain_text',content:'Open Admin'},type:'primary',url:ADMIN_URL}]}
+    ]}};
+  }
+  async function notifyLark(card:unknown){
    try{
-    const response=await fetch(larkWebhook,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({msg_type:'text',content:{text}}),signal:AbortSignal.timeout(10000)});
+    const response=await fetch(larkWebhook,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(card),signal:AbortSignal.timeout(10000)});
     if(!response.ok)console.warn('Lark notification failed',response.status);
     await response.body?.cancel();
    }catch{console.warn('Lark notification failed');}
@@ -135,7 +151,7 @@ Deno.serve(async (request: Request) => {
     const storeName=names[batch.store]||'Store';
     const payload=JSON.stringify({requestId:batch.requestId,store:storeName,template:batch.template,type:eventId?'print_initiated':approval?'approved':'requested',eventId:batch.eventId});
     // Admin-facing only (new request / store started printing); approvals notify the store, not Lark.
-    if(!approval&&larkReady&&batch.requestId)await notifyLark(eventId?`\u{1F5A8}️ ${storeName} started printing: ${batch.template}`:`\u{1F5A8}️ New print request from ${storeName}: ${batch.template}`);
+    if(!approval&&larkReady&&batch.requestId)await notifyLark(larkPrintCard(eventId?'print_initiated':'requested',storeName,batch.template));
     const rows=batch.subscriptions||[];
     for(let i=0;i<rows.length;i+=5)await Promise.all(rows.slice(i,i+5).map(async (raw:any)=>{
      try{

@@ -1,8 +1,10 @@
 LARK (FEISHU) GROUP NOTIFICATIONS FOR ADMIN
 
 What it does: when a store submits a new print request, or starts printing an
-already-approved poster, the Edge Function also posts a plain-text message to a
-Lark group chat via a custom-bot webhook. Approvals are store-facing only and do
+already-approved poster, the Edge Function also posts an interactive card to a
+Lark group chat via a custom-bot webhook: a colored header (blue for a new
+request, green for printing started), Store/Template/Time rows, and an Open
+Admin button linking to the live site. Approvals are store-facing only and do
 not post to Lark. This is independent of web push: it works even if VAPID
 notifications are never configured, and vice versa.
 
@@ -20,8 +22,9 @@ One-time setup (GitHub Pages does not deploy the Supabase backend):
    deploy. Keep existing passwords, ALLOWED_ORIGINS, VAPID secrets and JWT
    gateway settings unchanged.
 4. Submit a new print request from a store account. The Lark group should
-   receive "New print request from <store>: <template>". Printing an approved
-   poster sends "<store> started printing: <template>".
+   receive a blue "New Print Request" card with the store, template and time.
+   Printing an approved poster sends a green "Printing Started" card. Both
+   cards include an Open Admin button linking to the live site.
 
 Notes:
 - Only open.larksuite.com and open.feishu.cn webhook hosts are accepted; any
