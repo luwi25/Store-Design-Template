@@ -108,6 +108,15 @@ Deno.serve(async (request: Request) => {
   const publicKey=Deno.env.get('VAPID_PUBLIC_KEY')||'',privateKey=Deno.env.get('VAPID_PRIVATE_KEY')||'';
   const subject=Deno.env.get('VAPID_SUBJECT')||'';
   const pushReady=Boolean(publicKey&&privateKey&&/^(mailto:|https:\/\/)/.test(subject));
+  const larkWebhook=Deno.env.get('LARK_WEBHOOK_URL')||'';
+  const larkReady=(()=>{try{const u=new URL(larkWebhook);return u.protocol==='https:'&&(u.hostname==='open.larksuite.com'||u.hostname==='open.feishu.cn');}catch{return false;}})();
+  async function notifyLark(text:string){
+   try{
+    const response=await fetch(larkWebhook,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({msg_type:'text',content:{text}}),signal:AbortSignal.timeout(10000)});
+    if(!response.ok)console.warn('Lark notification failed',response.status);
+    await response.body?.cancel();
+   }catch{console.warn('Lark notification failed');}
+  }
   if(path.startsWith('/push/') && ['GET','POST'].includes(request.method)){
    const actor=await rpc('session',tokenHash);
    if(!Object.hasOwn(roles,actor.store))throw new HttpError(403,'Store sign-in is required.');
@@ -123,7 +132,10 @@ Deno.serve(async (request: Request) => {
    try{
     const batch=await rpc(eventId?'claim_print':approval?'claim_approval':'claim',tokenHash,{id,...(eventId?{eventId}:{})},true);
     const names:Record<string,string>={'home-express':'Home Express Basak',pesoplus:'Pesoplus Mambaling','alkeia-talamban':'Alkeia Talamban'};
-    const payload=JSON.stringify({requestId:batch.requestId,store:names[batch.store]||'Store',template:batch.template,type:eventId?'print_initiated':approval?'approved':'requested',eventId:batch.eventId});
+    const storeName=names[batch.store]||'Store';
+    const payload=JSON.stringify({requestId:batch.requestId,store:storeName,template:batch.template,type:eventId?'print_initiated':approval?'approved':'requested',eventId:batch.eventId});
+    // Admin-facing only (new request / store started printing); approvals notify the store, not Lark.
+    if(!approval&&larkReady&&batch.requestId)await notifyLark(eventId?`\u{1F5A8}️ ${storeName} started printing: ${batch.template}`:`\u{1F5A8}️ New print request from ${storeName}: ${batch.template}`);
     const rows=batch.subscriptions||[];
     for(let i=0;i<rows.length;i+=5)await Promise.all(rows.slice(i,i+5).map(async (raw:any)=>{
      try{
@@ -146,7 +158,7 @@ Deno.serve(async (request: Request) => {
   }
   if (request.method === 'POST' && postRoutes[path]) {
    const result=await rpc(postRoutes[path],tokenHash,path==='/logout'?{}:await readBody(request));
-   if(path==='/requests'&&result.id&&pushReady)EdgeRuntime.waitUntil(notifyPrintAccount(result.id));
+   if(path==='/requests'&&result.id&&(pushReady||larkReady))EdgeRuntime.waitUntil(notifyPrintAccount(result.id));
    return reply(result);
   }
   const route = path.match(/^\/requests\/([a-zA-Z0-9_-]{8,80})(?:\/(decision|print))?$/);
@@ -156,7 +168,7 @@ Deno.serve(async (request: Request) => {
     const data = await readBody(request);
     const result=await rpc(route[2], tokenHash, { ...data, eventId: data.id, id: route[1] });
     if(route[2]==='decision'&&data.status==='approved'&&pushReady)EdgeRuntime.waitUntil(notifyPrintAccount(route[1],true));
-    if(route[2]==='print'&&result.ok&&typeof data.id==='string'&&pushReady)EdgeRuntime.waitUntil(notifyPrintAccount(route[1],false,data.id));
+    if(route[2]==='print'&&result.ok&&typeof data.id==='string'&&(pushReady||larkReady))EdgeRuntime.waitUntil(notifyPrintAccount(route[1],false,data.id));
     return reply(result);
    }
   }

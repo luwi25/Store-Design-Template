@@ -1,0 +1,38 @@
+LARK (FEISHU) GROUP NOTIFICATIONS FOR ADMIN
+
+What it does: when a store submits a new print request, or starts printing an
+already-approved poster, the Edge Function also posts a plain-text message to a
+Lark group chat via a custom-bot webhook. Approvals are store-facing only and do
+not post to Lark. This is independent of web push: it works even if VAPID
+notifications are never configured, and vice versa.
+
+One-time setup (GitHub Pages does not deploy the Supabase backend):
+1. In the target Lark group: Settings > Bots > Add Bot > Custom Bot. Copy the
+   webhook URL it gives you (looks like
+   https://open.larksuite.com/open-apis/bot/v2/hook/<token>, or the Feishu
+   open.feishu.cn equivalent).
+2. In Supabase Dashboard > Edge Functions > quick-handler > Secrets, add
+   LARK_WEBHOOK_URL with that exact URL. Treat it as a secret: anyone who has it
+   can post into the group. Never paste it into frontend code, DESIGN.md, a
+   commit, or any file under version control -- Supabase secrets are the only
+   place it should live.
+3. Replace quick-handler's index.ts with the full store-service/index.ts and
+   deploy. Keep existing passwords, ALLOWED_ORIGINS, VAPID secrets and JWT
+   gateway settings unchanged.
+4. Submit a new print request from a store account. The Lark group should
+   receive "New print request from <store>: <template>". Printing an approved
+   poster sends "<store> started printing: <template>".
+
+Notes:
+- Only open.larksuite.com and open.feishu.cn webhook hosts are accepted; any
+  other URL in LARK_WEBHOOK_URL is treated as not configured (no crash, no send).
+- Delivery reuses the same push-claim row used for web push, so Lark fires at
+  most once per event even with concurrent Edge Function instances or retried
+  requests.
+- Delivery is best-effort: a failed Lark POST is logged (check quick-handler
+  logs for 'Lark notification failed') and never blocks or rolls back the print
+  request/activity record.
+- To stop forwarding to Lark, delete the LARK_WEBHOOK_URL secret and redeploy
+  (or just leave it unset); everything else keeps working unchanged.
+
+Reference: https://open.larksuite.com/document/client-docs/bot-v3/add-custom-bot
