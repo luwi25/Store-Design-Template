@@ -18,3 +18,17 @@
 .catalog-publish-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
 @media(max-width:820px){.catalog-publish-form{padding:18px}.catalog-publish-actions .btn{min-height:44px;flex:1 1 auto}}
 @media print{#publishCatalog,#sharedCatalogUpdate,.catalog-publish-dialog{display:none!important}}
+
+.template-visibility-option{display:flex!important;align-items:center;gap:12px;min-height:44px;padding:8px 0;cursor:pointer}
+.template-visibility-option input{width:20px!important;height:20px;min-height:20px!important;flex:0 0 20px;accent-color:#163b65}
+.template-visibility-option span{overflow-wrap:anywhere;min-width:0}
+#templateVisibilityDialog fieldset{min-width:0;border:1px solid #e5e9ef;border-radius:10px;padding:12px;margin:0 0 14px}
+#templateVisibilityDialog legend{font-weight:700;color:#163b65;padding:0 6px}
+.visibility-dialog-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}
+#templateVisibilityDialog{max-height:85dvh;overflow:auto}
+#templateVisibilityButton[hidden]{display:none!important}
+.template-visibility-empty{padding:24px;border:1px solid #e5e9ef;border-radius:12px;background:white;color:#56637c;text-align:center}
+.template-series-group[hidden],.template-card[hidden]{display:none!important}
+.no-visible-template .poster-wrap,.no-visible-template .right-rail>*{display:none!important}
+.no-visible-template #printBtn{opacity:.5;cursor:not-allowed}
+@media print{.no-visible-template .poster,.no-visible-template #printSheet{display:none!important}}

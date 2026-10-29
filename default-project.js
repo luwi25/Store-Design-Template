@@ -16,6 +16,11 @@ async function fetchFreshPublishedProject(base, {allowOffline = true} = {}) {
   }
 }
 
+function receivePublishedTemplateVisibility(project){
+  if(project.version!==1||!project.state)return;
+  window.publishedTemplateVisibility=Object.fromEntries(Object.entries(project.state.templateVisibility||{}).filter(([id,value])=>typeof value==='boolean'));
+  window.dispatchEvent(new window.Event('published-template-visibility'));
+}
 let checkedPublishedProject;
 window.fetchPublishedRevision = async function () {
   const base = new URL('defaults/', document.baseURI);
@@ -23,6 +28,7 @@ window.fetchPublishedRevision = async function () {
   if (!response.ok) return null;
   const project = await response.json();
   checkedPublishedProject = project;
+  receivePublishedTemplateVisibility(project);
   return typeof project.sourceRevision === 'number' ? project.sourceRevision : null;
 };
 
@@ -40,6 +46,7 @@ window.loadPublishedDefault = async function ({fresh = false} = {}) {
   if (project.version !== 1 || !Array.isArray(project.state?.products)) {
     throw new Error('Invalid starting project.');
   }
+  receivePublishedTemplateVisibility(project);
   const images = new Map();
   function collect(value) {
     if (!value || typeof value !== 'object') return;

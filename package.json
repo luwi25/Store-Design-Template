@@ -2,7 +2,8 @@
   "private": true,
   "scripts": {
     "test": "node browser-storage-review.cjs && node browser-model-review.cjs",
-    "test:catalog": "node shared-catalog-review.cjs && node shared-catalog-integration-review.cjs"
+    "test:catalog": "node shared-catalog-review.cjs && node shared-catalog-integration-review.cjs",
+    "test:visibility": "python build_pages.py && node template-visibility-review.cjs && node template-visibility-integration-review.cjs && node template-visibility-integration-review.cjs --mobile"
   },
   "devDependencies": {
     "fake-indexeddb": "6.2.5",

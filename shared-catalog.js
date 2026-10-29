@@ -64,7 +64,7 @@
  async function prepare(project,changes){
   if(project.version!==1||!Array.isArray(project.state?.products)||!Number.isSafeInteger(project.sourceRevision))throw Error('The published catalog format is invalid.');
   const next=clone(project),images=new Map(),resolved=new Map();let count=0;
-  for(const change of changes.filter(change=>change.kind!=='replacement')){
+  for(const change of changes.filter(change=>!['replacement','visibility'].includes(change.kind))){
    if(!change.identity||!change.fields)throw Error('Invalid publishing draft.');
    const product=match(next.state.products,change.identity);
    for(const [field,edit] of Object.entries(change.fields)){
@@ -93,6 +93,18 @@
    if(slot.productId===replacement.id)continue;
    if((slot.productId??null)!==(change.before.id??null))throw Error('The product in this published template position changed since your edit. Reload the latest template and reapply the replacement.');
    slot.productId=replacement.id;slot.details=null;slot.image=null;slot.imageOriginal=null;count++;
+  }
+  const visibilityIds=new Set();
+  for(const change of changes.filter(change=>change.kind==='visibility')){
+   const id=change.templateId;
+   if(typeof id!=='string'||(!Object.hasOwn(templateSections,id)&&!next.state.templates?.some(t=>t.id===id)))throw Error('Unknown template for visibility change.');
+   if(typeof change.before!=='boolean'||typeof change.after!=='boolean'||visibilityIds.has(id))throw Error('Invalid template visibility change.');
+   visibilityIds.add(id);
+   const current=next.state.templateVisibility?.[id]!==false;
+   if(current===change.after)continue;
+   if(current!==change.before)throw Error('Template visibility changed since your edit. Reload and retry.');
+   next.state.templateVisibility ||= {};
+   next.state.templateVisibility[id]=change.after;count++;
   }
   if(count)next.sourceRevision++;
   return {project:next,images,count};
