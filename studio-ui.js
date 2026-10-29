@@ -45,7 +45,7 @@ function syncStudioInspector(){
    const originalLabel=slotEditor.querySelector('label[for="slotOriginalPrice"]');if(originalLabel)originalLabel.textContent='Original price (₱)';
   }
  }
- const editActions=$('saveProductEdit')?.closest('.product-edit-actions');if(editActions)slotEditor.append(editActions);
+ const editActions=$('saveProductEdit')?.closest('.product-edit-actions');if(editActions){const advanced=slotEditor.querySelector('.product-advanced');if(advanced)advanced.after(editActions);else slotEditor.append(editActions)}
  const discount=$('slotDiscount');if(discount){
   const presets=document.createElement('div');presets.className='discount-presets';presets.setAttribute('role','group');presets.setAttribute('aria-label','Discount for selected product');
   for(const value of [0,10,20,30,50]){const b=document.createElement('button');b.type='button';b.className='btn btn-sm';b.textContent=value+'%';b.setAttribute('aria-pressed',String(Number(discount.value)===value));b.onclick=()=>{discount.value=value;discount.dispatchEvent(new Event('input',{bubbles:true}));for(const other of presets.children)other.setAttribute('aria-pressed',String(other===b))};presets.append(b)}
