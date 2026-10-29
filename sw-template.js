@@ -46,7 +46,7 @@ self.addEventListener('install',event=>{
   }));
   await cache.put(scoped('__asset-digests'),new Response(JSON.stringify(HASHES)));
   // Activate completed updates without requiring every installed app window to close.
-  // Do not reload open editors or touch their IndexedDB projects.
+  // Open editors decide when to refresh safely; never modify IndexedDB projects.
   await self.skipWaiting();
  })());
 });

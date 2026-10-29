@@ -22,8 +22,26 @@
   if(navigator.storage?.persist)navigator.storage.persist().catch(()=>{});
  };
  if('serviceWorker' in navigator){
+  let controlled=Boolean(navigator.serviceWorker.controller),updatePending=false,reloading=false,retryTimer=null;
+  const refreshWhenReady=()=>{
+   if(!updatePending||reloading||document.hidden||navigator.onLine===false)return;
+   if(typeof window.flashSaleActions?.canReloadForUpdate!=='function'||!window.flashSaleActions.canReloadForUpdate())return;
+   if(document.querySelector('dialog[open], [aria-busy="true"]')||document.querySelector('.app')?.inert||document.body.classList.contains('printing-top'))return;
+   if(document.getElementById('printBtn')?.disabled||document.activeElement?.matches('input,textarea,select,[contenteditable="true"]'))return;
+   reloading=true;clearInterval(retryTimer);location.reload();
+  };
+  navigator.serviceWorker.addEventListener('controllerchange',()=>{
+   // The first installation only prepares offline use; later controllers are updates.
+   if(!controlled){controlled=true;return}
+   updatePending=true;
+   if(!retryTimer)retryTimer=setInterval(refreshWhenReady,1000);
+   refreshWhenReady();
+  });
+  window.addEventListener('online',refreshWhenReady);
+  window.addEventListener('afterprint',refreshWhenReady);
+  document.addEventListener('visibilitychange',refreshWhenReady);
   navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).then(registration=>{
-   const showReady=()=>{offline.textContent='App files are ready for offline use. Refresh while online to load the latest version. Your saved products stay on this device.'};
+   const showReady=()=>{offline.textContent='App files are ready for offline use. New versions refresh automatically when your work is saved and the editor is idle. Your saved products stay on this device.'};
    let checking=false,lastCheck=0;
    const checkUpdate=async()=>{
     if(checking||navigator.onLine===false||Date.now()-lastCheck<15000)return;
@@ -34,11 +52,6 @@
    window.addEventListener('online',checkUpdate);
    document.addEventListener('visibilitychange',()=>{if(!document.hidden)checkUpdate()});
    setInterval(()=>{if(!document.hidden)checkUpdate()},60000);
-   navigator.serviceWorker.addEventListener('controllerchange',()=>{
-    const update=document.getElementById('appUpdateReady')||document.createElement('button');
-    update.id='appUpdateReady';update.type='button';update.className='btn';update.textContent='Update ready — refresh';
-    update.onclick=()=>location.reload();document.querySelector('.top-actions').append(update);
-   });
    if(registration.active)showReady();
    navigator.serviceWorker.ready.then(showReady);
   }).catch(()=>{offline.textContent='Offline download could not finish. You can still use the app online; reconnect and reload to retry.'});
