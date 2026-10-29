@@ -21,9 +21,16 @@ alter table store_monitor.push_subscriptions enable row level security;
 alter table store_monitor.push_claims enable row level security;
 revoke all on store_monitor.push_subscriptions,store_monitor.push_claims from public,anon,authenticated;
 
+create table if not exists store_monitor.push_print_claims (
+ event_id text primary key references store_monitor.activity(id) on delete cascade,
+ created_at timestamptz not null default now()
+);
+alter table store_monitor.push_print_claims enable row level security;
+revoke all on store_monitor.push_print_claims from public,anon,authenticated;
+
 create or replace function public.store_push_api(p_action text,p_token_hash text default '',p_data jsonb default '{}')
 returns jsonb language plpgsql security definer set search_path='' as $$
-declare v_store text; v_request store_monitor.print_requests%rowtype; v_rows jsonb; v_count integer;
+declare v_store text; v_request store_monitor.print_requests%rowtype; v_rows jsonb; v_count integer; v_event store_monitor.activity%rowtype;
 begin
  -- Only the service role can call this RPC, including delivery cleanup.
  if p_action='expired' then
@@ -42,6 +49,19 @@ begin
   select coalesce(jsonb_agg(subscription),'[]') into v_rows from store_monitor.push_subscriptions
    where store='all' and updated_at>now()-interval '90 days';
   return jsonb_build_object('subscriptions',v_rows,'requestId',v_request.id,'store',v_request.store,'template',v_request.template_name);
+ end if;
+ if p_action='claim_print' then
+  select * into v_event from store_monitor.activity where id=v_store||':'||(p_data->>'eventId')
+   and store=v_store and store<>'all' and action='print_initiated'
+   and details->>'requestId'=p_data->>'id' and created_at>now()-interval '5 minutes';
+  if not found then return '{"subscriptions":[]}'; end if;
+  insert into store_monitor.push_print_claims(event_id) values(v_event.id) on conflict do nothing;
+  get diagnostics v_count=row_count;
+  if v_count=0 then return '{"subscriptions":[]}'; end if;
+  select coalesce(jsonb_agg(subscription),'[]') into v_rows from store_monitor.push_subscriptions
+   where store='all' and updated_at>now()-interval '90 days';
+  return jsonb_build_object('subscriptions',v_rows,'requestId',p_data->>'id','store',v_event.store,
+   'template',v_event.template_name,'type','print_initiated','eventId',v_event.id);
  end if;
  if p_action='claim_approval' then
   if v_store<>'all' then return jsonb_build_object('error','Admin access is required.','status',403); end if;

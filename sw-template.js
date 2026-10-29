@@ -7,10 +7,11 @@ const ALLOWED=new Set(FILES.map(scoped));
 self.addEventListener('push',event=>{
  let data={};try{data=event.data?.json()||{}}catch{}
  const requestId=/^[a-zA-Z0-9_-]{8,80}$/.test(data.requestId||'')?data.requestId:'';
- const approved=data.type==='approved';
- event.waitUntil(self.registration.showNotification(approved?'Print request approved':'Print approval requested',{
-  body:approved?String(data.template||'Your poster').slice(0,160)+' has been approved. Open the poster and use Print poster.':data.store?String(data.store).slice(0,80)+' · '+String(data.template||'Poster').slice(0,160):'A store is waiting for Admin approval.',
-  tag:requestId?'print-request-'+requestId:'print-request',
+ const approved=data.type==='approved',initiated=data.type==='print_initiated';
+ const eventId=/^[a-zA-Z0-9:_-]{8,120}$/.test(data.eventId||'')?data.eventId:requestId;
+ event.waitUntil(self.registration.showNotification(initiated?'Store started printing':approved?'Print request approved':'Print approval requested',{
+  body:initiated?String(data.store||'Store').slice(0,80)+' started printing '+String(data.template||'Poster').slice(0,160)+'.':approved?String(data.template||'Your poster').slice(0,160)+' has been approved. Open the poster and use Print poster.':data.store?String(data.store).slice(0,80)+' · '+String(data.template||'Poster').slice(0,160):'A store is waiting for Admin approval.',
+  tag:initiated?'print-initiated-'+eventId:requestId?'print-request-'+requestId:'print-request',
   icon:scoped('icons/icon-192.png'),data:{requestId}
  }));
 });

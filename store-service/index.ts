@@ -119,11 +119,11 @@ Deno.serve(async (request: Request) => {
     return reply(await rpc(path.slice(6),tokenHash,data,true));
    }
   }
-  async function notifyPrintAccount(id: string, approval = false){
+  async function notifyPrintAccount(id: string, approval = false, eventId?: string){
    try{
-    const batch=await rpc(approval?'claim_approval':'claim',tokenHash,{id},true);
+    const batch=await rpc(eventId?'claim_print':approval?'claim_approval':'claim',tokenHash,{id,...(eventId?{eventId}:{})},true);
     const names:Record<string,string>={'home-express':'Home Express Basak',pesoplus:'Pesoplus Mambaling','alkeia-talamban':'Alkeia Talamban'};
-    const payload=JSON.stringify({requestId:batch.requestId,store:names[batch.store]||'Store',template:batch.template,type:approval?'approved':'requested'});
+    const payload=JSON.stringify({requestId:batch.requestId,store:names[batch.store]||'Store',template:batch.template,type:eventId?'print_initiated':approval?'approved':'requested',eventId:batch.eventId});
     const rows=batch.subscriptions||[];
     for(let i=0;i<rows.length;i+=5)await Promise.all(rows.slice(i,i+5).map(async (raw:any)=>{
      try{
@@ -156,6 +156,7 @@ Deno.serve(async (request: Request) => {
     const data = await readBody(request);
     const result=await rpc(route[2], tokenHash, { ...data, eventId: data.id, id: route[1] });
     if(route[2]==='decision'&&data.status==='approved'&&pushReady)EdgeRuntime.waitUntil(notifyPrintAccount(route[1],true));
+    if(route[2]==='print'&&result.ok&&typeof data.id==='string'&&pushReady)EdgeRuntime.waitUntil(notifyPrintAccount(route[1],false,data.id));
     return reply(result);
    }
   }

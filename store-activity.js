@@ -57,11 +57,11 @@
   approvalDialog.innerHTML='<div class="store-service-body"><h2>Print request status</h2><p data-summary></p><img data-preview alt="Submitted poster"><p data-status role="status" aria-live="polite"></p><button type="button" class="btn" data-close>Close</button></div>';document.body.append(approvalDialog);
   const notifications=node('div',undefined,'store-push-settings');
   const notificationButton=node('button','Enable notifications','btn');notificationButton.type='button';notificationButton.id='adminPushNotifications';
-  const notificationStatus=node('p','Get an alert on this device when a store requests print approval.');notificationStatus.setAttribute('role','status');notificationStatus.setAttribute('aria-live','polite');
+  const notificationStatus=node('p','Get an alert on this device when a store requests approval or starts printing.');notificationStatus.setAttribute('role','status');notificationStatus.setAttribute('aria-live','polite');
   notifications.append(notificationButton,notificationStatus);adminDialog.querySelector('.store-service-tabs').before(notifications);
   let pushEnabled=false,pushBusy=false,pushRole=null;
-  const pushHelp=()=>getMode()==='all'?'Get an alert on this device when a store requests print approval.':'Get an alert on this device when Admin approves your print request.';
-  const pushOn=()=>getMode()==='all'?'Print-request alerts are enabled on this device.':'Approval alerts are enabled on this device for '+(names[getMode()]||'your store')+'.';
+  const pushHelp=()=>getMode()==='all'?'Get an alert on this device when a store requests approval or starts printing.':'Get an alert on this device when Admin approves your print request.';
+  const pushOn=()=>getMode()==='all'?'Print-request and printing alerts are enabled on this device.':'Approval alerts are enabled on this device for '+(names[getMode()]||'your store')+'.';
   let inboxCursor=null,inboxLoad=0;
   const inboxList=notificationDialog.querySelector('[data-inbox-list]'),inboxStatus=notificationDialog.querySelector('[data-inbox-status]'),readAll=notificationDialog.querySelector('[data-read-all]');
   function showUnread(count){const badge=storeNotifications.querySelector('.notification-count');badge.hidden=!count;badge.textContent=count>99?'99+':String(count);storeNotifications.setAttribute('aria-label',count?'Notifications, '+count+' unread':'Notifications, no unread items');readAll.disabled=!count}
@@ -72,7 +72,7 @@
     if(session?.token!==actor||version!==inboxLoad)return;
     showUnread(data.unread);for(const item of data.notifications){
      const button=node('button',undefined,'notification-item'+(item.read_at?'':' is-unread'));button.type='button';
-     button.append(node('strong',(item.read_at?'':'Unread · ')+(item.kind==='approved'?'Print request approved':'Print approval requested')),node('span',item.template_name),node('small',timestamp(item.created_at)));
+     button.append(node('strong',(item.read_at?'':'Unread · ')+(item.kind==='print_initiated'?(names[item.source_store]||'Store')+' started printing':item.kind==='approved'?'Print request approved':'Print approval requested')),node('span',item.template_name),node('small',timestamp(item.created_at)));
      button.onclick=async()=>{button.disabled=true;try{const result=await api('/notifications/read','POST',{id:item.id});if(session?.token!==actor)return;showUnread(result.unread);notificationDialog.close();openNotificationRequest(item.request_id)}catch(error){inboxStatus.textContent=error.message}finally{button.disabled=false}};
      inboxList.append(button);
     }

@@ -1,0 +1,28 @@
+const fs=require('fs'),assert=require('node:assert/strict');
+(async()=>{
+ const {PGlite}=require(require('path').join(process.env.TEMP,'store-push-check/node_modules/@electric-sql/pglite'));
+ const db=new PGlite();await db.exec('create role anon;create role authenticated;create role service_role;');
+ await db.exec(fs.readFileSync('store-service/print-24h-and-notifications.sql','utf8'));
+ const admin='a'.repeat(64),store='b'.repeat(64),other='c'.repeat(64);
+ await db.query("insert into store_monitor.sessions values ($1,'all',now()+interval '1 hour'),($2,'home-express',now()+interval '1 hour'),($3,'pesoplus',now()+interval '1 hour')",[admin,store,other]);
+ await db.exec("insert into store_monitor.print_requests(id,store,template_id,template_name,preview,status,decided_at) values('request-print1','home-express','home-back','Back','preview','approved',now()-interval '6 hours')");
+ const rpc=async(fn,action,token,data={})=>(await db.query('select public.'+fn+'($1,$2,$3::jsonb) as data',[action,token,JSON.stringify(data)])).rows[0].data;
+ const monitor=(a,t,d)=>rpc('store_monitor_api',a,t,d),push=(a,t,d)=>rpc('store_push_api',a,t,d),inbox=(a,t,d)=>rpc('store_inbox_api',a,t,d);
+ assert.equal((await monitor('request_get',store,{id:'request-print1'})).can_print,true,'Approval stays usable after 6 hours');
+ const sub={endpoint:'https://fcm.googleapis.com/admin',keys:{p256dh:'B'.repeat(87),auth:'a'.repeat(22)}};await push('subscribe',admin,sub);
+ for(const eventId of ['event-print1','event-print1','event-print2'])assert.equal((await monitor('print',store,{id:'request-print1',eventId})).ok,true);
+ let items=(await inbox('list',admin)).notifications.filter(n=>n.kind==='print_initiated');assert.equal(items.length,2,'Each unique print gets an inbox entry');assert.equal(items[0].source_store,'home-express');
+ assert.equal((await inbox('list',store)).notifications.filter(n=>n.kind==='print_initiated').length,0);
+ assert.equal((await push('claim_print',other,{id:'request-print1',eventId:'event-print1'})).subscriptions.length,0);
+ assert.equal((await push('claim_print',store,{id:'request-print1',eventId:'event-print1'})).subscriptions.length,1);
+ assert.equal((await push('claim_print',store,{id:'request-print1',eventId:'event-print1'})).subscriptions.length,0);
+ assert.equal((await push('claim_print',store,{id:'request-print1',eventId:'event-print2'})).subscriptions.length,1);
+ await db.exec("update store_monitor.print_requests set decided_at=clock_timestamp()-interval '24 hours' where id='request-print1'");
+ assert.equal((await monitor('request_get',store,{id:'request-print1'})).can_print,false);
+ assert.equal((await monitor('print',store,{id:'request-print1',eventId:'event-print3'})).status,403);
+ assert.equal((await inbox('list',admin)).notifications.filter(n=>n.kind==='print_initiated').length,2);
+ await inbox('read',admin,{id:items[0].id});
+ await db.exec(fs.readFileSync('store-service/print-24h-and-notifications.sql','utf8'));
+ items=(await inbox('list',admin)).notifications.filter(n=>n.kind==='print_initiated');assert.equal(items.length,2);assert(items[0].read_at);
+ await db.close();console.log('PASS: 24-hour expiry, repeated print notifications, retry deduplication, store isolation and rerunnable migrations.');
+})().catch(e=>{console.error(e);process.exitCode=1});

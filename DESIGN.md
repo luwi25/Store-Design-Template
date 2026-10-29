@@ -97,7 +97,7 @@ All activity cards show the connection IP recorded by the backend for that actio
 
 On mobile, More includes Switch store. It closes the menu and opens the existing store chooser, keeping the existing password and role checks. Desktop retains the sidebar Store selector. Focus returns through the More button when the chooser closes.
 
-Stores use Print poster as the single print control. A valid approval prints directly after server authorization; otherwise it opens the request overlay. Approvals expire five hours after the original approval time, enforced by Supabase on each print request. Repeated prints do not extend approval. The overlay displays the expiry in Philippine time; it has no separate approved-print button. Admin printing and exports retain their existing behavior.
+Stores use Print poster as the single print control. A valid approval prints directly after server authorization; otherwise it opens the request overlay. Approvals expire 24 hours after the original approval time, enforced by Supabase on each print request. Repeated prints do not extend approval. The overlay displays the expiry in Philippine time; it has no separate approved-print button. Admin printing and exports retain their existing behavior.
 
 Store account display names are Home Express Basak and Pesoplus Mambaling in the chooser, password prompts, sidebar grouping and monitoring UI. Internal role IDs and Supabase secret names remain unchanged.
 
@@ -129,3 +129,5 @@ Template navigation groups each store by Template #1, Template #2, etc., with Fr
 Admin manages per-design visibility through Template visibility in the toolbar (More on mobile). Checked designs are visible to their store; Admin always sees all designs. Save visibility adds choices to Publish changes and deployment shares them. Published visibility is refreshed independently of locally edited posters; drafts do not change store access. A store with no visible designs sees an empty state and cannot use Print poster. This is interface visibility, not a confidential-content access boundary. Weekly rankings, fill-up and schedules are unchanged.
 
 Completed service-worker updates automatically refresh online, visible editors when saves are complete and no product draft, dialog, input focus, export, print or other busy operation is active. Keep the existing one-minute update check. Do not show an Update ready button, reload on first offline installation, or alter IndexedDB projects. The app exposes canReloadForUpdate through flashSaleActions; install-app.js owns reload scheduling.
+
+Admin receives a saved inbox entry and optional push notification for each authorized store print initiation. Use the existing server activity event ID to deduplicate retries while allowing repeat prints under one approval. Identify the originating store; label the event as printing started, never printing completed. SQL and Edge Function changes require manual Supabase deployment.

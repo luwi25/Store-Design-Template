@@ -15,6 +15,11 @@ async function workerReview(file='sw-template.js'){
  assert.equal(opened[1],scope,'Untrusted click data must stay within the app');
  handlers.push({data:{json:()=>({requestId:'request-1234',type:'approved',template:'Back'})},waitUntil:p=>promise=p});await promise;
  assert.equal(shown[1][0],'Print request approved');assert.match(shown[1][1].body,/Back has been approved/);
+ for(const eventId of ['home-express:print-event-1','home-express:print-event-2']){
+  handlers.push({data:{json:()=>({requestId:'request-1234',type:'print_initiated',eventId,store:'Home Express Basak',template:'Back'})},waitUntil:p=>promise=p});await promise;
+ }
+ assert.equal(shown[2][0],'Store started printing');assert.match(shown[2][1].body,/Home Express Basak started printing Back/);
+ assert.notEqual(shown[2][1].tag,shown[3][1].tag,'Separate prints retain separate push alerts');
  console.log('Service worker push and safe notification navigation passed');
 }
 async function serverReview(){
@@ -22,7 +27,7 @@ async function serverReview(){
  let handler,actor='all',background=[],claims=0,delivered=0;
  const secrets={SUPABASE_URL:'https://db.test',SUPABASE_SERVICE_ROLE_KEY:'private',ALLOWED_ORIGINS:'https://example.test',VAPID_PUBLIC_KEY:'public',VAPID_PRIVATE_KEY:'private',VAPID_SUBJECT:'https://example.test'};
  const subscription={endpoint:'https://fcm.googleapis.com/send/test',keys:{p256dh:'B'.repeat(87),auth:'a'.repeat(22)}};
- let failure=false,claimed=false,expired=false,approvalClaims=0;
+ let failure=false,claimed=false,expired=false,approvalClaims=0,printClaims=0,denyPrint=false;
  const context={URL,Request,Response,AbortSignal,TextEncoder,TextDecoder,Uint8Array,crypto:require('node:crypto').webcrypto,console,
   Deno:{env:{get:key=>secrets[key]},serve:fn=>handler=fn},EdgeRuntime:{waitUntil:p=>background.push(p)},isIP:require('node:net').isIP,
   webpush:{generateRequestDetails:sub=>({endpoint:sub.endpoint,headers:{},body:'encrypted'})},
@@ -32,6 +37,8 @@ async function serverReview(){
    if(body.p_action==='session')result={store:actor};
    if(body.p_action==='request_create')result={id:'request-1234',status:'pending'};
    if(body.p_action==='claim'){claims++;if(failure)throw Error('database offline');result={subscriptions:claimed?[]:[subscription],requestId:'request-1234',store:'home-express',template:'Front'};claimed=true}
+   if(body.p_action==='print'&&denyPrint)result={error:'Approval expired',status:403};
+   if(body.p_action==='claim_print'){printClaims++;assert.equal(body.p_data.eventId,'print-event-1');result={subscriptions:[]}}
    if(body.p_action==='expired')expired=true;
    if(body.p_action==='claim_approval'){approvalClaims++;result={subscriptions:[]}}
    return Response.json(result);
@@ -51,6 +58,8 @@ async function serverReview(){
  assert.equal(claims,3);
  actor='all';await call('/requests/request-1234/decision',{status:'approved'});await Promise.all(background);assert.equal(approvalClaims,1);
  await call('/requests/request-1234/decision',{status:'rejected'});await Promise.all(background);assert.equal(approvalClaims,1,'Rejection does not send approval alert');
+ actor='home-express';await call('/requests/request-1234/print',{id:'print-event-1'});await Promise.all(background);assert.equal(printClaims,1);
+ denyPrint=true;assert.equal((await call('/requests/request-1234/print',{id:'print-event-1'})).status,403);await Promise.all(background);assert.equal(printClaims,1,'Rejected printing must not notify Admin');
  console.log('Edge routes: admin authorization, endpoint validation, expired cleanup and non-blocking delivery passed');
 }
 async function browserReview(){

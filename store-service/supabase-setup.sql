@@ -158,8 +158,8 @@ begin
   return jsonb_build_object('id',v_row.id,'status',v_row.status,'created_at',v_row.created_at);
  elsif p_action='requests' then
   select coalesce(jsonb_agg(to_jsonb(r)-'preview'-'seq' order by r.seq desc),'[]') into v_rows from (
-   select *,case when status='approved' then decided_at+interval '5 hours' else null end as expires_at,
-    (status='approved' and decided_at is not null and decided_at+interval '5 hours'>clock_timestamp()) as can_print
+   select *,case when status='approved' then decided_at+interval '24 hours' else null end as expires_at,
+    (status='approved' and decided_at is not null and decided_at+interval '24 hours'>clock_timestamp()) as can_print
     from store_monitor.print_requests
     where (v_store='all' or store=v_store)
     and (coalesce(p_data->>'store','')='' or store=p_data->>'store')
@@ -173,8 +173,8 @@ begin
   if not found then return jsonb_build_object('error','Request not found.','status',404); end if;
   if v_store<>'all' and v_row.store<>v_store then return jsonb_build_object('error','This request belongs to another store.','status',403); end if;
   if p_action='request_get' then return (to_jsonb(v_row)-'seq')||jsonb_build_object(
-   'expires_at',case when v_row.status='approved' then v_row.decided_at+interval '5 hours' else null end,
-   'can_print',v_row.status='approved' and v_row.decided_at is not null and v_row.decided_at+interval '5 hours'>clock_timestamp()); end if;
+   'expires_at',case when v_row.status='approved' then v_row.decided_at+interval '24 hours' else null end,
+   'can_print',v_row.status='approved' and v_row.decided_at is not null and v_row.decided_at+interval '24 hours'>clock_timestamp()); end if;
   perform pg_advisory_xact_lock(hashtextextended(v_row.store||':'||v_row.template_id,0));
   select * into v_row from store_monitor.print_requests where id=v_id for update;
   if p_action='decision' then
@@ -191,7 +191,7 @@ begin
    insert into store_monitor.activity(id,store,action,template_id,template_name,details)
     values(v_id||'-decision','all',v_status,v_row.template_id,v_row.template_name,jsonb_build_object('store',v_row.store,'comment',v_comment)||v_network);
   else
-   if v_row.status='approved' and (v_row.decided_at is null or v_row.decided_at+interval '5 hours'<=clock_timestamp()) then
+   if v_row.status='approved' and (v_row.decided_at is null or v_row.decided_at+interval '24 hours'<=clock_timestamp()) then
     return jsonb_build_object('error','Approval expired. Send a new print request to admin.','status',403);
    end if;
    if v_store='all' or v_row.status<>'approved' or exists(

@@ -1,7 +1,7 @@
 PRINT-REQUEST AND APPROVAL NOTIFICATIONS
 
 UPDATING AN EXISTING NOTIFICATION SETUP
-Run the updated push-notifications.sql again and run notification-inbox.sql, then redeploy quick-handler using
+Run the complete print-24h-and-notifications.sql in SQL Editor, then redeploy quick-handler using
 the updated index.ts. Keep your existing VAPID secrets; no new keys are needed.
 Publish the website changes to GitHub Pages and reload. Existing Admin device
 enrollments are preserved. The bell icon opens saved notifications for Admin and
@@ -12,7 +12,7 @@ The inbox works without browser notification permission. Open Push notification
 settings inside the inbox to enable optional alerts. Approving a request sends an alert only
 to enrolled devices for that store. Clicking it opens the submitted poster preview
 and checks its current approval status; it never prints automatically. Use the
-existing Print poster button to print within the five-hour approval window.
+existing Print poster button to print within the 24-hour approval window.
 
 One-time setup (GitHub Pages does not deploy the Supabase backend):
 1. In Supabase SQL Editor, run the whole store-service/push-notifications.sql.
@@ -34,7 +34,7 @@ One-time setup (GitHub Pages does not deploy the Supabase backend):
    Admin receives an alert. Clicking it opens that request (Admin sign-in is
    still required). Sign in to the store and enable Notifications there as well.
    Approve the request as Admin: the store device receives Print request approved.
-   Approve/reject and the five-hour printing rule work as before.
+   Approve/reject and the 24-hour printing rule work as before.
 
 Notifications work without the poster editor tab open when the browser/OS allows
 background delivery. They are best-effort: offline devices, focus modes, browser
@@ -63,3 +63,5 @@ References:
 https://supabase.com/docs/guides/functions/background-tasks
 https://github.com/web-push-libs/web-push
 https://webkit.org/blog/13878/web-push-for-web-apps-on-ios-and-ipados/
+
+Admin also receives an inbox entry and push alert for every authorized store print initiation, including repeated prints under one approval. Retries with the same event ID are deduplicated. This records the start of browser printing, not confirmation of physical output. Admin-initiated printing does not notify Admin.
