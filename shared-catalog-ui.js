@@ -105,18 +105,17 @@ window.setupSharedCatalogPublishing=function({getState,getMode,save,render,canAp
  visibilityButton.onclick=()=>{
   if(getMode()!=='all')return;
   visibilityTrigger=document.activeElement;const list=visibilityDialog.querySelector('[data-template-list]');list.replaceChildren();
+  const isVisible=id=>{const pending=changes().find(c=>c.kind==='visibility'&&c.templateId===id);return pending?pending.after:getState().templateVisibility?.[id]!==false};
   for(const store of document.querySelectorAll('#templateList .template-store-group')){
    const group=document.createElement('fieldset'),legend=document.createElement('legend');legend.textContent=store.querySelector('h3')?.textContent||'Templates';group.append(legend);
-   // Mirror the sidebar's Template #1/#2 grouping instead of listing every card flat.
+   // One checkbox per Template # series (mirroring the sidebar's grouping); toggling it
+   // shows/hides every design inside that series (e.g. both Front and Back) together.
    for(const series of store.querySelectorAll('.template-series-group')){
-    const seriesGroup=document.createElement('fieldset'),seriesLegend=document.createElement('legend');seriesLegend.textContent=series.querySelector('h4')?.textContent||'Templates';seriesGroup.append(seriesLegend);
-    for(const card of series.querySelectorAll('.template-card')){
-     const label=document.createElement('label');label.className='template-visibility-option';const input=document.createElement('input');input.type='checkbox';input.dataset.templateId=card.dataset.templateId;
-     const pending=changes().find(c=>c.kind==='visibility'&&c.templateId===card.dataset.templateId);
-     input.checked=pending?pending.after:getState().templateVisibility?.[card.dataset.templateId]!==false;
-     const text=document.createElement('span');text.textContent=card.querySelector('b')?.textContent||card.dataset.templateId;input.dataset.templateName=text.textContent;label.append(input,text);seriesGroup.append(label);
-    }
-    group.append(seriesGroup);
+    const cards=[...series.querySelectorAll('.template-card')];
+    const label=document.createElement('label');label.className='template-visibility-option';const input=document.createElement('input');input.type='checkbox';
+    input.dataset.templates=JSON.stringify(cards.map(card=>({id:card.dataset.templateId,name:card.querySelector('b')?.textContent||card.dataset.templateId})));
+    input.checked=cards.every(card=>isVisible(card.dataset.templateId));
+    const text=document.createElement('span');text.textContent=series.querySelector('h4')?.textContent||'Templates';label.append(input,text);group.append(label);
    }
    list.append(group);
   }
@@ -127,10 +126,12 @@ window.setupSharedCatalogPublishing=function({getState,getMode,save,render,canAp
  visibilityDialog.querySelector('form').onsubmit=event=>{
   event.preventDefault();if(getMode()!=='all')return;
   const state=getState();state.sharedCatalogDraft ||= {version:1,changes:[]};const list=state.sharedCatalogDraft.changes;
-  for(const input of visibilityDialog.querySelectorAll('input[data-template-id]')){
-   const id=input.dataset.templateId,existing=list.find(c=>c.kind==='visibility'&&c.templateId===id),before=existing?existing.before:state.templateVisibility?.[id]!==false;
-   if(existing)list.splice(list.indexOf(existing),1);
-   if(input.checked!==before)list.push({kind:'visibility',templateId:id,templateName:input.dataset.templateName,before,after:input.checked});
+  for(const input of visibilityDialog.querySelectorAll('input[data-templates]')){
+   for(const{id,name}of JSON.parse(input.dataset.templates)){
+    const existing=list.find(c=>c.kind==='visibility'&&c.templateId===id),before=existing?existing.before:state.templateVisibility?.[id]!==false;
+    if(existing)list.splice(list.indexOf(existing),1);
+    if(input.checked!==before)list.push({kind:'visibility',templateId:id,templateName:name,before,after:input.checked});
+   }
   }
   save();refresh();visibilityDialog.close();button.focus();
  };

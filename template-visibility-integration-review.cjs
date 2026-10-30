@@ -24,11 +24,18 @@ const html=fs.readFileSync('public/index.html','utf8');
  assert.equal(w.document.querySelectorAll('.template-card').length,10);
  w.document.getElementById('templateVisibilityButton').click();
  const form=w.document.querySelector('#templateVisibilityDialog form');
- const choices=form.querySelectorAll('input[data-template-id]');assert.equal(choices.length,10);
- form.querySelector('[data-template-id="home-back"]').checked=false;
+ // One checkbox per Template # series (5 series across 10 designs), not one per design.
+ const choices=form.querySelectorAll('input[data-templates]');assert.equal(choices.length,5);
+ const homeTemplate1=[...choices].find(input=>JSON.parse(input.dataset.templates).some(t=>t.id==='home-back'));
+ assert.deepEqual(JSON.parse(homeTemplate1.dataset.templates).map(t=>t.id).sort(),['home-back','home-everyday'],'Template #1 groups Home Express Front and Back together');
+ homeTemplate1.checked=false;
  form.dispatchEvent(new w.Event('submit',{cancelable:true}));
- assert.equal(api.getState().sharedCatalogDraft.changes.find(c=>c.kind==='visibility').after,false);
+ const visibilityChanges=api.getState().sharedCatalogDraft.changes.filter(c=>c.kind==='visibility');
+ assert.equal(visibilityChanges.length,2,'Unchecking the series checkbox changes both designs inside it');
+ assert.ok(visibilityChanges.every(c=>c.after===false));
+ assert.equal([...visibilityChanges].map(c=>c.templateId).sort().join(','),'home-back,home-everyday');
  assert.notEqual(api.getState().templateVisibility?.['home-back'],false,'Unpublished draft does not hide a store template');
+ assert.notEqual(api.getState().templateVisibility?.['home-everyday'],false,'Unpublished draft does not hide a store template');
  w.document.getElementById('publishCatalog').click();assert.match(w.document.querySelector('[data-changes]').textContent,/Hidden from store/);
  w.document.getElementById('publishCatalogDialog').close();
  // A separate published visibility refresh applies even when this browser has edits.
