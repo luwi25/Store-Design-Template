@@ -111,7 +111,7 @@ Deno.serve(async (request: Request) => {
   const larkWebhook=Deno.env.get('LARK_WEBHOOK_URL')||'';
   const larkReady=(()=>{try{const u=new URL(larkWebhook);return u.protocol==='https:'&&(u.hostname==='open.larksuite.com'||u.hostname==='open.feishu.cn');}catch{return false;}})();
   const ADMIN_URL='https://luwi25.github.io/Store-Design-Template/';
-  function larkPrintCard(kind:'requested'|'print_initiated',storeName:string,template:string){
+  function larkPrintCard(kind:'requested'|'print_initiated',storeName:string,template:string,ipAddress?:string|null){
    const title=kind==='requested'?'New Print Request':'Printing Started';
    const time=new Intl.DateTimeFormat('en-PH',{timeZone:'Asia/Manila',dateStyle:'medium',timeStyle:'short'}).format(new Date());
    return{msg_type:'interactive',card:{config:{wide_screen_mode:true},
@@ -120,6 +120,7 @@ Deno.serve(async (request: Request) => {
      {tag:'div',fields:[
       {is_short:false,text:{tag:'lark_md',content:`**Store**\n${storeName}`}},
       {is_short:false,text:{tag:'lark_md',content:`**Template**\n${template||'-'}`}},
+      {is_short:false,text:{tag:'lark_md',content:`**IP address**\n${ipAddress||'Not recorded'}`}},
       {is_short:false,text:{tag:'lark_md',content:`**Time**\n${time}`}}
      ]},
      {tag:'hr'},
@@ -151,7 +152,7 @@ Deno.serve(async (request: Request) => {
     const storeName=names[batch.store]||'Store';
     const payload=JSON.stringify({requestId:batch.requestId,store:storeName,template:batch.template,type:eventId?'print_initiated':approval?'approved':'requested',eventId:batch.eventId});
     // Admin-facing only (new request / store started printing); approvals notify the store, not Lark.
-    if(!approval&&larkReady&&batch.requestId)await notifyLark(larkPrintCard(eventId?'print_initiated':'requested',storeName,batch.template));
+    if(!approval&&larkReady&&batch.requestId)await notifyLark(larkPrintCard(eventId?'print_initiated':'requested',storeName,batch.template,batch.ipAddress));
     const rows=batch.subscriptions||[];
     for(let i=0;i<rows.length;i+=5)await Promise.all(rows.slice(i,i+5).map(async (raw:any)=>{
      try{

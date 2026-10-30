@@ -73,6 +73,7 @@
     showUnread(data.unread);for(const item of data.notifications){
      const button=node('button',undefined,'notification-item'+(item.read_at?'':' is-unread'));button.type='button';
      button.append(node('strong',(item.read_at?'':'Unread · ')+(item.kind==='print_initiated'?(names[item.source_store]||'Store')+' started printing':item.kind==='approved'?'Print request approved':'Print approval requested')),node('span',item.template_name),node('small',timestamp(item.created_at)));
+     if(item.ip_address)button.append(node('small','IP address: '+item.ip_address));
      button.onclick=async()=>{button.disabled=true;try{const result=await api('/notifications/read','POST',{id:item.id});if(session?.token!==actor)return;showUnread(result.unread);notificationDialog.close();openNotificationRequest(item.request_id)}catch(error){inboxStatus.textContent=error.message}finally{button.disabled=false}};
      inboxList.append(button);
     }
