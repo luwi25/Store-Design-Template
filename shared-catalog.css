@@ -24,6 +24,9 @@
 .template-visibility-option span{overflow-wrap:anywhere;min-width:0}
 #templateVisibilityDialog fieldset{min-width:0;border:1px solid #e5e9ef;border-radius:10px;padding:12px;margin:0 0 14px}
 #templateVisibilityDialog legend{font-weight:700;color:#163b65;padding:0 6px}
+#templateVisibilityDialog fieldset fieldset{border:none;border-top:1px solid #e5e9ef;border-radius:0;padding:10px 0 0;margin:0 0 10px}
+#templateVisibilityDialog fieldset fieldset legend{font-weight:600;color:#596f84;padding:0}
+#templateVisibilityDialog fieldset fieldset:last-child{margin-bottom:0}
 .visibility-dialog-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}
 #templateVisibilityDialog{max-height:85dvh;overflow:auto}
 #templateVisibilityButton[hidden]{display:none!important}

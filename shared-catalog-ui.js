@@ -107,11 +107,16 @@ window.setupSharedCatalogPublishing=function({getState,getMode,save,render,canAp
   visibilityTrigger=document.activeElement;const list=visibilityDialog.querySelector('[data-template-list]');list.replaceChildren();
   for(const store of document.querySelectorAll('#templateList .template-store-group')){
    const group=document.createElement('fieldset'),legend=document.createElement('legend');legend.textContent=store.querySelector('h3')?.textContent||'Templates';group.append(legend);
-   for(const card of store.querySelectorAll('.template-card')){
-    const label=document.createElement('label');label.className='template-visibility-option';const input=document.createElement('input');input.type='checkbox';input.dataset.templateId=card.dataset.templateId;
-    const pending=changes().find(c=>c.kind==='visibility'&&c.templateId===card.dataset.templateId);
-    input.checked=pending?pending.after:getState().templateVisibility?.[card.dataset.templateId]!==false;
-    const text=document.createElement('span');text.textContent=card.querySelector('b')?.textContent||card.dataset.templateId;input.dataset.templateName=text.textContent;label.append(input,text);group.append(label);
+   // Mirror the sidebar's Template #1/#2 grouping instead of listing every card flat.
+   for(const series of store.querySelectorAll('.template-series-group')){
+    const seriesGroup=document.createElement('fieldset'),seriesLegend=document.createElement('legend');seriesLegend.textContent=series.querySelector('h4')?.textContent||'Templates';seriesGroup.append(seriesLegend);
+    for(const card of series.querySelectorAll('.template-card')){
+     const label=document.createElement('label');label.className='template-visibility-option';const input=document.createElement('input');input.type='checkbox';input.dataset.templateId=card.dataset.templateId;
+     const pending=changes().find(c=>c.kind==='visibility'&&c.templateId===card.dataset.templateId);
+     input.checked=pending?pending.after:getState().templateVisibility?.[card.dataset.templateId]!==false;
+     const text=document.createElement('span');text.textContent=card.querySelector('b')?.textContent||card.dataset.templateId;input.dataset.templateName=text.textContent;label.append(input,text);seriesGroup.append(label);
+    }
+    group.append(seriesGroup);
    }
    list.append(group);
   }
