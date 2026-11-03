@@ -1880,6 +1880,8 @@ function renderStudioProducts(){
 function setupStudioUI(){
  document.body.classList.add('studio-editor');setupProductSheet();window.addEventListener('beforeunload',event=>{if(hasUnsavedProductEdit()){event.preventDefault();event.returnValue=''}});
  setupDownloadMenu();
+ // Surface the rarely-found Import backup control next to Background remover in the toolbar.
+ $('bgRemoverBtn')?.after($('importDatabaseBackup'));
  const left=document.querySelector('.left-rail'),right=document.querySelector('.right-rail');
  // Keep the shared rename control accessible in desktop and mobile settings.
  const templateNameField=$('templateNameInput').closest('.field');
