@@ -17,7 +17,7 @@ window.setupSharedCatalogPublishing=function({getState,getMode,save,render,canAp
   if(state.sharedCatalogDraft.version!==1||!Array.isArray(state.sharedCatalogDraft.changes))throw Error('Invalid publishing draft.');
   const list=state.sharedCatalogDraft.changes;
   let entry=list.find(item=>!['replacement','visibility'].includes(item.kind)&&item.identity?.id===product.id);
-  if(!entry){entry={identity:{id:product.id,name:product.name,code:product.code||'',templateId:product.templateId||''},fields:{}};list.push(entry)}
+  if(!entry){entry={identity:{id:product.id,name:product.name,code:product.code||'',templateId:product.templateId||'',sharedCatalog:product.sharedCatalog||false},fields:{}};list.push(entry)}
   const before=entry.fields[field]?entry.fields[field].before:structuredClone(product[field]??null);
   if(before===value)delete entry.fields[field];else entry.fields[field]={before,after:structuredClone(value)};
   if(!Object.keys(entry.fields).length)list.splice(list.indexOf(entry),1);
@@ -33,7 +33,7 @@ window.setupSharedCatalogPublishing=function({getState,getMode,save,render,canAp
   const draft=state.sharedCatalogDraft;if(draft.version!==1||!Array.isArray(draft.changes))throw Error('Invalid publishing draft.');
   const list=draft.changes;
   let entry=list.find(item=>item.kind==='replacement'&&item.templateId===templateId&&item.slotIndex===slotIndex);
-  const identity=p=>({id:p.id,name:p.name,code:p.code||'',templateId:p.templateId||''});
+  const identity=p=>({id:p.id,name:p.name,code:p.code||'',templateId:p.templateId||'',sharedCatalog:p.sharedCatalog||false});
   if(!entry){
    const previous=state.products.find(p=>p.id===beforeSlot.productId);
    entry={kind:'replacement',templateId,templateName:state.templateNames?.[templateId]||templateId,slotIndex,slotCount:slots.length,group:beforeSlot.group??null,before:previous?identity(previous):{id:beforeSlot.productId??null,name:'Empty position'}};
