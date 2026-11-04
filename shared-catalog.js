@@ -41,6 +41,10 @@
   if(!value)return '';
   if(value.__defaultImage)return value.__defaultImage;
   if(typeof value==='string'&&value.startsWith('data:')){const im=imageBytes(value);return 'images/'+await digest(im.bytes)+'.'+im.ext}
+  // Template seeds use asset URLs; published snapshots use image markers.
+  // Compare immutable content-hashed asset paths, not their representation.
+  const asset=typeof value==='string'&&value.match(/^(?:\.\/)?(?:defaults\/)?(images\/[a-f0-9]{64}\.(?:png|jpg|webp|svg))$/);
+  if(asset)return asset[1];
   return String(value);
  }
  async function same(field,a,b){return field==='image'?(await imageKey(a))===(await imageKey(b)):a===b}

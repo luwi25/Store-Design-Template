@@ -16,6 +16,20 @@ const change=()=>[edit({name:{before:'Paper',after:'Manila Paper'},price:{before
  assert.deepEqual(state.homeCollection.slots[0].image,state.products[0].image);assert.equal(state.products[0].photoSource,'admin-upload');
  assert.deepEqual(state.templateSettings,original.state.templateSettings);assert.equal(original.state.products[0].name,'Paper');
  assert.equal((await core.prepare(result.project,change())).count,0,'Retries are idempotent');
+ // Existing template seeds and published markers must compare by content hash.
+ const catalog=JSON.parse(fs.readFileSync('defaults/project.json','utf8'));
+ const drawer=catalog.state.products.find(p=>p.id==='felcon-back-0');
+ const path=drawer.image.__defaultImage;
+ const data='data:image/png;base64,'+fs.readFileSync('defaults/'+path).toString('base64');
+ for(const before of ['defaults/'+path,'./defaults/'+path,path,data,drawer.image]){
+  assert.equal(await core.imageKey(before),path);
+  const updated=await core.prepare(catalog,[edit({image:{before,after:photo}},drawer)]);
+  assert.equal(updated.count,1,'Equivalent image formats must not cause a stale edit conflict');
+ }
+ const wrong='defaults/images/'+'0'.repeat(64)+'.png';
+ await assert.rejects(core.prepare(catalog,[edit({image:{before:wrong,after:photo}},drawer)]),/published image changed/);
+ assert.notEqual(await core.imageKey('https://unrelated.example/defaults/'+path),path,'External URLs are not trusted as content hashes');
+ assert.equal((await core.prepare(catalog,[edit({image:{before:null,after:'defaults/'+path}},drawer)])).count,0,'Already published photo is a no-op');
  const stale=fixture();stale.state.products[0].price=99;
  await assert.rejects(core.prepare(stale,change()),/published price changed/);
  const fresh=fixture();fresh.state.homeCollection.groupNames=['Ranked this week'];fresh.state.products.push({id:'new-sales-item',name:'Weekly newcomer'});
