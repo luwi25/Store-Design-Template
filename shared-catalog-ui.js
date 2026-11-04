@@ -142,7 +142,7 @@ window.setupSharedCatalogPublishing=function({getState,getMode,save,render,canAp
  }
  window.addEventListener('published-template-visibility',receiveVisibility);receiveVisibility();
  // Readers can explicitly load the new owner-published data without interrupting editing.
- const update=document.createElement('button');update.id='sharedCatalogUpdate';update.type='button';update.className='btn';update.hidden=true;update.textContent='Published catalog updated';toolbar.append(update);
+ const update=document.createElement('button');update.id='sharedCatalogUpdate';update.style.display='none';update.type='button';update.className='btn';update.hidden=true;update.textContent='Published catalog updated';toolbar.append(update);
  update.onclick=()=>document.getElementById('restorePublishedDefaults')?.click();
  let checking=false;
  async function check(){
