@@ -4,7 +4,7 @@ window.setupSharedCatalogPublishing=function({getState,getMode,save,render,canAp
  const toolbar=document.querySelector('.top-actions');
  const button=document.createElement('button');button.id='publishCatalog';button.type='button';button.className='btn btn-dark';toolbar.append(button);
  const dialog=document.createElement('dialog');dialog.id='publishCatalogDialog';dialog.className='catalog-publish-dialog';dialog.setAttribute('aria-labelledby','publishCatalogTitle');
- dialog.innerHTML='<form class="catalog-publish-form"><h2 id="publishCatalogTitle">Publish changes</h2><p>Share these product edits and template visibility choices with everyone after the website finishes deploying. The next sales sync will still get prices from UBEST.</p><ul data-changes></ul><p class="helper">Saved Admin catalog edits, product replacements and template visibility choices are included. Discounts, text settings and layouts stay separate.</p><label for="catalogPublishToken">Restricted GitHub token</label><input id="catalogPublishToken" type="password" autocomplete="off" spellcheck="false" required placeholder="Enter token for this publication"><p class="helper">Use a fine-grained token for luwi25/Store-Design-Template with Contents: Read and write. It is cleared after use and never saved in your project.</p><a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener noreferrer">Create a restricted token on GitHub</a><p data-status role="status" aria-live="polite"></p><div data-result></div><div class="catalog-publish-actions"><button type="button" class="btn" data-discard>Clear pending list</button><button type="button" class="btn" data-close>Cancel</button><button type="submit" class="btn btn-dark" data-submit>Publish changes</button></div></form>';
+ dialog.innerHTML='<form class="catalog-publish-form"><h2 id="publishCatalogTitle">Publish changes</h2><p>Share these product edits and template visibility choices with everyone after the website finishes deploying. The next sales sync will still get prices from UBEST.</p><ul data-changes></ul><p class="helper">Saved Admin catalog edits, product replacements, product text sizes and template visibility choices are included. Discounts and layouts stay separate.</p><label for="catalogPublishToken">Restricted GitHub token</label><input id="catalogPublishToken" type="password" autocomplete="off" spellcheck="false" required placeholder="Enter token for this publication"><p class="helper">Use a fine-grained token for luwi25/Store-Design-Template with Contents: Read and write. It is cleared after use and never saved in your project.</p><a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener noreferrer">Create a restricted token on GitHub</a><p data-status role="status" aria-live="polite"></p><div data-result></div><div class="catalog-publish-actions"><button type="button" class="btn" data-discard>Clear pending list</button><button type="button" class="btn" data-close>Cancel</button><button type="submit" class="btn btn-dark" data-submit>Publish changes</button></div></form>';
  document.body.append(dialog);
  const form=dialog.querySelector('form'),input=dialog.querySelector('input'),status=dialog.querySelector('[data-status]'),submit=dialog.querySelector('[data-submit]');
  let busy=false,trigger=null;
@@ -16,7 +16,7 @@ window.setupSharedCatalogPublishing=function({getState,getMode,save,render,canAp
   const state=getState();state.sharedCatalogDraft ||= {version:1,changes:[]};
   if(state.sharedCatalogDraft.version!==1||!Array.isArray(state.sharedCatalogDraft.changes))throw Error('Invalid publishing draft.');
   const list=state.sharedCatalogDraft.changes;
-  let entry=list.find(item=>!['replacement','visibility'].includes(item.kind)&&item.identity?.id===product.id);
+  let entry=list.find(item=>!['replacement','visibility','textSizes'].includes(item.kind)&&item.identity?.id===product.id);
   if(!entry){entry={identity:{id:product.id,name:product.name,code:product.code||'',templateId:product.templateId||'',sharedCatalog:product.sharedCatalog||false},fields:{}};list.push(entry)}
   const before=entry.fields[field]?entry.fields[field].before:structuredClone(product[field]??null);
   if(before===value)delete entry.fields[field];else entry.fields[field]={before,after:structuredClone(value)};
@@ -43,9 +43,30 @@ window.setupSharedCatalogPublishing=function({getState,getMode,save,render,canAp
   if(entry.before.id===entry.after.id)list.splice(list.indexOf(entry),1);
   refresh();
  }
+ function recordTextSizes(templateId,slotIndex,beforeSlot,afterSlot,product){
+  if(getMode()!=='all')return;
+  const state=getState(),slots=service.templateSlots(state,templateId);
+  if(!Array.isArray(slots)||slots[slotIndex]!==beforeSlot)throw Error('Select this product again before saving text sizes.');
+  const keys=['name','sale','original','discount'];
+  const existing=changes().find(c=>c.kind==='textSizes'&&c.templateId===templateId&&c.slotIndex===slotIndex);
+  if(!existing&&keys.every(k=>(beforeSlot.textSizes?.[k]??null)===(afterSlot.textSizes?.[k]??null)))return;
+  state.sharedCatalogDraft ||= {version:1,changes:[]};const list=state.sharedCatalogDraft.changes;
+  const entry=existing||{kind:'textSizes',templateId,templateName:state.templateNames?.[templateId]||templateId,slotIndex,slotCount:slots.length,group:beforeSlot.group??null,fields:{}};
+  entry.productId=product.id;entry.productName=product.name;
+  if(!existing)list.push(entry);
+  for(const key of keys){
+   const before=entry.fields[key]?entry.fields[key].before:beforeSlot.textSizes?.[key]??null,after=afterSlot.textSizes?.[key]??null;
+   if(before===after)delete entry.fields[key];else entry.fields[key]={before,after};
+  }
+  if(!Object.keys(entry.fields).length)list.splice(list.indexOf(entry),1);
+  refresh();
+ }
  function summary(){
   const list=dialog.querySelector('[data-changes]');list.replaceChildren();
   for(const edit of changes()){
+   if(edit.kind==='textSizes'){
+    const item=document.createElement('li');item.textContent=(edit.templateName||edit.templateId)+' ? Product '+(edit.slotIndex+1)+' ('+edit.productName+'): '+Object.entries(edit.fields).map(([key,value])=>key+' text size: '+(value.before===null?'Template default':value.before+'%')+' ? '+(value.after===null?'Template default':value.after+'%')).join(', ');list.append(item);continue;
+   }
    if(edit.kind==='visibility'){
     const item=document.createElement('li');item.textContent=(edit.templateName||edit.templateId)+': '+(edit.after?'Visible to store':'Hidden from store');list.append(item);continue;
    }
@@ -151,5 +172,5 @@ window.setupSharedCatalogPublishing=function({getState,getMode,save,render,canAp
   checking=true;try{const latest=await window.fetchPublishedRevision();update.hidden=!(latest>current)}catch{}finally{checking=false}
  }
  setInterval(check,60000);window.addEventListener('online',check);document.addEventListener('visibilitychange',check);
- refresh();check();return {record,recordReplacement,refresh};
+ refresh();check();return {record,recordReplacement,recordTextSizes,refresh};
 };

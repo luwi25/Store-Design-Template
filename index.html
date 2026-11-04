@@ -952,6 +952,7 @@ async function commitProductEdit(draft){
    if(next!==before){window.catalogPublisher?.record(product,field,next);product[field]=next}
   }
   window.catalogPublisher?.recordReplacement(draft.templateId,state.selectedSlot,draft.target,product);
+  window.catalogPublisher?.recordTextSizes(draft.templateId,state.selectedSlot,draft.target,draft.slot,product);
   Object.assign(draft.target,structuredClone(draft.slot));
   if(!Object.hasOwn(draft.slot,'textSizes'))delete draft.target.textSizes;
   save();const ok=await flushDatabaseSave();

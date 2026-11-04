@@ -69,7 +69,7 @@
  async function prepare(project,changes){
   if(project.version!==1||!Array.isArray(project.state?.products)||!Number.isSafeInteger(project.sourceRevision))throw Error('The published catalog format is invalid.');
   const next=clone(project),images=new Map(),resolved=new Map();let count=0;
-  for(const change of changes.filter(change=>!['replacement','visibility'].includes(change.kind))){
+  for(const change of changes.filter(change=>!['replacement','visibility','textSizes'].includes(change.kind))){
    if(!change.identity||!change.fields)throw Error('Invalid publishing draft.');
    const product=match(next.state.products,change.identity);
    for(const [field,edit] of Object.entries(change.fields)){
@@ -98,6 +98,23 @@
    if(slot.productId===replacement.id)continue;
    if((slot.productId??null)!==(change.before.id??null))throw Error('The product in this published template position changed since your edit. Reload the latest template and reapply the replacement.');
    slot.productId=replacement.id;slot.details=null;slot.image=null;slot.imageOriginal=null;count++;
+  }
+  const textPositions=new Set();
+  for(const change of changes.filter(change=>change.kind==='textSizes')){
+   const list=templateSlots(next.state,change.templateId),index=change.slotIndex,key=change.templateId+':'+index;
+   if(!Array.isArray(list)||!Number.isSafeInteger(index)||index<0||index>=list.length||!change.fields||textPositions.has(key))throw Error('Invalid product text-size change.');
+   textPositions.add(key);const slot=list[index];
+   if(list.length!==change.slotCount||(slot.group??null)!==change.group||slot.productId!==change.productId)throw Error('The product in this template position changed. Reload the latest template before publishing text sizes.');
+   for(const [field,edit] of Object.entries(change.fields)){
+    if(!['name','sale','original','discount'].includes(field)||!edit||![edit.before,edit.after].every(v=>v===null||(typeof v==='number'&&Number.isFinite(v)&&v>=70&&v<=140)))throw Error('Invalid product text size.');
+    const current=slot.textSizes?.[field]??null;
+    if(current===edit.after)continue;
+    if(current!==edit.before)throw Error('The published product text size changed since this edit. Reload the latest template and reapply your edit.');
+    slot.textSizes ||= {};
+    if(edit.after===null)delete slot.textSizes[field];else slot.textSizes[field]=edit.after;
+    if(!Object.keys(slot.textSizes).length)delete slot.textSizes;
+    count++;
+   }
   }
   const visibilityIds=new Set();
   for(const change of changes.filter(change=>change.kind==='visibility')){
