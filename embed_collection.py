@@ -50,7 +50,17 @@ def collection_source(root: Path) -> str:
     for product in alkeia_back_products:
         product['image'] = 'defaults/' + product['image']['__defaultImage']
     alkeia_back = (root / 'alkeia-back.js').read_text(encoding='utf-8').replace('__ALKEIA_BACK_ART__',json.dumps(alkeia_back_art)).replace('__ALKEIA_BACK_SEEDS__',json.dumps(alkeia_back_products))
-    return back + "\n" + front + "\n" + peso + "\n" + peso_back + "\n" + alkeia + "\n" + alkeia_back
+    felcon_art = 'defaults/images/' + hashlib.sha256((root / 'template-artwork/felcon-bato-back.jpg').read_bytes()).hexdigest() + '.jpg'
+    felcon_products = json.loads((root / 'template-artwork/felcon-bato-back-products.json').read_text(encoding='utf-8'))
+    for product in felcon_products:
+        product['image'] = 'defaults/' + product['image']['__defaultImage']
+    felcon = (root / 'felcon-back.js').read_text(encoding='utf-8').replace('__FELCON_BACK_ART__',json.dumps(felcon_art)).replace('__FELCON_BACK_SEEDS__',json.dumps(felcon_products))
+    felcon_front_art = 'defaults/images/' + hashlib.sha256((root / 'template-artwork/felcon-bato-front.jpg').read_bytes()).hexdigest() + '.jpg'
+    felcon_front_products = json.loads((root / 'template-artwork/felcon-bato-front-products.json').read_text(encoding='utf-8'))
+    for product in felcon_front_products:
+        product['image'] = 'defaults/' + product['image']['__defaultImage']
+    felcon_front = (root / 'felcon-front.js').read_text(encoding='utf-8').replace('__FELCON_FRONT_ART__',json.dumps(felcon_front_art)).replace('__FELCON_FRONT_SEEDS__',json.dumps(felcon_front_products))
+    return back + "\n" + front + "\n" + peso + "\n" + peso_back + "\n" + alkeia + "\n" + alkeia_back + "\n" + felcon + "\n" + felcon_front
 
 
 def embed_collection(html: str, root: Path) -> str:

@@ -3,12 +3,13 @@
  'use strict';
  const REPO='luwi25/Store-Design-Template', API='https://api.github.com/repos/'+REPO;
  const fields=['name','price','image'];
- const templateSections={'home-collection':'homeCollection','home-collection-front':'homeCollectionFront','home-back':'homeBack','home-everyday':'everyday','peso-back':'pesoBack','peso-collection-front':'pesoCollectionFront','peso-collection-back':'pesoCollectionBack','alkeia-talamban-front':'alkeiaFront','alkeia-talamban-back':'alkeiaBack','peso-plus':'peso','home-express':'approved','home-bestsellers':'bestsellers'};
+ const templateSections={'home-collection':'homeCollection','home-collection-front':'homeCollectionFront','home-back':'homeBack','home-everyday':'everyday','peso-back':'pesoBack','peso-collection-front':'pesoCollectionFront','peso-collection-back':'pesoCollectionBack','alkeia-talamban-front':'alkeiaFront','alkeia-talamban-back':'alkeiaBack','felcon-bato-back':'felconBack','felcon-bato-front':'felconFront','peso-plus':'peso','home-express':'approved','home-bestsellers':'bestsellers'};
  function templateSlots(state,id){return Object.hasOwn(templateSections,id)?state[templateSections[id]]?.slots:null}
  const clone=value=>structuredClone(value);
  const code=p=>String(p.code||'').trim().toLowerCase();
  function store(p){
   if(p.sharedCatalog)return 'shared';
+  if(String(p.templateId).startsWith('felcon-bato-'))return 'felcon-bato';
   if(String(p.id).startsWith('sales-heb-')||String(p.templateId).startsWith('home-'))return 'home';
   if(String(p.id).startsWith('sales-ppm-')||String(p.templateId).startsWith('peso-'))return 'peso';
   return 'shared';

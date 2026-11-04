@@ -1,0 +1,98 @@
+[
+  {
+    "id": "felcon-front-0",
+    "templateId": "felcon-bato-front",
+    "name": "Kitchenware",
+    "price": 0,
+    "code": "",
+    "image": {
+      "__defaultImage": "images/be9e79905c7559af4d6feb11c5ea0d88eb97ae7878276194912b0366d3264cdd.png",
+      "mime": "image/png"
+    },
+    "photoSource": "supplied-template"
+  },
+  {
+    "id": "felcon-front-1",
+    "templateId": "felcon-bato-front",
+    "name": "Small Appliances",
+    "price": 0,
+    "code": "",
+    "image": {
+      "__defaultImage": "images/2bab427ce469e36d521b8d5b8cd78050b534ba1fe2767a77f5513c1e721c4e4d.png",
+      "mime": "image/png"
+    },
+    "photoSource": "supplied-template"
+  },
+  {
+    "id": "felcon-front-2",
+    "templateId": "felcon-bato-front",
+    "name": "Electric Fan",
+    "price": 0,
+    "code": "",
+    "image": {
+      "__defaultImage": "images/9c311b4a470128f3565963d43750f168251ca72548089165483db094dee31c97.png",
+      "mime": "image/png"
+    },
+    "photoSource": "supplied-template"
+  },
+  {
+    "id": "felcon-front-3",
+    "templateId": "felcon-bato-front",
+    "name": "Electronics",
+    "price": 0,
+    "code": "",
+    "image": {
+      "__defaultImage": "images/e1a19a6b47d9b2ff9f985c5581666b49ad4576e3eb07d2d654069cc175e58045.png",
+      "mime": "image/png"
+    },
+    "photoSource": "supplied-template"
+  },
+  {
+    "id": "felcon-front-4",
+    "templateId": "felcon-bato-front",
+    "name": "Furniture / Storage Units",
+    "price": 0,
+    "code": "",
+    "image": {
+      "__defaultImage": "images/45ce911667360d94ba1627562c5dc5d295dd0bb3c2c36fc7f76d9b8b4dcd6d56.png",
+      "mime": "image/png"
+    },
+    "photoSource": "supplied-template"
+  },
+  {
+    "id": "felcon-front-5",
+    "templateId": "felcon-bato-front",
+    "name": "Houseware",
+    "price": 0,
+    "code": "",
+    "image": {
+      "__defaultImage": "images/36c2935309d87a06ea728e86c1eae2c45cd67e9d9daa7ac6285493a45745f9f7.png",
+      "mime": "image/png"
+    },
+    "photoSource": "supplied-template"
+  },
+  {
+    "id": "felcon-front-6",
+    "templateId": "felcon-bato-front",
+    "name": "Toys & Accessories",
+    "price": 0,
+    "code": "",
+    "image": {
+      "__defaultImage": "images/e688e50500ace1276a61c7eeb760440efcc3525b09eab00490e0b67bc587ce04.png",
+      "mime": "image/png"
+    },
+    "photoSource": "supplied-template"
+  },
+  {
+    "id": "felcon-front-7",
+    "templateId": "felcon-bato-front",
+    "name": "Footwear",
+    "price": 0,
+    "code": "",
+    "image": {
+      "__defaultImage": "images/bb46856dc24cd35abd647bdff1d571f46b50af87a4c19d335109f39486318fa0.png",
+      "mime": "image/png"
+    },
+    "photoSource": "supplied-template"
+  }
+]

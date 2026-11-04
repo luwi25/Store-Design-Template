@@ -1,0 +1,8 @@
+FELCON BATO SETUP
+
+1. Run the complete add-felcon-bato.sql in Supabase SQL Editor. Existing records are retained.
+2. Add the Edge Function secret FELCON_BATO_PASSWORD with a password of at least 12 characters.
+3. Redeploy quick-handler with the full updated index.ts. Existing secrets remain unchanged.
+4. Deploy the website and sign in as Felcon Bato. Template #1 - FELCON BATO - BACK has 25 editable product positions and five editable headings. Template #1 - FELCON BATO - FRONT has eight editable featured cards.
+
+Admin can manage visibility and publish product edits. Store print approval, activity, push notifications and optional Lark notifications include Felcon Bato. Sales sync scheduling and rankings are unchanged; Felcon sales automation has not been added.
