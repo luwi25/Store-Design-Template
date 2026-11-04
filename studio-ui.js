@@ -60,8 +60,9 @@ function renderStudioProducts(){
  list.replaceChildren();const slots=activeSlots(),placed=slots.filter(slot=>productFor(slot)).length;
  $('studioProductCount').textContent=placed+' / '+slots.length;$('studioProductCount').title='Products placed / available slots';
  $('studioClearSearch').hidden=!search;
- const canAdd=usesCanvasTemplate()&&slots.length<designLimit();$('studioAdd').disabled=!canAdd;$('studioAdd').title=canAdd?'Add a product slot':'All product slots are in use. Select a product to replace it.';
- $('studioCapacity').textContent=!usesCanvasTemplate()?'Select a product to edit it.':canAdd?(designLimit()-slots.length)+' more product slots available.':'All slots are in use. Select a product to replace it.';
+ const freeform=isFreeformTemplate();
+ const canAdd=usesCanvasTemplate()?slots.length<designLimit():freeform?slots.length<freeformLimit():false;$('studioAdd').disabled=!canAdd;$('studioAdd').title=canAdd?'Add a product slot':usesCanvasTemplate()||freeform?'All product slots are in use. Select a product to replace it.':'This template cannot add product slots.';
+ $('studioCapacity').textContent=usesCanvasTemplate()?(canAdd?(designLimit()-slots.length)+' more product slots available.':'All slots are in use. Select a product to replace it.'):freeform?(canAdd?(freeformLimit()-slots.length)+' more product slots available.':'All slots are in use. Select a product to replace it.'):'Select a product to edit it.';
  const canUndo=removedProduct&&removedProduct.templateId===state.templateId&&usesCanvasTemplate();$('studioUndoRemoval').hidden=!canUndo;$('studioUndoRemoval').disabled=!canAdd;
 
  let lastGroup=null,shown=0;
