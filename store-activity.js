@@ -271,6 +271,8 @@
    finally{printBusy=false;setBusy(printDialog,false)}
   };
   const filters=adminDialog.querySelector('[data-filters]'),items=adminDialog.querySelector('[data-items]'),adminStatus=adminDialog.querySelector('[data-admin-status]');
+  const todayParts=new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Manila',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
+  filters.elements.from.value=['year','month','day'].map(type=>todayParts.find(part=>part.type===type).value).join('-');
   const templateLabels={'felcon-bato-front':'Felcon Bato - Template #1 Front','felcon-bato-back':'Felcon Bato - Template #1 Back','alkeia-talamban-back':'Alkeia Talamban - Template #1 Back','alkeia-talamban-front':'Alkeia Talamban - Template #1 Front','peso-collection-back':'Pesoplus Mambaling - Template #2 Back','peso-collection-front':'Pesoplus Mambaling - Template #2 Front','home-everyday':'Home Express Basak — Front','home-back':'Home Express Basak — Back','home-collection':'Home Express Basak — Back (Blue & Orange)','home-collection-front':'Home Express Basak — Front (Blue & Orange)','peso-plus':'Pesoplus Mambaling — Front','peso-back':'Pesoplus Mambaling — Back'};
   for(const id of Object.keys(templates)){const option=node('option',templateLabels[id]);option.value=id;filters.elements.template.append(option)}
   adminDialog.querySelector('[data-tab="requests"]').setAttribute('aria-pressed','true');
