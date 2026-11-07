@@ -148,8 +148,25 @@ class Handler(BaseHTTPRequestHandler):
             return self.reply(403, {'error': 'Open this app directly on this computer.'})
         relative = unquote(path).lstrip('/') or 'index.html'
         target = (ROOT / relative).resolve()
-        public = {'index.html', 'db-config.js', 'local-db.js', 'notification-worker.js', 'mobile.css', 'mobile.js'}
-        if not target.is_relative_to(ROOT) or (relative not in public and not relative.startswith('assets/')) or not target.is_file():
+        public = {
+            'index.html', 'db-config.js', 'local-db.js',
+            'default-project.js',
+            'download-menu.css', 'sidebar-spacing.css',
+            'shared-catalog.js', 'shared-catalog-ui.js', 'shared-catalog.css',
+            'store-activity-config.js', 'store-activity.js', 'store-activity.css',
+            'notification-worker.js',
+            'mobile.css', 'mobile.js',
+            'defaults/project.json',
+            'template-import/index.html','template-import/style.css','template-import/app.js',
+            'template-import/image-background.js','background-worker.js',
+            'vendor/ort.wasm.min.js','vendor/ort-wasm-simd-threaded.mjs','vendor/ort-wasm-simd-threaded.wasm','vendor/u2netp.onnx',
+            'template-import/core.js','template-import/catalog-core.js','template-import/catalog.js','template-import/access.js',
+        }
+        if not target.is_relative_to(ROOT):
+            return self.reply(404, {'error': 'Not found.'})
+        normalized = target.relative_to(ROOT).as_posix()
+        image_asset = normalized.startswith(('assets/', 'icons/', 'defaults/images/')) and target.suffix.lower() in {'.png', '.jpg', '.jpeg', '.webp', '.svg', '.ico'}
+        if (normalized not in public and not image_asset) or not target.is_file():
             return self.reply(404, {'error': 'Not found.'})
         self.send_bytes(200, target.read_bytes(), mimetypes.guess_type(target.name)[0] or 'application/octet-stream')
 

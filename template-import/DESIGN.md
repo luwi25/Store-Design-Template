@@ -1,0 +1,2 @@
+# Template Import design
+Separate local preview workspace, using the studio navy #163b65, teal #18a999, white panels and dotted canvas. Three panels: local library/detection, artwork preview, selected-region inspector; stack on mobile. Preserve original source and render only changed regions. Save is explicit, with unload protection. OCR reports progress, supports cancellation and retains drafts on failure. No production state storage, scheduled jobs, authentication or catalog APIs are touched.

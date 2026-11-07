@@ -2175,6 +2175,7 @@ window.storeActivity=window.StoreActivity?.setup({
  onExpired:()=>{setStoreFilter(null);openStoreChooser()}
 });
 await initStoreChooser();
+window.flashSaleActions.openTemplateImport=async()=>{if(storeFilter!=='all'||!leaveProductEdit())return;if(await flushDatabaseSave())location.href='template-import/index.html'};
 window.catalogPublisher=window.setupSharedCatalogPublishing?.({getState:()=>state,getMode:()=>storeFilter,save,render:renderAll,canApplyVisibility:()=>!hasUnsavedProductEdit()});
 })();
 </script>
