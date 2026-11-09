@@ -5,14 +5,14 @@ window.setupSharedCatalogPublishing=function({getState,getMode,save,render,canAp
  const button=document.createElement('button');button.id='publishCatalog';button.type='button';button.className='btn btn-dark';toolbar.append(button);
  const importButton=document.createElement('button');importButton.id='importTemplate';importButton.type='button';importButton.className='btn';importButton.textContent='Import template';importButton.hidden=true;importButton.onclick=()=>{if(getMode()==='all')window.flashSaleActions?.openTemplateImport()};toolbar.append(importButton);
  const backupButton=document.getElementById('importDatabaseBackup');
- const importWrap=document.createElement('div');importWrap.id='importActions';importWrap.className='import-dropdown';
+ const importWrap=document.createElement('div');importWrap.id='importActions';importWrap.className='import-dropdown';importWrap.hidden=true;
  const importToggle=document.createElement('button');importToggle.type='button';importToggle.id='importMenuButton';importToggle.className='btn';importToggle.textContent='Import ▾';importToggle.setAttribute('aria-expanded','false');importToggle.setAttribute('aria-controls','importOptions');
  const importOptions=document.createElement('div');importOptions.id='importOptions';importOptions.className='download-options';importOptions.hidden=true;importOptions.setAttribute('role','group');importOptions.setAttribute('aria-label','Import options');
  if(backupButton)backupButton.before(importWrap);else toolbar.append(importWrap);
  importWrap.append(importToggle,importOptions);importOptions.append(...[backupButton,importButton].filter(Boolean));
  const closeImport=(focus=false)=>{importOptions.hidden=true;importToggle.setAttribute('aria-expanded','false');if(focus)importToggle.focus()};
  const importChoices=()=>[backupButton,importButton].filter(b=>b&&!b.hidden&&!b.disabled);
- const openImport=()=>{importOptions.hidden=false;importToggle.setAttribute('aria-expanded','true');importChoices()[0]?.focus()};
+ const openImport=()=>{if(getMode()!=='all')return;importOptions.hidden=false;importToggle.setAttribute('aria-expanded','true');importChoices()[0]?.focus()};
  importToggle.onclick=event=>{event.stopPropagation();importOptions.hidden?openImport():closeImport()};
  importToggle.onkeydown=event=>{if(event.key==='ArrowDown'){event.preventDefault();openImport()}};
  importWrap.addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();event.stopPropagation();closeImport(true)}else if(event.target!==importToggle&&['ArrowDown','ArrowUp'].includes(event.key)){event.preventDefault();const choices=importChoices();choices[(choices.indexOf(document.activeElement)+(event.key==='ArrowDown'?1:-1)+choices.length)%choices.length]?.focus()}});
@@ -25,7 +25,7 @@ window.setupSharedCatalogPublishing=function({getState,getMode,save,render,canAp
  const form=dialog.querySelector('form'),input=dialog.querySelector('input'),status=dialog.querySelector('[data-status]'),submit=dialog.querySelector('[data-submit]');
  let busy=false,trigger=null;
  function changes(){const draft=getState().sharedCatalogDraft;return draft?.version===1&&Array.isArray(draft.changes)?draft.changes:[]}
- function refresh(){importButton.hidden=getMode()!=='all';button.hidden=getMode()!=='all';button.textContent='Publish changes'+(changes().length?' ('+changes().length+')':'');button.disabled=busy;visibilityButton.hidden=getMode()!=='all';visibilityButton.disabled=busy}
+ function refresh(){importWrap.hidden=getMode()!=='all';if(importWrap.hidden){closeImport();if(importWrap.contains(document.activeElement))document.getElementById('printBtn')?.focus()}importButton.hidden=getMode()!=='all';button.hidden=getMode()!=='all';button.textContent='Publish changes'+(changes().length?' ('+changes().length+')':'');button.disabled=busy;visibilityButton.hidden=getMode()!=='all';visibilityButton.disabled=busy}
  function record(product,field,value){
   if(getMode()!=='all'||!product||!service.fields.includes(field))return;
   if((product[field]??null)===value)return;
