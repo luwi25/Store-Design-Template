@@ -94,9 +94,9 @@ function setupRestoreDefaults() {
       : 'Replace all templates, products, photos and settings with the latest published project. This includes custom templates and catalog edits.';
     status.textContent = ''; dialog.showModal(); dialog.querySelector('[data-cancel]').focus();
   });
-  dialog.querySelector('[data-backup]').onclick = () => {
-    downloadStateBackup(state);
-    status.textContent = 'Backup download requested. Check your downloads before restoring.';
+  dialog.querySelector('[data-backup]').onclick = async () => {
+    if(busy)return;busy=true;enable(false);status.textContent='Preparing backup images...';
+    try{const saved=await downloadStateBackup(state);status.textContent=saved===false?'Backup could not finish. Connect and retry.':'Backup download requested. Check your downloads before restoring.'}finally{busy=false;enable(true)}
   };
   dialog.querySelector('[data-cancel]').onclick = () => dialog.close();
   dialog.addEventListener('cancel', event => { if (busy) event.preventDefault(); });

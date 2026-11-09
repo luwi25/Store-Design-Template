@@ -47,36 +47,15 @@ window.loadPublishedDefault = async function ({fresh = false} = {}) {
     throw new Error('Invalid starting project.');
   }
   receivePublishedTemplateVisibility(project);
-  const images = new Map();
-  function collect(value) {
-    if (!value || typeof value !== 'object') return;
-    if (value.__defaultImage) {
-      if (!/^images\/[a-f0-9]{64}\.(png|jpg|webp|svg)$/.test(value.__defaultImage)) throw new Error('Invalid starter image path.');
-      images.set(value.__defaultImage, value.mime);
-    } else Object.values(value).forEach(collect);
-  }
-  collect(project.state);
-  const queue = [...images.entries()];
-  const loaded = new Map();
-  await Promise.all(Array.from({length: Math.min(4, queue.length)}, async () => {
-    while (queue.length) {
-      const [path, mime] = queue.shift();
-      // Content-hashed image paths are immutable; a cached copy is always valid.
-      const image = await fetch(new URL(path, base), {cache: 'force-cache'});
-      if (!image.ok) throw new Error('A starting product image could not load. Please retry.');
-      const blob = new Blob([await image.arrayBuffer()], {type: mime});
-      const data = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = () => reject(reader.error);
-        reader.readAsDataURL(blob);
-      });
-      loaded.set(path, data);
-    }
-  }));
   function hydrate(value) {
     if (!value || typeof value !== 'object') return value;
-    if (value.__defaultImage) return loaded.get(value.__defaultImage);
+    if (value.__defaultImage) {
+      if (!/^images\/[a-f0-9]{64}\.(png|jpg|webp|svg)$/.test(value.__defaultImage)) throw new Error('Invalid starter image path.');
+      const url = new URL(value.__defaultImage, base);
+      // Relative URLs preserve shared-catalog identity and same-origin canvas export.
+      const app = new URL('.', document.baseURI);
+      return url.href.startsWith(app.href) ? url.href.slice(app.href.length) : url.href;
+    }
     if (Array.isArray(value)) return value.map(hydrate);
     return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, hydrate(item)]));
   }

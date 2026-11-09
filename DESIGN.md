@@ -44,6 +44,10 @@ spacing belongs in mobile.css; artwork, canvas text and print styles are unchang
 
 The favicon uses a white poster sheet and teal sparkle on navy. Keep it legible at 16px; avoid lettering or store-specific logos. SVG is primary, with PNG and ICO fallbacks in icons/.
 
+## First-visit loading
+
+Use the existing store/password dialog before fetching published catalog data. Keep all catalog metadata and full-resolution image URLs available, but request image pixels only for the active poster or visible thumbnails. Hidden stores must not load their artwork. Background-removal model/runtime files load on use. Offline installation caches the application shell first; optional screens/icons warm after editor startup, and requested images are cached without reducing print quality. Unvisited content needs a connection. Backup export materializes image references to keep backups portable; publishing retains content-hash image identity.
+
 ## Download actions
 
 Import backup and Import template share one Admin-only Import dropdown using the Download menu styling. Preserve the original action handlers. Hide the entire group from store users and close it when leaving Admin. On mobile, keep the whole Import group together inside More, with its options expanded inline; support keyboard navigation, Escape and outside-click dismissal.

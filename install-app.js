@@ -22,6 +22,9 @@
   if(navigator.storage?.persist)navigator.storage.persist().catch(()=>{});
  };
  if('serviceWorker' in navigator){
+  const warmOptional=()=>{navigator.serviceWorker.ready.then(reg=>{(navigator.serviceWorker.controller||reg.active)?.postMessage({type:'editor-ready'})}).catch(()=>{})};
+  window.addEventListener('store-editor-ready',warmOptional,{once:true});
+  if(window.flashSaleActions)warmOptional();
   let controlled=Boolean(navigator.serviceWorker.controller),updatePending=false,reloading=false,retryTimer=null;
   const refreshWhenReady=()=>{
    if(!updatePending||reloading||document.hidden||navigator.onLine===false)return;
@@ -41,7 +44,7 @@
   window.addEventListener('afterprint',refreshWhenReady);
   document.addEventListener('visibilitychange',refreshWhenReady);
   navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).then(registration=>{
-   const showReady=()=>{offline.textContent='App files are ready for offline use. New versions refresh automatically when your work is saved and the editor is idle. Your saved products stay on this device.'};
+   const showReady=()=>{offline.textContent='App files are ready. Viewed images are saved for offline use; new images and background removal need a connection the first time. Updates refresh automatically when your work is saved and the editor is idle.'};
    let checking=false,lastCheck=0;
    const checkUpdate=async()=>{
     if(checking||navigator.onLine===false||Date.now()-lastCheck<15000)return;

@@ -1,6 +1,9 @@
 const PREFIX='store-design:'+self.registration.scope+':';
 const CACHE=PREFIX+'__VERSION__';
 const FILES=__FILES__;
+const ESSENTIAL=__ESSENTIAL__;
+const OPTIONAL=__OPTIONAL__;
+const RUNTIME=PREFIX+'runtime';
 const HASHES=__HASHES__;
 const scoped=path=>new URL(path,self.registration.scope).href;
 const ALLOWED=new Set(FILES.map(scoped));
@@ -36,7 +39,7 @@ self.addEventListener('install',event=>{
    previous.push({cache:old,hashes:record?await record.json():{}});
   }
   // Reuse identical assets locally instead of downloading the whole app again.
-  for(let i=0;i<FILES.length;i+=4)await Promise.all(FILES.slice(i,i+4).map(async file=>{
+  for(let i=0;i<ESSENTIAL.length;i+=4)await Promise.all(ESSENTIAL.slice(i,i+4).map(async file=>{
    const immutable=/^(assets\/|defaults\/images\/)[a-f0-9]{64}\./.test(file);
    for(const old of previous){
     if(old.hashes[file]!==HASHES[file]&&!immutable)continue;
@@ -53,18 +56,37 @@ self.addEventListener('install',event=>{
 });
 self.addEventListener('activate',event=>{
  event.waitUntil((async()=>{
-  for(const name of await caches.keys())if(name.startsWith(PREFIX)&&name!==CACHE)await caches.delete(name);
+  // Keep already-used immutable artwork and model files across deployments.
+  const runtime=await caches.open(RUNTIME);
+  for(const name of await caches.keys())if(name.startsWith(PREFIX)&&name!==CACHE&&name!==RUNTIME){
+   const old=await caches.open(name);
+   for(const request of await old.keys())if(/\/(?:assets|defaults\/images)\/[a-f0-9]{64}\./.test(request.url))await runtime.put(request,await old.match(request));
+   await caches.delete(name);
+  }
   await self.clients.claim();
  })());
+});
+let warming=null;
+self.addEventListener('message',event=>{
+ if(event.data?.type!=='editor-ready')return;
+ if(!warming)warming=(async()=>{
+  const cache=await caches.open(CACHE);
+  // Optional lightweight screens/icons are warmed serially after editing can begin.
+  for(const file of OPTIONAL){try{if(!await cache.match(scoped(file)))await cache.addAll([scoped(file)])}catch{/* Retry when requested. */}}
+ })();
+ event.waitUntil(warming);
 });
 self.addEventListener('fetch',event=>{
  if(event.request.method!=='GET')return;
  const url=new URL(event.request.url);
  if(url.origin!==self.location.origin||!url.href.startsWith(self.registration.scope))return;
- const key=event.request.mode==='navigate'?scoped('index.html'):url.href;
- if(!ALLOWED.has(key))return;
+ const navigation=event.request.mode==='navigate';
+ const clean=new URL(url);clean.search='';
+ const key=navigation?(url.pathname.endsWith('/template-import/')?scoped('template-import/index.html'):ALLOWED.has(clean.href)?clean.href:scoped('index.html')):clean.href;
+ const immutable=/\/(?:assets|defaults\/images)\/[a-f0-9]{64}\.(png|jpg|webp|svg)$/.test(url.pathname);
+ if(!ALLOWED.has(key)&&!immutable)return;
  event.respondWith((async()=>{
-  const cache=await caches.open(CACHE);
+  const cache=await caches.open(immutable?RUNTIME:CACHE);
   // defaults/project.json drives the published-catalog revision check -- always go to
   // network for it (like app code) so a slightly-stale installed service worker never
   // serves an old cached catalog. defaults/images/* stay cache-first: they're large,
@@ -73,9 +95,12 @@ self.addEventListener('fetch',event=>{
   if(appCode){
    try{
     const response=await fetch(event.request,{cache:'no-cache'});
-    if(response.ok)return response;
+    if(response.ok){try{await cache.put(key,response.clone())}catch{/* Storage may be full; keep the online response usable. */}return response;}
    }catch{/* Offline: use the complete installed app. */}
   }
-  return await cache.match(key)||fetch(event.request);
+  const saved=await cache.match(key);if(saved)return saved;
+  const response=await fetch(event.request);
+  if(response.ok)try{await cache.put(key,response.clone())}catch{/* Caching is optional for an online request. */}
+  return response;
  })());
 });

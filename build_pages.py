@@ -69,7 +69,7 @@ def external_image(match):
     return 'assets/'+name
 html=re.sub(r'data:image/(png|jpeg|webp|svg\+xml);base64,([A-Za-z0-9+/=]+)',external_image,html)
 (OUT/'index.html').write_text(html,encoding='utf-8')
-for name in ['default-project.js','browser-db.js','browser-background.js','background-worker.js','mobile.css','mobile.js','install-app.js','manifest.webmanifest','restore-defaults.css','download-menu.css','sidebar-spacing.css','shared-catalog.js','shared-catalog-ui.js','shared-catalog.css','store-activity-config.js','store-activity.js','store-activity.css','notification-worker.js']:
+for name in ['startup-gate.js','portable-backup.js','default-project.js','browser-db.js','browser-background.js','background-worker.js','mobile.css','mobile.js','install-app.js','manifest.webmanifest','restore-defaults.css','download-menu.css','sidebar-spacing.css','shared-catalog.js','shared-catalog-ui.js','shared-catalog.css','store-activity-config.js','store-activity.js','store-activity.css','notification-worker.js']:
     shutil.copy2(ROOT/name,OUT/name)
 # Independent import workspace; no draft data is bundled.
 (OUT/'template-import').mkdir(exist_ok=True)
@@ -103,7 +103,9 @@ files=sorted(path.relative_to(OUT).as_posix() for path in OUT.rglob('*') if path
 digest=hashlib.sha256()
 for name in files:
     digest.update(name.encode());digest.update((OUT/name).read_bytes())
-sw=(ROOT/'sw-template.js').read_text(encoding='utf-8').replace('__VERSION__',digest.hexdigest()[:16]).replace('__FILES__',json.dumps(files)).replace('__HASHES__',json.dumps({name:hashlib.sha256((OUT/name).read_bytes()).hexdigest() for name in files}))
+essential=[name for name in files if '/' not in name and name not in ['background-worker.js','browser-background.js','notification-worker.js']]
+optional=[name for name in files if name.startswith(('icons/','template-import/'))]
+sw=(ROOT/'sw-template.js').read_text(encoding='utf-8').replace('__VERSION__',digest.hexdigest()[:16]).replace('__FILES__',json.dumps(files)).replace('__ESSENTIAL__',json.dumps(essential)).replace('__OPTIONAL__',json.dumps(optional)).replace('__HASHES__',json.dumps({name:hashlib.sha256((OUT/name).read_bytes()).hexdigest() for name in files}))
 (OUT/'sw.js').write_text(sw,encoding='utf-8')
 assert 'src="db-config.js"' not in html and 'src="local-db.js"' not in html
 print('Built browser-only site:',OUT)

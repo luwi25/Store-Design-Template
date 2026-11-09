@@ -50,6 +50,8 @@
  async function same(field,a,b){return field==='image'?(await imageKey(a))===(await imageKey(b)):a===b}
  async function encodeImage(value){
   if(value===null)return {value:null};
+  const existing=typeof value==='string'&&value.match(/^(?:\.\/)?defaults\/(images\/[a-f0-9]{64}\.(png|jpg|webp|svg))$/);
+  if(existing)return {value:{__defaultImage:existing[1],mime:{png:'image/png',jpg:'image/jpeg',webp:'image/webp',svg:'image/svg+xml'}[existing[2]]}};
   const im=imageBytes(value),b=im.bytes;
   const valid=(im.ext==='png'&&[137,80,78,71,13,10,26,10].every((v,i)=>b[i]===v))||
    (im.ext==='jpg'&&b[0]===255&&b[1]===216&&b[2]===255)||

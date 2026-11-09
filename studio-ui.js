@@ -69,7 +69,7 @@ function renderStudioProducts(){
   const p=productFor(slot);if(search&&!((p?.name||'Choose product')+' '+(p?.code||'')).toLowerCase().includes(search))return;
   if(slot.group!=null&&slot.group!==lastGroup){const group=categoryGroups()[slot.group];const label=document.createElement('h3');label.textContent=state.templateId===HOME_COLLECTION_ID?homeCollectionLabel(slot.group):group?.title||group?.name||'Category '+(slot.group+1);list.append(label);lastGroup=slot.group}
   const row=document.createElement('button');row.type='button';row.className='studio-product';row.setAttribute('aria-pressed',String(index===state.selectedSlot));row.setAttribute('aria-label','Edit '+(p?.name||'product slot '+(index+1)));
-  const image=document.createElement('img');image.src=slot.image||p?.image||svgThumb('+','#f2f6f7');image.alt='';
+  const image=document.createElement('img');image.loading='lazy';image.decoding='async';image.src=slot.image||p?.image||svgThumb('+','#f2f6f7');image.alt='';
   const copy=document.createElement('span'),name=document.createElement('strong'),code=document.createElement('small'),price=document.createElement('b');name.textContent=p?.name||'Choose product';code.textContent=p?.code||'Slot '+(index+1);price.textContent=p?money(salePrice(p,slot)):'Add';copy.append(name,code);row.append(image,copy,price);row.onclick=()=>openProductSlot(index);list.append(row);shown++;
  });
  if(!shown){const empty=document.createElement('p');empty.className='helper';empty.textContent=search?'No matching products on this poster.':'No products yet. Add a product to start.';list.append(empty)}

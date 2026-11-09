@@ -10,7 +10,7 @@ $('usePublishedProject').addEventListener('click', async () => {
   try {
     if (!await flushDatabaseSave()) throw Error('Finish saving before loading the published project.');
     const published = await loadPublishedDefault();
-    downloadStateBackup(state);
+    if(await downloadStateBackup(state)===false)throw Error('Backup could not finish. Your current project was kept.');
     await StoreDatabase.save(published);
     databaseQueued = false;
     button.hidden = true;

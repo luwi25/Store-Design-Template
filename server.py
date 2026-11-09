@@ -150,7 +150,7 @@ class Handler(BaseHTTPRequestHandler):
         target = (ROOT / relative).resolve()
         public = {
             'index.html', 'db-config.js', 'local-db.js',
-            'default-project.js',
+            'default-project.js', 'startup-gate.js', 'portable-backup.js',
             'download-menu.css', 'sidebar-spacing.css',
             'shared-catalog.js', 'shared-catalog-ui.js', 'shared-catalog.css',
             'store-activity-config.js', 'store-activity.js', 'store-activity.css',
