@@ -46,6 +46,8 @@ The favicon uses a white poster sheet and teal sparkle on navy. Keep it legible 
 
 ## Download actions
 
+Import backup and Import template share one Import dropdown using the Download menu styling. Preserve the original action handlers and Admin-only template import. On mobile, keep the whole Import group together inside More, with its options expanded inline; support keyboard navigation, Escape and outside-click dismissal.
+
 The toolbar uses one Download button opening PDF and PNG options. Keep existing export handlers, progress and disabled states. The dropdown supports keyboard focus, Escape and outside-click dismissal on desktop and mobile.
 
 Print paper and Print fit fields are hidden in template settings. Their values and event bindings remain intact for saved projects, PDF export and printing.
