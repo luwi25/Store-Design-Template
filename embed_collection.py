@@ -66,7 +66,13 @@ def collection_source(root: Path) -> str:
     ginsey_back_art = 'defaults/images/' + hashlib.sha256((root / 'template-artwork/ginsey-oslob-back.jpg').read_bytes()).hexdigest() + '.jpg'
     ginsey_back_products = json.loads((root / 'template-artwork/ginsey-oslob-back-products.json').read_text(encoding='utf-8'))
     ginsey_back = (root / 'ginsey-back.js').read_text(encoding='utf-8').replace('__GINSEY_BACK_ART__',json.dumps(ginsey_back_art)).replace('__GINSEY_BACK_SEEDS__',json.dumps(ginsey_back_products))
-    return back + "\n" + front + "\n" + peso + "\n" + peso_back + "\n" + alkeia + "\n" + alkeia_back + "\n" + felcon + "\n" + felcon_front + "\n" + ginsey + "\n" + ginsey_back
+    welmart_art = 'defaults/images/' + hashlib.sha256((root / 'template-artwork/welmart-inayawan-front.jpg').read_bytes()).hexdigest() + '.jpg'
+    welmart_products = json.loads((root / 'template-artwork/welmart-inayawan-front-products.json').read_text(encoding='utf-8'))
+    welmart = (root / 'welmart-front.js').read_text(encoding='utf-8').replace('__WELMART_FRONT_ART__',json.dumps(welmart_art)).replace('__WELMART_FRONT_SEEDS__',json.dumps(welmart_products))
+    welmart_back_art = 'defaults/images/' + hashlib.sha256((root / 'template-artwork/welmart-inayawan-back.jpg').read_bytes()).hexdigest() + '.jpg'
+    welmart_back_products = json.loads((root / 'template-artwork/welmart-inayawan-back-products.json').read_text(encoding='utf-8'))
+    welmart_back = (root / 'welmart-back.js').read_text(encoding='utf-8').replace('__WELMART_BACK_ART__',json.dumps(welmart_back_art)).replace('__WELMART_BACK_SEEDS__',json.dumps(welmart_back_products))
+    return back + "\n" + front + "\n" + peso + "\n" + peso_back + "\n" + alkeia + "\n" + alkeia_back + "\n" + felcon + "\n" + felcon_front + "\n" + ginsey + "\n" + ginsey_back + "\n" + welmart + "\n" + welmart_back
 
 
 def embed_collection(html: str, root: Path) -> str:

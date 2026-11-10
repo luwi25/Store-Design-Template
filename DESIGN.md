@@ -152,3 +152,9 @@ Felcon Bato Template #1 Front preserves the supplied blue-and-yellow storefront 
 Template #1 Front uses the supplied yellow/red artwork with nine editable cards in three rows. Preserve its header, footer and QR pixels. Names and prices are rendered as editable canvas text, and image areas begin empty; unset prices show a dash. Store ownership, Admin visibility, publishing, backup/restore, print approvals and activity filters use ginsey-oslob / ginsey-oslob-front. New store setup requires its Supabase secret and additive migration. Sales automation remains unchanged.
 
 Ginsey Template #1 Back adds five editable category headings and 25 product cards with blank initial photos and unset prices. It shares the Ginsey Template #1 visibility group and store permissions with Front; original top and footer artwork remain intact.
+
+## Welmart Inayawan
+
+Template #1 Front preserves the supplied red/white artwork, header, footer and QR. Nine editable cards start with blank photos and unset prices. Store ownership uses welmart-inayawan and welmart-inayawan-front. The store is included in visibility, publishing, backup/restore, activity and approvals; its Supabase secret/migration is required for hosted sign-in. Sales automation is unchanged.
+
+Welmart Template #1 Back has five editable category headings and 25 editable product cards. It shares the Front template's store ownership and Template #1 visibility group. Preserve the red/white artwork and footer; initial photos remain blank and unset prices show a dash.

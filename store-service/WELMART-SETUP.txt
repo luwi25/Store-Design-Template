@@ -1,0 +1,9 @@
+Welmart Inayawan setup
+
+1. Run add-welmart-inayawan.sql in the existing Supabase SQL Editor.
+2. Save WELMART_INAYAWAN_PASSWORD in Edge Function Secrets with at least 12 characters.
+3. Redeploy the updated store-service/index.ts to the existing quick-handler function.
+
+Existing secrets remain unchanged. Sales automation is not enabled for this new store by adding its template.
+
+The current add-welmart-inayawan.sql covers both Front and Back. If you ran the earlier Front-only setup, rerun this updated SQL file for Back print approvals. Keep the same WELMART_INAYAWAN_PASSWORD secret.
