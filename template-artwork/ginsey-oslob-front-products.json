@@ -1,0 +1,74 @@
+[
+  {
+    "id": "ginsey-front-0",
+    "templateId": "ginsey-oslob-front",
+    "name": "Cookware Set",
+    "price": 0,
+    "code": "",
+    "image": null
+  },
+  {
+    "id": "ginsey-front-1",
+    "templateId": "ginsey-oslob-front",
+    "name": "Rice Cooker",
+    "price": 0,
+    "code": "",
+    "image": null
+  },
+  {
+    "id": "ginsey-front-2",
+    "templateId": "ginsey-oslob-front",
+    "name": "Electric Kettle",
+    "price": 0,
+    "code": "",
+    "image": null
+  },
+  {
+    "id": "ginsey-front-3",
+    "templateId": "ginsey-oslob-front",
+    "name": "Stand Fan",
+    "price": 0,
+    "code": "",
+    "image": null
+  },
+  {
+    "id": "ginsey-front-4",
+    "templateId": "ginsey-oslob-front",
+    "name": "Blender",
+    "price": 0,
+    "code": "",
+    "image": null
+  },
+  {
+    "id": "ginsey-front-5",
+    "templateId": "ginsey-oslob-front",
+    "name": "Steam Iron",
+    "price": 0,
+    "code": "",
+    "image": null
+  },
+  {
+    "id": "ginsey-front-6",
+    "templateId": "ginsey-oslob-front",
+    "name": "Storage Drawer",
+    "price": 0,
+    "code": "",
+    "image": null
+  },
+  {
+    "id": "ginsey-front-7",
+    "templateId": "ginsey-oslob-front",
+    "name": "Food Containers",
+    "price": 0,
+    "code": "",
+    "image": null
+  },
+  {
+    "id": "ginsey-front-8",
+    "templateId": "ginsey-oslob-front",
+    "name": "Laundry Basket",
+    "price": 0,
+    "code": "",
+    "image": null
+  }
+]

@@ -146,3 +146,9 @@ Import backup sits in the top toolbar next to Background remover, not only in th
 Felcon Bato has a password-protected store choice and Template #1 Back with 25 editable product cards in five rows. Preserve supplied yellow/navy artwork and source product photos; display editable section headings, names and blue prices. Use the same store grouping, template visibility, saved product drafts, shared publishing, 24-hour print approval and notifications as other stores. Felcon authentication uses FELCON_BATO_PASSWORD in Supabase. Sales schedules and rankings are outside this addition.
 
 Felcon Bato Template #1 Front preserves the supplied blue-and-yellow storefront artwork and has eight editable department cards. The supplied design has no prices; prices appear only when a positive price is assigned. Front and Back share the Felcon Template #1 visibility group.
+
+## Ginsey Oslob
+
+Template #1 Front uses the supplied yellow/red artwork with nine editable cards in three rows. Preserve its header, footer and QR pixels. Names and prices are rendered as editable canvas text, and image areas begin empty; unset prices show a dash. Store ownership, Admin visibility, publishing, backup/restore, print approvals and activity filters use ginsey-oslob / ginsey-oslob-front. New store setup requires its Supabase secret and additive migration. Sales automation remains unchanged.
+
+Ginsey Template #1 Back adds five editable category headings and 25 product cards with blank initial photos and unset prices. It shares the Ginsey Template #1 visibility group and store permissions with Front; original top and footer artwork remain intact.

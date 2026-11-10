@@ -1,0 +1,9 @@
+Ginsey Oslob setup
+
+1. Run store-service/add-ginsey-oslob.sql in the existing Supabase project SQL Editor.
+2. Add the Edge Function secret GINSEY_OSLOB_PASSWORD with a password of at least 12 characters.
+3. Redeploy store-service/index.ts to the existing quick-handler Edge Function.
+
+No new Supabase project is needed. This adds the store to sign-in, activity logs, print approvals and push subscriptions. Existing sales sync schedules are unchanged; Ginsey sales automation is not enabled by this template addition.
+
+The current add-ginsey-oslob.sql includes both Front and Back template ownership. If you ran the earlier Front-only setup, rerun this updated SQL file. The same GINSEY_OSLOB_PASSWORD secret works for both templates.

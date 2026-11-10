@@ -60,7 +60,13 @@ def collection_source(root: Path) -> str:
     for product in felcon_front_products:
         product['image'] = 'defaults/' + product['image']['__defaultImage']
     felcon_front = (root / 'felcon-front.js').read_text(encoding='utf-8').replace('__FELCON_FRONT_ART__',json.dumps(felcon_front_art)).replace('__FELCON_FRONT_SEEDS__',json.dumps(felcon_front_products))
-    return back + "\n" + front + "\n" + peso + "\n" + peso_back + "\n" + alkeia + "\n" + alkeia_back + "\n" + felcon + "\n" + felcon_front
+    ginsey_art = 'defaults/images/' + hashlib.sha256((root / 'template-artwork/ginsey-oslob-front.jpg').read_bytes()).hexdigest() + '.jpg'
+    ginsey_products = json.loads((root / 'template-artwork/ginsey-oslob-front-products.json').read_text(encoding='utf-8'))
+    ginsey = (root / 'ginsey-front.js').read_text(encoding='utf-8').replace('__GINSEY_FRONT_ART__',json.dumps(ginsey_art)).replace('__GINSEY_FRONT_SEEDS__',json.dumps(ginsey_products))
+    ginsey_back_art = 'defaults/images/' + hashlib.sha256((root / 'template-artwork/ginsey-oslob-back.jpg').read_bytes()).hexdigest() + '.jpg'
+    ginsey_back_products = json.loads((root / 'template-artwork/ginsey-oslob-back-products.json').read_text(encoding='utf-8'))
+    ginsey_back = (root / 'ginsey-back.js').read_text(encoding='utf-8').replace('__GINSEY_BACK_ART__',json.dumps(ginsey_back_art)).replace('__GINSEY_BACK_SEEDS__',json.dumps(ginsey_back_products))
+    return back + "\n" + front + "\n" + peso + "\n" + peso_back + "\n" + alkeia + "\n" + alkeia_back + "\n" + felcon + "\n" + felcon_front + "\n" + ginsey + "\n" + ginsey_back
 
 
 def embed_collection(html: str, root: Path) -> str:
