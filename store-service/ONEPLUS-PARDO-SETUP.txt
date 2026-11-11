@@ -1,0 +1,7 @@
+Oneplus Pardo setup
+
+1. Run add-oneplus-pardo.sql in the existing Supabase SQL Editor.
+2. Add ONEPLUS_PARDO_PASSWORD to Edge Function Secrets (at least 12 characters).
+3. Redeploy store-service/index.ts to the existing quick-handler function.
+
+Keep all existing store passwords. This addition does not enable Oneplus sales sync.

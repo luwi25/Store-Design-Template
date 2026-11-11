@@ -78,7 +78,19 @@ def collection_source(root: Path) -> str:
     tayud_back_art = 'defaults/images/' + hashlib.sha256((root / 'template-artwork/alkeia-tayud-back.jpg').read_bytes()).hexdigest() + '.jpg'
     tayud_back_products = json.loads((root / 'template-artwork/alkeia-tayud-back-products.json').read_text(encoding='utf-8'))
     tayud_back = (root / 'tayud-back.js').read_text(encoding='utf-8').replace('__TAYUD_BACK_ART__',json.dumps(tayud_back_art)).replace('__TAYUD_BACK_SEEDS__',json.dumps(tayud_back_products))
-    return back + "\n" + front + "\n" + peso + "\n" + peso_back + "\n" + alkeia + "\n" + alkeia_back + "\n" + felcon + "\n" + felcon_front + "\n" + ginsey + "\n" + ginsey_back + "\n" + welmart + "\n" + welmart_back + "\n" + tayud + "\n" + tayud_back
+    kazumi_art = 'defaults/images/' + hashlib.sha256((root / 'template-artwork/kazumi-linao-front.jpg').read_bytes()).hexdigest() + '.jpg'
+    kazumi_products = json.loads((root / 'template-artwork/kazumi-linao-front-products.json').read_text(encoding='utf-8'))
+    kazumi = (root / 'kazumi-front.js').read_text(encoding='utf-8').replace('__KAZUMI_FRONT_ART__',json.dumps(kazumi_art)).replace('__KAZUMI_FRONT_SEEDS__',json.dumps(kazumi_products))
+    kazumi_back_art = 'defaults/images/' + hashlib.sha256((root / 'template-artwork/kazumi-linao-back.jpg').read_bytes()).hexdigest() + '.jpg'
+    kazumi_back_products = json.loads((root / 'template-artwork/kazumi-linao-back-products.json').read_text(encoding='utf-8'))
+    kazumi_back = (root / 'kazumi-back.js').read_text(encoding='utf-8').replace('__KAZUMI_BACK_ART__',json.dumps(kazumi_back_art)).replace('__KAZUMI_BACK_SEEDS__',json.dumps(kazumi_back_products))
+    oneplus_art = 'defaults/images/' + hashlib.sha256((root / 'template-artwork/oneplus-pardo-front.jpg').read_bytes()).hexdigest() + '.jpg'
+    oneplus_products = json.loads((root / 'template-artwork/oneplus-pardo-front-products.json').read_text(encoding='utf-8'))
+    oneplus = (root / 'oneplus-front.js').read_text(encoding='utf-8').replace('__ONEPLUS_FRONT_ART__',json.dumps(oneplus_art)).replace('__ONEPLUS_FRONT_SEEDS__',json.dumps(oneplus_products))
+    oneplus_back_art = 'defaults/images/' + hashlib.sha256((root / 'template-artwork/oneplus-pardo-back.jpg').read_bytes()).hexdigest() + '.jpg'
+    oneplus_back_products = json.loads((root / 'template-artwork/oneplus-pardo-back-products.json').read_text(encoding='utf-8'))
+    oneplus_back = (root / 'oneplus-back.js').read_text(encoding='utf-8').replace('__ONEPLUS_BACK_ART__',json.dumps(oneplus_back_art)).replace('__ONEPLUS_BACK_SEEDS__',json.dumps(oneplus_back_products))
+    return back + "\n" + front + "\n" + peso + "\n" + peso_back + "\n" + alkeia + "\n" + alkeia_back + "\n" + felcon + "\n" + felcon_front + "\n" + ginsey + "\n" + ginsey_back + "\n" + welmart + "\n" + welmart_back + "\n" + tayud + "\n" + tayud_back + "\n" + kazumi + "\n" + kazumi_back + "\n" + oneplus + "\n" + oneplus_back
 
 
 def embed_collection(html: str, root: Path) -> str:

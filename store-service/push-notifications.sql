@@ -10,9 +10,9 @@ create table if not exists store_monitor.push_claims (
 );
 -- Existing subscriptions were Admin subscriptions. Bind new enrollments to their authenticated store.
 alter table store_monitor.push_subscriptions add column if not exists store text not null default 'all'
- check(store in ('all','home-express','pesoplus','alkeia-talamban','alkeia-tayud','welmart-inayawan','ginsey-oslob','felcon-bato'));
+ check(store in ('all','home-express','pesoplus','alkeia-talamban','alkeia-tayud','kazumi-linao','oneplus-pardo','welmart-inayawan','ginsey-oslob','felcon-bato'));
 alter table store_monitor.push_subscriptions drop constraint if exists push_subscriptions_store_check;
-alter table store_monitor.push_subscriptions add constraint push_subscriptions_store_check check(store in ('all','home-express','pesoplus','alkeia-talamban','alkeia-tayud','welmart-inayawan','ginsey-oslob','felcon-bato'));
+alter table store_monitor.push_subscriptions add constraint push_subscriptions_store_check check(store in ('all','home-express','pesoplus','alkeia-talamban','alkeia-tayud','kazumi-linao','oneplus-pardo','welmart-inayawan','ginsey-oslob','felcon-bato'));
 create table if not exists store_monitor.push_approval_claims (
  request_id text primary key references store_monitor.print_requests(id) on delete cascade,
  created_at timestamptz not null default now()

@@ -1,0 +1,7 @@
+Kazumi Linao setup
+
+1. Run add-kazumi-linao.sql in the existing Supabase SQL Editor.
+2. Add KAZUMI_LINAO_PASSWORD to Edge Function Secrets (at least 12 characters).
+3. Redeploy store-service/index.ts to the existing quick-handler function.
+
+Keep all existing store passwords. This addition does not enable Kazumi sales sync.
