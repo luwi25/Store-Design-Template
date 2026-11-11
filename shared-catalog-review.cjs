@@ -42,6 +42,14 @@ const change=()=>[edit({name:{before:'Paper',after:'Manila Paper'},price:{before
  await assert.rejects(core.prepare(fixture(),[edit({price:{before:10,after:-1}})]),/valid original price/);
  const replacement={kind:'replacement',templateId:'home-back',slotIndex:0,slotCount:1,group:null,before:{...item},after:{...fixture().state.products[1]}};
  const replaced=await core.prepare(fixture(),[replacement]);
+ const restoredReplacement={...replacement,before:{...item,id:'restored-local-copy'}};
+ assert.equal((await core.prepare(fixture(),[restoredReplacement])).project.state.homeBack.slots[0].productId,'sales-ppm-abc','A restored copy with the same unique stock/store identity is not a conflict');
+ const aliased=fixture();aliased.state.catalogAliases={'old-seed':item.id};
+ assert.equal((await core.prepare(aliased,[{...replacement,before:{id:'old-seed',code:''}}])).count,1,'Explicit catalog aliases retain product identity');
+ const ambiguousReplacement=fixture();ambiguousReplacement.state.products.push({...item,id:'duplicate'});
+ await assert.rejects(core.prepare(ambiguousReplacement,[restoredReplacement]),/position changed/);
+ const wrongStore={...restoredReplacement,before:{...restoredReplacement.before,templateId:'peso-back'}};
+ await assert.rejects(core.prepare(fixture(),[wrongStore]),/position changed/);
  assert.equal(replaced.count,1);assert.equal(replaced.project.state.homeBack.slots[0].productId,'sales-ppm-abc');
  assert.equal(replaced.project.state.homeBack.slots[0].details,null);assert.equal(replaced.project.state.homeBack.slots[0].image,null);
  assert.equal(replaced.project.state.homeBack.slots[0].discountPercent,20);assert.deepEqual(replaced.project.state.homeBack.slots[0].textSizes,{name:110});

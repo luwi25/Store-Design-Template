@@ -100,7 +100,17 @@
    const slot=list[index],replacement=match(next.state.products,change.after);
    if(list.length!==change.slotCount||(slot.group??null)!==change.group)throw Error('The published template layout changed. Reload the latest template before replacing this product.');
    if(slot.productId===replacement.id)continue;
-   if((slot.productId??null)!==(change.before.id??null))throw Error('The product in this published template position changed since your edit. Reload the latest template and reapply the replacement.');
+   let previousId=change.before.id??null;
+   if((slot.productId??null)!==previousId){
+    // Restored copies and catalog deduplication may change IDs without changing
+    // the product. Resolve only explicit aliases or a unique stock/store identity.
+    const alias=next.state.catalogAliases?.[previousId];
+    if(alias&&next.state.products.some(p=>p.id===alias))previousId=alias;
+    else if(code(change.before)){
+     try{previousId=match(next.state.products,change.before).id}catch{/* Keep genuine or ambiguous conflicts blocked. */}
+    }
+   }
+   if((slot.productId??null)!==previousId)throw Error('The product in this published template position changed since your edit. Reload the latest template and reapply the replacement.');
    slot.productId=replacement.id;slot.details=null;slot.image=null;slot.imageOriginal=null;count++;
   }
   const textPositions=new Set();
