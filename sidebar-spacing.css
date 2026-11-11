@@ -87,3 +87,6 @@
  .product-edit-actions .btn-dark{background:#163b65;color:#fff;}
  .product-edit-actions button:disabled{opacity:.55;cursor:not-allowed;}
 }
+
+/* Hide the routine saved badge while retaining saving/error feedback. */
+#saveStatus[data-state="saved"]{display:none!important}
