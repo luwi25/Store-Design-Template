@@ -3,12 +3,13 @@
  'use strict';
  const REPO='luwi25/Store-Design-Template', API='https://api.github.com/repos/'+REPO;
  const fields=['name','price','image'];
- const templateSections={'home-collection':'homeCollection','home-collection-front':'homeCollectionFront','home-back':'homeBack','home-everyday':'everyday','peso-back':'pesoBack','peso-collection-front':'pesoCollectionFront','peso-collection-back':'pesoCollectionBack','alkeia-talamban-front':'alkeiaFront','alkeia-talamban-back':'alkeiaBack','felcon-bato-back':'felconBack','ginsey-oslob-back':'ginseyBack','welmart-inayawan-back':'welmartBack','welmart-inayawan-front':'welmartFront','ginsey-oslob-front':'ginseyFront','felcon-bato-front':'felconFront','peso-plus':'peso','home-express':'approved','home-bestsellers':'bestsellers'};
+ const templateSections={'home-collection':'homeCollection','home-collection-front':'homeCollectionFront','home-back':'homeBack','home-everyday':'everyday','peso-back':'pesoBack','peso-collection-front':'pesoCollectionFront','peso-collection-back':'pesoCollectionBack','alkeia-talamban-front':'alkeiaFront','alkeia-talamban-back':'alkeiaBack','felcon-bato-back':'felconBack','ginsey-oslob-back':'ginseyBack','alkeia-tayud-back':'tayudBack','welmart-inayawan-back':'welmartBack','alkeia-tayud-front':'tayudFront','welmart-inayawan-front':'welmartFront','ginsey-oslob-front':'ginseyFront','felcon-bato-front':'felconFront','peso-plus':'peso','home-express':'approved','home-bestsellers':'bestsellers'};
  function templateSlots(state,id){return Object.hasOwn(templateSections,id)?state[templateSections[id]]?.slots:null}
  const clone=value=>structuredClone(value);
  const code=p=>String(p.code||'').trim().toLowerCase();
  function store(p){
   if(p.sharedCatalog)return 'shared';
+  if(String(p.templateId).startsWith('alkeia-tayud-'))return 'alkeia-tayud';
   if(String(p.templateId).startsWith('welmart-inayawan-'))return 'welmart-inayawan';
   if(String(p.templateId).startsWith('ginsey-oslob-'))return 'ginsey-oslob';
   if(String(p.templateId).startsWith('felcon-bato-'))return 'felcon-bato';

@@ -1,0 +1,9 @@
+Alkeia Tayud setup
+
+1. Run add-alkeia-tayud.sql in the existing Supabase SQL Editor.
+2. Save ALKEIA_TAYUD_PASSWORD in Edge Function Secrets with at least 12 characters.
+3. Redeploy store-service/index.ts to the existing quick-handler function.
+
+Existing store passwords remain unchanged. This does not enable sales sync for Alkeia Tayud.
+
+The SQL now covers both Front and Back. If you ran the Front-only setup, rerun add-alkeia-tayud.sql. Keep the same password secret.

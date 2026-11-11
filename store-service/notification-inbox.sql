@@ -45,7 +45,7 @@ insert into store_monitor.notifications(store,request_id,kind,template_name,crea
 create or replace function store_monitor.save_print_initiated_notification()
 returns trigger language plpgsql security definer set search_path='' as $$
 begin
- if NEW.action='print_initiated' and NEW.store in ('home-express','pesoplus','alkeia-talamban','welmart-inayawan','ginsey-oslob','felcon-bato') then
+ if NEW.action='print_initiated' and NEW.store in ('home-express','pesoplus','alkeia-talamban','alkeia-tayud','welmart-inayawan','ginsey-oslob','felcon-bato') then
   insert into store_monitor.notifications(store,request_id,kind,template_name,created_at,event_id,source_store)
    select 'all',r.id,'print_initiated',NEW.template_name,NEW.created_at,NEW.id,NEW.store
    from store_monitor.print_requests r where r.id=NEW.details->>'requestId' and r.store=NEW.store
