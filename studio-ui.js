@@ -105,7 +105,7 @@ function setupStudioUI(){
 
  const zoom=document.createElement('div');zoom.className='studio-zoom';zoom.innerHTML='<button type="button" class="btn btn-sm" aria-label="Zoom out">−</button><output aria-live="polite">100%</output><button type="button" class="btn btn-sm" aria-label="Zoom in">+</button><button type="button" class="btn btn-sm">Fit</button>';
  document.querySelector('.stage-top').append(zoom);let scale=1;const buttons=zoom.querySelectorAll('button');const apply=()=>{const stage=document.querySelector('.stage'),width=Math.min(500,stage.clientWidth-48);document.querySelector('.poster-wrap').style.width=Math.max(200,width*scale)+'px';zoom.querySelector('output').textContent=Math.round(scale*100)+'%'};
- buttons[0].onclick=()=>{scale=Math.max(.5,scale-.1);apply()};buttons[1].onclick=()=>{scale=Math.min(2,scale+.1);apply()};buttons[2].onclick=()=>{scale=1;apply()};window.addEventListener('resize',apply);apply();
+ buttons[0].onclick=()=>{scale=Math.max(.5,scale-.1);apply()};buttons[1].onclick=()=>{scale=Math.min(2,scale+.1);apply()};buttons[2].onclick=()=>{scale=1;apply()};window.addEventListener('resize',apply);apply();setupAdminCatalog();
 }
 
 function syncStoreDownloadMenu(){
@@ -206,4 +206,28 @@ function bindProductNameSearch(input,slot){
   else if(event.key==='Enter'){event.preventDefault();if(!list.hidden&&active>=0)choose(matches[active]);else{commit();close()}}
   else if(event.key==='Escape'&&!list.hidden){event.preventDefault();event.stopPropagation();dirty=false;input.value=productFor(slot)?.name||'';close()}
  });
+}
+// Admin catalog overlay reuses the catalog editor and its save/delete behavior.
+function setupAdminCatalog(){
+ const panel=$('catalogList').closest('.panel');delete panel.dataset.studioPanel;
+ const dialog=document.createElement('dialog');dialog.id='adminCatalogDialog';dialog.className='admin-catalog-dialog';dialog.setAttribute('aria-labelledby','adminCatalogHeading');
+ const header=document.createElement('div');header.className='admin-catalog-heading';
+ const title=document.createElement('h2');title.id='adminCatalogHeading';title.textContent='Product catalog';
+ const close=document.createElement('button');close.type='button';close.className='btn';close.textContent='×';close.setAttribute('aria-label','Close product catalog');close.onclick=()=>dialog.close();header.append(title,close);
+ header.insertBefore($('addProductBtn'),close);dialog.append(header,panel);document.body.append(dialog);panel.querySelector('.panel-head h2').hidden=true;
+ const note=panel.querySelector(':scope > .helper');note.textContent='Changes save to this browser. Existing product name, price and photo edits can be shared through Publish changes. Additions and deletions are included in downloaded backups.';
+ const filters=document.createElement('div');filters.className='admin-catalog-filters';
+ filters.innerHTML='<label>Store<select id="adminCatalogStore"><option value="">All stores and shared products</option><option value="shared">Shared products</option><option value="home-express">Home Express Basak</option><option value="pesoplus">Pesoplus Mambaling</option><option value="alkeia-talamban">Alkeia Talamban</option><option value="alkeia-tayud">Alkeia Tayud</option><option value="felcon-bato">Felcon Bato</option><option value="ginsey-oslob">Ginsey Oslob</option><option value="welmart-inayawan">Welmart Inayawan</option></select></label><label>Photo<select id="adminCatalogPhoto"><option value="">All photos</option><option value="missing">Missing photo</option><option value="present">With photo</option></select></label><label>Price<select id="adminCatalogPrice"><option value="">All prices</option><option value="zero">?0 only</option></select></label><label>Sort by<select id="adminCatalogSort"><option value="name">Name A–Z</option><option value="low">Price: low to high</option><option value="high">Price: high to low</option></select></label>';
+ $('catalogSearchForm').after(filters);for(const select of filters.querySelectorAll('select'))select.onchange=()=>{catalogPage=0;renderCatalog()};
+ const reset=document.createElement('button');reset.className='btn';reset.type='button';reset.textContent='Reset filters';reset.onclick=()=>{$('catalogSearch').value='';$('adminCatalogStore').value='';$('adminCatalogPhoto').value='';$('adminCatalogPrice').value='';$('adminCatalogSort').value='name';catalogPage=0;renderCatalog()};filters.append(reset);
+ const button=document.createElement('button');button.id='adminCatalogButton';button.type='button';button.className='btn';button.textContent='Product catalog';button.hidden=true;button.setAttribute('aria-haspopup','dialog');$('bgRemoverBtn').after(button);
+ button.onclick=()=>{if(storeFilter!=='all'||!leaveProductEdit())return;dialog.showModal();renderCatalog();$('catalogSearch').focus()};
+ dialog.addEventListener('close',()=>button.focus());
+ syncAdminCatalog();
+}
+function syncAdminCatalog(){const button=$('adminCatalogButton');if(!button)return;button.hidden=storeFilter!=='all';if(button.hidden){if($('adminCatalogDialog').open)$('adminCatalogDialog').close();if($('productDialog').open)$('productDialog').close()}}
+function adminCatalogProducts(products){
+ const selected=$('adminCatalogStore')?.value||'',photo=$('adminCatalogPhoto')?.value||'',price=$('adminCatalogPrice')?.value||'',sort=$('adminCatalogSort')?.value||'name';
+ const owner=p=>{if(p.sharedCatalog)return 'shared';const id=p.templateId||'';for(const store of ['alkeia-tayud','alkeia-talamban','felcon-bato','ginsey-oslob','welmart-inayawan'])if(id.startsWith(store+'-'))return store;if(id.startsWith('home-'))return 'home-express';if(id.startsWith('peso-'))return 'pesoplus';return 'shared'};
+ return products.filter(p=>(!selected||owner(p)===selected)&&(!price||p.price===0)&&(!photo||(photo==='present'?!!p.image:!p.image))).sort((a,b)=>sort==='low'?a.price-b.price:sort==='high'?b.price-a.price:String(a.name).localeCompare(String(b.name)));
 }

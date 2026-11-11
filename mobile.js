@@ -30,7 +30,7 @@
     templateRow?.remove();
    }
   }
-  for(const id of ['importActions','templateVisibilityButton','bgRemoverBtn','restorePublishedDefaults','publishCatalog','sharedCatalogUpdate','storeActivityDashboard','storeActivitySync','installApp']){
+  for(const id of ['importActions','templateVisibilityButton','bgRemoverBtn','adminCatalogButton','restorePublishedDefaults','publishCatalog','sharedCatalogUpdate','storeActivityDashboard','storeActivitySync','installApp']){
    const button=document.getElementById(id);if(!button)continue;
    if(!homes.has(button)){
     const home=document.createComment('Toolbar position: '+id);
