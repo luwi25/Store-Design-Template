@@ -1,0 +1,9 @@
+Sheldon Pinamungajan setup
+
+1. Run add-sheldon-pinamungajan.sql in the existing Supabase SQL Editor.
+2. Add SHELDON_PINAMUNGAJAN_PASSWORD to Edge Function Secrets (at least 12 characters).
+3. Redeploy store-service/index.ts to the existing quick-handler function.
+
+Keep all existing store passwords. This addition does not enable Sheldon sales sync.
+
+Includes notification inbox and IP forwarding to Lark; no separate notification SQL is needed.

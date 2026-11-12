@@ -1,0 +1,11 @@
+Mandarin Dalaguete setup
+
+1. Run add-mandarin-dalaguete.sql in the existing Supabase SQL Editor.
+2. Add MANDARIN_DALAGUETE_PASSWORD to Edge Function Secrets (at least 12 characters).
+3. Redeploy store-service/index.ts to the existing quick-handler function.
+
+Keep all existing store passwords. This addition does not enable Mandarin Dalaguete sales sync.
+
+Username: mandarin-dalaguete
+
+The SQL now covers both Front and Back. If you ran the Front-only setup, rerun add-mandarin-dalaguete.sql. Keep the same password secret.

@@ -1,0 +1,9 @@
+Mandarin Catmon setup
+
+1. Run add-mandarin-catmon.sql in the existing Supabase SQL Editor.
+2. Add MANDARIN_CATMON_PASSWORD to Edge Function Secrets (at least 12 characters).
+3. Redeploy store-service/index.ts to the existing quick-handler function.
+
+Keep all existing store passwords. This addition does not enable Mandarin Catmon sales sync.
+
+The SQL now covers both Front and Back. If you ran the Front-only setup, rerun add-mandarin-catmon.sql. Keep the same password secret.

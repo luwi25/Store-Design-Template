@@ -90,7 +90,37 @@ def collection_source(root: Path) -> str:
     oneplus_back_art = 'defaults/images/' + hashlib.sha256((root / 'template-artwork/oneplus-pardo-back.jpg').read_bytes()).hexdigest() + '.jpg'
     oneplus_back_products = json.loads((root / 'template-artwork/oneplus-pardo-back-products.json').read_text(encoding='utf-8'))
     oneplus_back = (root / 'oneplus-back.js').read_text(encoding='utf-8').replace('__ONEPLUS_BACK_ART__',json.dumps(oneplus_back_art)).replace('__ONEPLUS_BACK_SEEDS__',json.dumps(oneplus_back_products))
-    return back + "\n" + front + "\n" + peso + "\n" + peso_back + "\n" + alkeia + "\n" + alkeia_back + "\n" + felcon + "\n" + felcon_front + "\n" + ginsey + "\n" + ginsey_back + "\n" + welmart + "\n" + welmart_back + "\n" + tayud + "\n" + tayud_back + "\n" + kazumi + "\n" + kazumi_back + "\n" + oneplus + "\n" + oneplus_back
+    weldon_art = 'defaults/images/' + hashlib.sha256((root / 'template-artwork/weldon-carcar-front.jpg').read_bytes()).hexdigest() + '.jpg'
+    weldon_products = json.loads((root / 'template-artwork/weldon-carcar-front-products.json').read_text(encoding='utf-8'))
+    weldon = (root / 'weldon-front.js').read_text(encoding='utf-8').replace('__WELDON_FRONT_ART__',json.dumps(weldon_art)).replace('__WELDON_FRONT_SEEDS__',json.dumps(weldon_products))
+    weldon_back_art = 'defaults/images/' + hashlib.sha256((root / 'template-artwork/weldon-carcar-back.jpg').read_bytes()).hexdigest() + '.jpg'
+    weldon_back_products = json.loads((root / 'template-artwork/weldon-carcar-back-products.json').read_text(encoding='utf-8'))
+    weldon_back = (root / 'weldon-back.js').read_text(encoding='utf-8').replace('__WELDON_BACK_ART__',json.dumps(weldon_back_art)).replace('__WELDON_BACK_SEEDS__',json.dumps(weldon_back_products))
+    sheldon_art = 'defaults/images/' + hashlib.sha256((root / 'template-artwork/sheldon-pinamungajan-front.jpg').read_bytes()).hexdigest() + '.jpg'
+    sheldon_products = json.loads((root / 'template-artwork/sheldon-pinamungajan-front-products.json').read_text(encoding='utf-8'))
+    sheldon = (root / 'sheldon-front.js').read_text(encoding='utf-8').replace('__SHELDON_FRONT_ART__',json.dumps(sheldon_art)).replace('__SHELDON_FRONT_SEEDS__',json.dumps(sheldon_products))
+    sheldon_back_art = 'defaults/images/' + hashlib.sha256((root / 'template-artwork/sheldon-pinamungajan-back.jpg').read_bytes()).hexdigest() + '.jpg'
+    sheldon_back_products = json.loads((root / 'template-artwork/sheldon-pinamungajan-back-products.json').read_text(encoding='utf-8'))
+    sheldon_back = (root / 'sheldon-back.js').read_text(encoding='utf-8').replace('__SHELDON_BACK_ART__',json.dumps(sheldon_back_art)).replace('__SHELDON_BACK_SEEDS__',json.dumps(sheldon_back_products))
+    mandarin_art = 'defaults/images/' + hashlib.sha256((root / 'template-artwork/mandarin-catmon-front.jpg').read_bytes()).hexdigest() + '.jpg'
+    mandarin_products = json.loads((root / 'template-artwork/mandarin-catmon-front-products.json').read_text(encoding='utf-8'))
+    mandarin = (root / 'mandarin-front.js').read_text(encoding='utf-8').replace('__MANDARIN_FRONT_ART__',json.dumps(mandarin_art)).replace('__MANDARIN_FRONT_SEEDS__',json.dumps(mandarin_products))
+    mandarin_back_art = 'defaults/images/' + hashlib.sha256((root / 'template-artwork/mandarin-catmon-back.jpg').read_bytes()).hexdigest() + '.jpg'
+    mandarin_back_products = json.loads((root / 'template-artwork/mandarin-catmon-back-products.json').read_text(encoding='utf-8'))
+    mandarin_back = (root / 'mandarin-back.js').read_text(encoding='utf-8').replace('__MANDARIN_BACK_ART__',json.dumps(mandarin_back_art)).replace('__MANDARIN_BACK_SEEDS__',json.dumps(mandarin_back_products))
+    dalaguete_art = 'defaults/images/' + hashlib.sha256((root / 'template-artwork/mandarin-dalaguete-front.jpg').read_bytes()).hexdigest() + '.jpg'
+    dalaguete_products = json.loads((root / 'template-artwork/mandarin-dalaguete-front-products.json').read_text(encoding='utf-8'))
+    dalaguete = (root / 'dalaguete-front.js').read_text(encoding='utf-8').replace('__DALAGUETE_FRONT_ART__',json.dumps(dalaguete_art)).replace('__DALAGUETE_FRONT_SEEDS__',json.dumps(dalaguete_products))
+    dalaguete_back_art = 'defaults/images/' + hashlib.sha256((root / 'template-artwork/mandarin-dalaguete-back.jpg').read_bytes()).hexdigest() + '.jpg'
+    dalaguete_back_products = json.loads((root / 'template-artwork/mandarin-dalaguete-back-products.json').read_text(encoding='utf-8'))
+    dalaguete_back = (root / 'dalaguete-back.js').read_text(encoding='utf-8').replace('__DALAGUETE_BACK_ART__',json.dumps(dalaguete_back_art)).replace('__DALAGUETE_BACK_SEEDS__',json.dumps(dalaguete_back_products))
+    bestco_back_art = 'defaults/images/' + hashlib.sha256((root / 'template-artwork/bestco-tuburan-back.jpg').read_bytes()).hexdigest() + '.jpg'
+    bestco_back_products = json.loads((root / 'template-artwork/bestco-tuburan-back-products.json').read_text(encoding='utf-8'))
+    bestco_back = (root / 'bestco-back.js').read_text(encoding='utf-8').replace('__BESTCO_BACK_ART__',json.dumps(bestco_back_art)).replace('__BESTCO_BACK_SEEDS__',json.dumps(bestco_back_products))
+    bestco_art = 'defaults/images/' + hashlib.sha256((root / 'template-artwork/bestco-tuburan-front.jpg').read_bytes()).hexdigest() + '.jpg'
+    bestco_products = json.loads((root / 'template-artwork/bestco-tuburan-front-products.json').read_text(encoding='utf-8'))
+    bestco = (root / 'bestco-front.js').read_text(encoding='utf-8').replace('__BESTCO_FRONT_ART__',json.dumps(bestco_art)).replace('__BESTCO_FRONT_SEEDS__',json.dumps(bestco_products))
+    return back + "\n" + front + "\n" + peso + "\n" + peso_back + "\n" + alkeia + "\n" + alkeia_back + "\n" + felcon + "\n" + felcon_front + "\n" + ginsey + "\n" + ginsey_back + "\n" + welmart + "\n" + welmart_back + "\n" + tayud + "\n" + tayud_back + "\n" + kazumi + "\n" + kazumi_back + "\n" + oneplus + "\n" + oneplus_back + "\n" + weldon + "\n" + weldon_back + "\n" + sheldon + "\n" + sheldon_back + "\n" + mandarin + "\n" + mandarin_back + "\n" + dalaguete + "\n" + dalaguete_back + "\n" + bestco_back + "\n" + bestco
 
 
 def embed_collection(html: str, root: Path) -> str:

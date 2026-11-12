@@ -5,7 +5,7 @@ const $=id=>document.getElementById(id),ctx=$('canvas').getContext('2d');
 let project=null,original=null,selected=null,dirty=false,worker=null,job=0,mode=null,busy=false;
 
 const images=new Map();
-const storeNames={'home-express':'Home Express Basak',pesoplus:'Pesoplus Mambaling','alkeia-talamban':'Alkeia Talamban','alkeia-tayud':'Alkeia Tayud','kazumi-linao':'Kazumi Linao','oneplus-pardo':'Oneplus Pardo','welmart-inayawan':'Welmart Inayawan','ginsey-oslob':'Ginsey Oslob','felcon-bato':'Felcon Bato'};
+const storeNames={'home-express':'Home Express Basak',pesoplus:'Pesoplus Mambaling','alkeia-talamban':'Alkeia Talamban','alkeia-tayud':'Alkeia Tayud','kazumi-linao':'Kazumi Linao','oneplus-pardo':'Oneplus Pardo','weldon-carcar':'Weldon Carcar','sheldon-pinamungajan':'Sheldon Pinamungajan','mandarin-catmon':'Mandarin Catmon','mandarin-dalaguete':'Mandarin Dalaguete','bestco-tuburan':'Bestco Tuburan','welmart-inayawan':'Welmart Inayawan','ginsey-oslob':'Ginsey Oslob','felcon-bato':'Felcon Bato'};
 
 const status=s=>$('status').textContent=s;
 

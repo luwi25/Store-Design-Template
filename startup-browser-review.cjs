@@ -11,7 +11,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
   await page.locator('#storeChooserDialog').waitFor({state:'visible'});
   assert(!requests.some(url=>url.includes('/defaults/project.json')),'Catalog must wait for sign-in');
   assert(!requests.some(url=>/\/(assets|defaults\/images|vendor)\//.test(url)),'No artwork or models before sign-in');
-  await page.locator('[data-store="'+store+'"]').click();await page.locator('#storePassword').fill('test-password');await page.locator('#storePasswordGate button[type=submit]').click();
+  await page.locator('#storeUsername').fill(store==='all'?'admin':store);await page.locator('#storePassword').fill('test-password');await page.locator('#storePasswordGate button[type=submit]').click();
   if(store==='alkeia-talamban'){
    await page.locator('#templateVisibilityEmpty').waitFor({state:'visible'});
    assert(!requests.some(url=>/\/(assets|defaults\/images|vendor)\//.test(url)),'Store with hidden templates must not download another store artwork');

@@ -1,0 +1,10 @@
+Bestco Tuburan setup
+
+1. Run add-bestco-tuburan.sql in Supabase SQL Editor.
+2. Add BESTCO_TUBURAN_PASSWORD to Edge Function Secrets (at least 12 characters).
+3. Redeploy store-service/index.ts to the existing quick-handler function.
+
+Username: bestco-tuburan
+Sales sync is unchanged.
+
+SQL now covers Front and Back. Rerun add-bestco-tuburan.sql if you previously ran the Back-only setup. Keep the same password.
