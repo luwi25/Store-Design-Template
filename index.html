@@ -785,7 +785,8 @@ async function printSheetPDF(canvas,paper){
  push(`trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`);
  return new Blob(parts,{type:'application/pdf'});
 }
-async function exportPDF(){
+function exportPDF(){return choosePrintPaper('pdf',exportPDFDirect)}
+async function exportPDFDirect(){
  const btn=$('pdfBtn');if(btn.disabled)return;
  if(usesCanvasTemplate()&&!activeSlots().length){showNotice('Add a product before downloading.');return}
  const label=btn.querySelector('span'),previous=label.textContent;
@@ -826,6 +827,28 @@ async function exportPNG(){
 }
 
 
+function choosePrintPaper(action,proceed){
+ if(!activeTemplateAvailable()){showNotice('No visible template is available. Contact Admin.');return}
+ let dialog=$('printPaperDialog');
+ if(!dialog){
+  dialog=document.createElement('dialog');dialog.id='printPaperDialog';dialog.className='modal';dialog.setAttribute('aria-labelledby','printPaperHeading');
+  dialog.innerHTML='<form method="dialog" class="modal-inner"><div class="modal-head"><h2 id="printPaperHeading">Paper size</h2><button type="button" class="icon-btn" data-cancel aria-label="Close paper size selection">?</button></div><div class="field"><label for="outputPaperSize">Paper size</label><select id="outputPaperSize"><option value="letter">Letter ? 8.5 ? 11 in</option><option value="a4">A4 ? 210 ? 297 mm</option></select></div><p class="helper">Choose the same paper size in your printer settings. Print the PDF at Actual size / 100%.</p><div class="modal-actions"><button class="btn" type="button" data-cancel>Cancel</button><button class="btn btn-primary" type="submit" data-continue>Continue</button></div></form>';
+  document.body.append(dialog);for(const button of dialog.querySelectorAll('[data-cancel]'))button.onclick=()=>dialog.close();
+ }
+ const select=$('outputPaperSize'),templateId=state.templateId,trigger=document.activeElement;
+ select.querySelector('[data-custom]')?.remove();
+ const current=state.poster.paper||'letter';
+ if(!['letter','a4'].includes(current)){const option=document.createElement('option');option.value=current;option.dataset.custom='true';option.textContent={'half-letter':'Half Letter',a3:'A3','long-bond':'Long bond'}[current]||current;select.append(option)}
+ select.value=current;
+ $('printPaperHeading').textContent=action==='pdf'?'Ready to print ? paper size':'Print poster ? paper size';
+ dialog.querySelector('[data-continue]').textContent=action==='pdf'?'Download PDF':'Continue';
+ dialog.querySelector('form').onsubmit=event=>{
+  event.preventDefault();if(state.templateId!==templateId){dialog.close();showNotice('The template changed. Choose the paper size again.');return}
+  state.poster.paper=select.value;$('paperSelect').value=select.value;save();dialog.close();proceed();
+ };
+ dialog.onclose=()=>trigger?.focus();dialog.showModal();select.focus();
+}
+
 function printGeometry(){
  const paper={'half-letter':[139.7,215.9],a4:[210,297],a3:[297,420],letter:[215.9,279.4],'long-bond':[215.9,330.2]}[state.poster.paper]||[215.9,279.4];
  const half=state.poster.fit==='half',margin=2.5,gap=4,available=paper[0]-margin*2;
@@ -843,7 +866,8 @@ function preparePrintPages(artworks,startHalf=0){
  const pages=[];artworks.forEach((art,i)=>{const position=i+startHalf,pageIndex=Math.floor(position/2);if(!pages[pageIndex]){const page=document.createElement('div');page.className='top-print-page';const cut=document.createElement('div');cut.className='print-cut-line';cut.setAttribute('aria-hidden','true');page.append(cut);pages[pageIndex]=page}const placement=document.createElement('div');placement.className='top-print-placement';placement.style.top=`${half?(position%2===0?outerTop:paper[1]-outerTop-artWidth):(position%2)*paper[1]/2+(paper[1]/2-artWidth)/2}mm`;art.classList.add('top-print-art');placement.append(art);pages[pageIndex].append(placement)});
  $('printSheet').replaceChildren(...pages);document.body.classList.add('printing-top');return pages;
 }
-function printPoster(){
+function printPoster(){return choosePrintPaper('print',printPosterSelected)}
+function printPosterSelected(){
  if(!activeTemplateAvailable()){showNotice('No visible template is available. Contact Admin.');return}
  if(window.STORE_ACTIVITY_CONFIG?.enabled){if(window.storeActivity)return window.storeActivity.requestPrint();showNotice('Store service could not load. Refresh the page and retry.');return}
  return printPosterDirect();
