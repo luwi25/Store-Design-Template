@@ -90,3 +90,5 @@
 
 /* Hide the routine saved badge while retaining saving/error feedback. */
 #saveStatus[data-state="saved"]{display:none!important}
+
+.admin-template-store-filter{margin:0 0 14px;padding:0}.admin-template-store-filter label{display:block;margin-bottom:6px;font-size:12px;font-weight:600;color:#163b65}.admin-template-store-filter select{width:100%;min-height:42px;padding:9px;border:1px solid #cbd8e8;border-radius:9px;background:#f7faff;color:#163b65}.admin-template-store-filter[hidden],.template-store-group.admin-filter-hidden{display:none!important}

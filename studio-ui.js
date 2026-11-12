@@ -231,3 +231,25 @@ function adminCatalogProducts(products){
  const owner=p=>{if(p.sharedCatalog)return 'shared';const id=p.templateId||'';for(const store of ['alkeia-tayud','alkeia-talamban','felcon-bato','ginsey-oslob','kazumi-linao','oneplus-pardo','welmart-inayawan'])if(id.startsWith(store+'-'))return store;if(id.startsWith('home-'))return 'home-express';if(id.startsWith('peso-'))return 'pesoplus';return 'shared'};
  return products.filter(p=>(!selected||owner(p)===selected)&&(!price||p.price===0)&&(!photo||(photo==='present'?!!p.image:!p.image))).sort((a,b)=>sort==='low'?a.price-b.price:sort==='high'?b.price-a.price:String(a.name).localeCompare(String(b.name)));
 }
+
+// A sidebar-only filter: Admin permissions and the active poster stay unchanged.
+function syncAdminTemplateStoreFilter(){
+ const list=$('templateList');if(!list)return;
+ let field=$('adminTemplateStoreField'),select=$('adminTemplateStore');
+ if(!field){
+  field=document.createElement('div');field.id='adminTemplateStoreField';field.className='field admin-template-store-filter';
+  const label=document.createElement('label');label.htmlFor='adminTemplateStore';label.textContent='Show templates for';
+  select=document.createElement('select');select.id='adminTemplateStore';field.append(label,select);list.before(field);
+  select.onchange=()=>{syncAdminTemplateStoreFilter();if(templatePreviewReady===state.templateId)loadVisibleTemplateThumbnails();list.closest('.left-rail').scrollTop=0};
+ }
+ const groups=[...list.querySelectorAll('.template-store-group')];
+ const names=groups.map(g=>g.querySelector('.template-store-heading')?.textContent||'Other templates');
+ const previous=select.value;
+ if(select.dataset.names!==JSON.stringify(names)){
+  select.replaceChildren();const all=document.createElement('option');all.value='';all.textContent='All stores';select.append(all);
+  for(const name of names){const option=document.createElement('option');option.value=name;option.textContent=name;select.append(option)}
+  select.dataset.names=JSON.stringify(names);select.value=names.includes(previous)?previous:'';
+ }
+ field.hidden=storeFilter!=='all';
+ groups.forEach((group,i)=>group.classList.toggle('admin-filter-hidden',storeFilter==='all'&&Boolean(select.value)&&names[i]!==select.value));
+}
