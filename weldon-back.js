@@ -47,7 +47,6 @@ async function weldonBackCanvas({width=1650,height=2550}={}){
     const priceSize=32*textScale('sale',slot),priceBaseline=b.y+b.h-20;
     const nameBaseline=priceBaseline-priceSize-5-(lines.length-1)*lineHeight;
     const photoH=Math.max(1,nameBaseline-size-b.y-12),im=photos[index];
-    ctx.save();ctx.strokeStyle='#d50000';ctx.lineWidth=3;roundRect(ctx,b.x+10,b.y+9,b.w-20,photoH,16);ctx.stroke();ctx.restore();
     if(im){
      const scale=Math.min((b.w-16)/im.width,photoH/im.height);
      ctx.save();roundRect(ctx,b.x+8,b.y+7,b.w-16,photoH,10);ctx.clip();
