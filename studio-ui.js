@@ -120,7 +120,8 @@ function syncStoreDownloadMenu(){
 function setupDownloadMenu(){
  const pdf=$('pdfBtn'),png=$('pngBtn');if(!pdf||!png)return;
  const backup=$('downloadDatabaseBackup');
- const downloadButtons=[pdf,png,backup].filter(Boolean);
+ const printPng=$('printPngBtn');
+ const downloadButtons=[pdf,printPng,png,backup].filter(Boolean);
  const wrap=document.createElement('div');wrap.className='download-dropdown';wrap.hidden=true;
  const toggle=document.createElement('button');toggle.id='downloadMenuButton';toggle.type='button';toggle.className='btn';toggle.textContent='Download ▾';
  toggle.setAttribute('aria-expanded','false');toggle.setAttribute('aria-controls','downloadOptions');
@@ -137,7 +138,7 @@ function setupDownloadMenu(){
  options.addEventListener('click',event=>{if(event.target.closest('button')&&!event.target.closest('button').disabled)close(true);else if(event.target.closest('button')?.getAttribute('aria-busy')==='true')close(true)});
  document.addEventListener('pointerdown',event=>{if(!wrap.contains(event.target))close()});
  wrap.addEventListener('focusout',()=>setTimeout(()=>{if(!wrap.contains(document.activeElement))close()},0));
- const sync=()=>{const busy=[pdf,png].find(b=>b.getAttribute('aria-busy')==='true');toggle.textContent=busy?(busy===pdf?'Preparing PDF…':'Preparing PNG…'):'Download ▾';toggle.setAttribute('aria-busy',String(Boolean(busy)));toggle.disabled=Boolean(busy)||downloadButtons.every(b=>b.disabled)};
+ const sync=()=>{const busy=[pdf,printPng,png].filter(Boolean).find(b=>b.getAttribute('aria-busy')==='true');toggle.textContent=busy?(busy===pdf?'Preparing PDF…':'Preparing PNG…'):'Download ▾';toggle.setAttribute('aria-busy',String(Boolean(busy)));toggle.disabled=Boolean(busy)||downloadButtons.every(b=>b.disabled)};
  const observer=new MutationObserver(sync);for(const button of downloadButtons)observer.observe(button,{attributes:true,attributeFilter:['disabled','aria-busy']});sync();
 }
 
