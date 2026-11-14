@@ -1,0 +1,9 @@
+Unico Talisay setup
+
+1. Run add-unico-talisay.sql in the existing Supabase SQL Editor.
+2. Add UNICO_TALISAY_PASSWORD to Edge Function Secrets (at least 12 characters).
+3. Redeploy store-service/index.ts to the existing quick-handler function.
+
+Keep all existing store passwords. This addition does not enable Unico Talisay sales sync.
+
+The SQL now covers both Front and Back. If you ran the Front-only setup, rerun add-unico-talisay.sql. Keep the same password secret.

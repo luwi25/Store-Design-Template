@@ -126,7 +126,13 @@ def collection_source(root: Path) -> str:
     sibonga_back_art = 'defaults/images/' + hashlib.sha256((root / 'template-artwork/ginsey-sibonga-back.jpg').read_bytes()).hexdigest() + '.jpg'
     sibonga_back_products = json.loads((root / 'template-artwork/ginsey-sibonga-back-products.json').read_text(encoding='utf-8'))
     sibonga_back = (root / 'sibonga-back.js').read_text(encoding='utf-8').replace('__SIBONGA_BACK_ART__',json.dumps(sibonga_back_art)).replace('__SIBONGA_BACK_SEEDS__',json.dumps(sibonga_back_products))
-    return back + "\n" + front + "\n" + peso + "\n" + peso_back + "\n" + alkeia + "\n" + alkeia_back + "\n" + felcon + "\n" + felcon_front + "\n" + ginsey + "\n" + ginsey_back + "\n" + welmart + "\n" + welmart_back + "\n" + tayud + "\n" + tayud_back + "\n" + kazumi + "\n" + kazumi_back + "\n" + oneplus + "\n" + oneplus_back + "\n" + weldon + "\n" + weldon_back + "\n" + sheldon + "\n" + sheldon_back + "\n" + mandarin + "\n" + mandarin_back + "\n" + dalaguete + "\n" + dalaguete_back + "\n" + bestco_back + "\n" + bestco + "\n" + sibonga + "\n" + sibonga_back
+    unico_art = 'defaults/images/' + hashlib.sha256((root / 'template-artwork/unico-talisay-front.jpg').read_bytes()).hexdigest() + '.jpg'
+    unico_products = json.loads((root / 'template-artwork/unico-talisay-front-products.json').read_text(encoding='utf-8'))
+    unico = (root / 'unico-front.js').read_text(encoding='utf-8').replace('__UNICO_FRONT_ART__',json.dumps(unico_art)).replace('__UNICO_FRONT_SEEDS__',json.dumps(unico_products))
+    unico_back_art = 'defaults/images/' + hashlib.sha256((root / 'template-artwork/unico-talisay-back.jpg').read_bytes()).hexdigest() + '.jpg'
+    unico_back_products = json.loads((root / 'template-artwork/unico-talisay-back-products.json').read_text(encoding='utf-8'))
+    unico_back = (root / 'unico-back.js').read_text(encoding='utf-8').replace('__UNICO_BACK_ART__',json.dumps(unico_back_art)).replace('__UNICO_BACK_SEEDS__',json.dumps(unico_back_products))
+    return back + "\n" + front + "\n" + peso + "\n" + peso_back + "\n" + alkeia + "\n" + alkeia_back + "\n" + felcon + "\n" + felcon_front + "\n" + ginsey + "\n" + ginsey_back + "\n" + welmart + "\n" + welmart_back + "\n" + tayud + "\n" + tayud_back + "\n" + kazumi + "\n" + kazumi_back + "\n" + oneplus + "\n" + oneplus_back + "\n" + weldon + "\n" + weldon_back + "\n" + sheldon + "\n" + sheldon_back + "\n" + mandarin + "\n" + mandarin_back + "\n" + dalaguete + "\n" + dalaguete_back + "\n" + bestco_back + "\n" + bestco + "\n" + sibonga + "\n" + sibonga_back + "\n" + unico + "\n" + unico_back
 
 
 def embed_collection(html: str, root: Path) -> str:
