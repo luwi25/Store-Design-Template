@@ -6,7 +6,7 @@ revoke all on schema store_monitor from public, anon, authenticated;
 
 create table if not exists store_monitor.sessions (
  token_hash text primary key check(token_hash ~ '^[a-f0-9]{64}$'),
- store text not null check(store in ('home-express','pesoplus','alkeia-talamban','alkeia-tayud','kazumi-linao','oneplus-pardo','weldon-carcar','sheldon-pinamungajan','mandarin-catmon','mandarin-dalaguete','bestco-tuburan','welmart-inayawan','ginsey-oslob','felcon-bato','all')),
+ store text not null check(store in ('home-express','pesoplus','alkeia-talamban','alkeia-tayud','kazumi-linao','oneplus-pardo','weldon-carcar','sheldon-pinamungajan','mandarin-catmon','mandarin-dalaguete','bestco-tuburan','ginsey-sibonga','welmart-inayawan','ginsey-oslob','felcon-bato','all')),
  expires timestamptz not null
 );
 create table if not exists store_monitor.login_limits (
@@ -22,7 +22,7 @@ create table if not exists store_monitor.activity (
 create index if not exists activity_store_seq on store_monitor.activity(store,seq desc);
 create table if not exists store_monitor.print_requests (
  seq bigint generated always as identity primary key,
- id text not null unique, store text not null check(store in ('home-express','pesoplus','alkeia-talamban','alkeia-tayud','kazumi-linao','oneplus-pardo','weldon-carcar','sheldon-pinamungajan','mandarin-catmon','mandarin-dalaguete','bestco-tuburan','welmart-inayawan','ginsey-oslob','felcon-bato')),
+ id text not null unique, store text not null check(store in ('home-express','pesoplus','alkeia-talamban','alkeia-tayud','kazumi-linao','oneplus-pardo','weldon-carcar','sheldon-pinamungajan','mandarin-catmon','mandarin-dalaguete','bestco-tuburan','ginsey-sibonga','welmart-inayawan','ginsey-oslob','felcon-bato')),
  template_id text not null, template_name text not null,
  note text not null default '', preview text not null,
  status text not null default 'pending' check(status in ('pending','approved','rejected')),
@@ -31,9 +31,9 @@ create table if not exists store_monitor.print_requests (
 );
 -- Update existing installations as well as fresh schemas.
 alter table store_monitor.sessions drop constraint if exists sessions_store_check;
-alter table store_monitor.sessions add constraint sessions_store_check check(store in ('home-express','pesoplus','alkeia-talamban','alkeia-tayud','kazumi-linao','oneplus-pardo','weldon-carcar','sheldon-pinamungajan','mandarin-catmon','mandarin-dalaguete','bestco-tuburan','welmart-inayawan','ginsey-oslob','felcon-bato','all'));
+alter table store_monitor.sessions add constraint sessions_store_check check(store in ('home-express','pesoplus','alkeia-talamban','alkeia-tayud','kazumi-linao','oneplus-pardo','weldon-carcar','sheldon-pinamungajan','mandarin-catmon','mandarin-dalaguete','bestco-tuburan','ginsey-sibonga','welmart-inayawan','ginsey-oslob','felcon-bato','all'));
 alter table store_monitor.print_requests drop constraint if exists print_requests_store_check;
-alter table store_monitor.print_requests add constraint print_requests_store_check check(store in ('home-express','pesoplus','alkeia-talamban','alkeia-tayud','kazumi-linao','oneplus-pardo','weldon-carcar','sheldon-pinamungajan','mandarin-catmon','mandarin-dalaguete','bestco-tuburan','welmart-inayawan','ginsey-oslob','felcon-bato'));
+alter table store_monitor.print_requests add constraint print_requests_store_check check(store in ('home-express','pesoplus','alkeia-talamban','alkeia-tayud','kazumi-linao','oneplus-pardo','weldon-carcar','sheldon-pinamungajan','mandarin-catmon','mandarin-dalaguete','bestco-tuburan','ginsey-sibonga','welmart-inayawan','ginsey-oslob','felcon-bato'));
 
 create unique index if not exists one_pending_request on store_monitor.print_requests(store,template_id) where status='pending';
 create index if not exists requests_store_template_seq on store_monitor.print_requests(store,template_id,seq desc);
@@ -83,7 +83,7 @@ begin
   return jsonb_build_object('allowed',v_attempts<=12);
  elsif p_action='session_create' then
   v_store:=p_data->>'store';
-  if v_store is null or v_store not in ('home-express','pesoplus','alkeia-talamban','alkeia-tayud','kazumi-linao','oneplus-pardo','weldon-carcar','sheldon-pinamungajan','mandarin-catmon','mandarin-dalaguete','bestco-tuburan','welmart-inayawan','ginsey-oslob','felcon-bato','all') then
+  if v_store is null or v_store not in ('home-express','pesoplus','alkeia-talamban','alkeia-tayud','kazumi-linao','oneplus-pardo','weldon-carcar','sheldon-pinamungajan','mandarin-catmon','mandarin-dalaguete','bestco-tuburan','ginsey-sibonga','welmart-inayawan','ginsey-oslob','felcon-bato','all') then
    return jsonb_build_object('error','Invalid store.','status',400);
   end if;
   delete from store_monitor.sessions where expires<=now();
@@ -107,6 +107,7 @@ begin
    when v_tid in ('mandarin-catmon-front','mandarin-catmon-back') then 'mandarin-catmon'
    when v_tid in ('mandarin-dalaguete-front','mandarin-dalaguete-back') then 'mandarin-dalaguete'
    when v_tid in ('bestco-tuburan-front','bestco-tuburan-back') then 'bestco-tuburan'
+   when v_tid in ('ginsey-sibonga-front','ginsey-sibonga-back') then 'ginsey-sibonga'
    when v_tid in ('welmart-inayawan-front','welmart-inayawan-back') then 'welmart-inayawan'
    when v_tid in ('ginsey-oslob-front','ginsey-oslob-back') then 'ginsey-oslob'
    when v_tid in ('felcon-bato-back','felcon-bato-front') then 'felcon-bato'
@@ -221,7 +222,7 @@ begin
   select coalesce(jsonb_agg((to_jsonb(a)-'seq')||jsonb_build_object('cursor',a.seq) order by a.seq desc),'[]'),count(*)
    into v_rows,v_count from (
     select * from store_monitor.activity where
-     ((coalesce(p_data->>'store','')='' and store in ('home-express','pesoplus','alkeia-talamban','alkeia-tayud','kazumi-linao','oneplus-pardo','weldon-carcar','sheldon-pinamungajan','mandarin-catmon','mandarin-dalaguete','bestco-tuburan','welmart-inayawan','ginsey-oslob','felcon-bato'))
+     ((coalesce(p_data->>'store','')='' and store in ('home-express','pesoplus','alkeia-talamban','alkeia-tayud','kazumi-linao','oneplus-pardo','weldon-carcar','sheldon-pinamungajan','mandarin-catmon','mandarin-dalaguete','bestco-tuburan','ginsey-sibonga','welmart-inayawan','ginsey-oslob','felcon-bato'))
       or (coalesce(p_data->>'store','')<>'' and (store=p_data->>'store' or details->>'store'=p_data->>'store')))
      and (coalesce(p_data->>'action','')='' or action=p_data->>'action')
      and (v_tid='' or template_id=v_tid) and (v_from is null or created_at>=v_from)
@@ -256,9 +257,9 @@ create table if not exists store_monitor.push_claims (
 );
 -- Existing subscriptions were Admin subscriptions. Bind new enrollments to their authenticated store.
 alter table store_monitor.push_subscriptions add column if not exists store text not null default 'all'
- check(store in ('all','home-express','pesoplus','alkeia-talamban','alkeia-tayud','kazumi-linao','oneplus-pardo','weldon-carcar','sheldon-pinamungajan','mandarin-catmon','mandarin-dalaguete','bestco-tuburan','welmart-inayawan','ginsey-oslob','felcon-bato'));
+ check(store in ('all','home-express','pesoplus','alkeia-talamban','alkeia-tayud','kazumi-linao','oneplus-pardo','weldon-carcar','sheldon-pinamungajan','mandarin-catmon','mandarin-dalaguete','bestco-tuburan','ginsey-sibonga','welmart-inayawan','ginsey-oslob','felcon-bato'));
 alter table store_monitor.push_subscriptions drop constraint if exists push_subscriptions_store_check;
-alter table store_monitor.push_subscriptions add constraint push_subscriptions_store_check check(store in ('all','home-express','pesoplus','alkeia-talamban','alkeia-tayud','kazumi-linao','oneplus-pardo','weldon-carcar','sheldon-pinamungajan','mandarin-catmon','mandarin-dalaguete','bestco-tuburan','welmart-inayawan','ginsey-oslob','felcon-bato'));
+alter table store_monitor.push_subscriptions add constraint push_subscriptions_store_check check(store in ('all','home-express','pesoplus','alkeia-talamban','alkeia-tayud','kazumi-linao','oneplus-pardo','weldon-carcar','sheldon-pinamungajan','mandarin-catmon','mandarin-dalaguete','bestco-tuburan','ginsey-sibonga','welmart-inayawan','ginsey-oslob','felcon-bato'));
 create table if not exists store_monitor.push_approval_claims (
  request_id text primary key references store_monitor.print_requests(id) on delete cascade,
  created_at timestamptz not null default now()
@@ -398,7 +399,7 @@ insert into store_monitor.notifications(store,request_id,kind,template_name,crea
 create or replace function store_monitor.save_print_initiated_notification()
 returns trigger language plpgsql security definer set search_path='' as $$
 begin
- if NEW.action='print_initiated' and NEW.store in ('home-express','pesoplus','alkeia-talamban','alkeia-tayud','kazumi-linao','oneplus-pardo','weldon-carcar','sheldon-pinamungajan','mandarin-catmon','mandarin-dalaguete','bestco-tuburan','welmart-inayawan','ginsey-oslob','felcon-bato') then
+ if NEW.action='print_initiated' and NEW.store in ('home-express','pesoplus','alkeia-talamban','alkeia-tayud','kazumi-linao','oneplus-pardo','weldon-carcar','sheldon-pinamungajan','mandarin-catmon','mandarin-dalaguete','bestco-tuburan','ginsey-sibonga','welmart-inayawan','ginsey-oslob','felcon-bato') then
   insert into store_monitor.notifications(store,request_id,kind,template_name,created_at,event_id,source_store)
    select 'all',r.id,'print_initiated',NEW.template_name,NEW.created_at,NEW.id,NEW.store
    from store_monitor.print_requests r where r.id=NEW.details->>'requestId' and r.store=NEW.store

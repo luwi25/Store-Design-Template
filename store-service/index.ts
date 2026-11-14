@@ -41,6 +41,7 @@ const roles = {
  'mandarin-catmon': 'MANDARIN_CATMON_PASSWORD',
  'mandarin-dalaguete': 'MANDARIN_DALAGUETE_PASSWORD',
  'bestco-tuburan': 'BESTCO_TUBURAN_PASSWORD',
+ 'ginsey-sibonga': 'GINSEY_SIBONGA_PASSWORD',
  'welmart-inayawan': 'WELMART_INAYAWAN_PASSWORD',
  'ginsey-oslob': 'GINSEY_OSLOB_PASSWORD',
  'felcon-bato': 'FELCON_BATO_PASSWORD',
@@ -159,7 +160,7 @@ Deno.serve(async (request: Request) => {
   async function notifyPrintAccount(id: string, approval = false, eventId?: string){
    try{
     const batch=await rpc(eventId?'claim_print':approval?'claim_approval':'claim',tokenHash,{id,...(eventId?{eventId}:{})},true);
-    const names:Record<string,string>={'home-express':'Home Express Basak',pesoplus:'Pesoplus Mambaling','alkeia-talamban':'Alkeia Talamban','alkeia-tayud':'Alkeia Tayud','kazumi-linao':'Kazumi Linao','oneplus-pardo':'Oneplus Pardo','weldon-carcar':'Weldon Carcar','sheldon-pinamungajan':'Sheldon Pinamungajan','mandarin-catmon':'Mandarin Catmon','mandarin-dalaguete':'Mandarin Dalaguete','bestco-tuburan':'Bestco Tuburan','welmart-inayawan':'Welmart Inayawan','ginsey-oslob':'Ginsey Oslob','felcon-bato':'Felcon Bato'};
+    const names:Record<string,string>={'home-express':'Home Express Basak',pesoplus:'Pesoplus Mambaling','alkeia-talamban':'Alkeia Talamban','alkeia-tayud':'Alkeia Tayud','kazumi-linao':'Kazumi Linao','oneplus-pardo':'Oneplus Pardo','weldon-carcar':'Weldon Carcar','sheldon-pinamungajan':'Sheldon Pinamungajan','mandarin-catmon':'Mandarin Catmon','mandarin-dalaguete':'Mandarin Dalaguete','bestco-tuburan':'Bestco Tuburan','ginsey-sibonga':'Ginsey Sibonga','welmart-inayawan':'Welmart Inayawan','ginsey-oslob':'Ginsey Oslob','felcon-bato':'Felcon Bato'};
     const storeName=names[batch.store]||'Store';
     const payload=JSON.stringify({requestId:batch.requestId,store:storeName,template:batch.template,type:eventId?'print_initiated':approval?'approved':'requested',eventId:batch.eventId});
     // Admin-facing only (new request / store started printing); approvals notify the store, not Lark.

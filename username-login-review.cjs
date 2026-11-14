@@ -1,6 +1,6 @@
 ﻿const fs=require('fs'),assert=require('assert/strict'),{JSDOM}=require('jsdom');
 (async()=>{
- for(const username of ['admin','HOME EXPRESS BASAK','pesoplus-mambaling','sheldon-pinamungajan','mandarin-catmon','mandarin-dalaguete','bestco-tuburan']){
+ for(const username of ['admin','HOME EXPRESS BASAK','pesoplus-mambaling','sheldon-pinamungajan','mandarin-catmon','mandarin-dalaguete','bestco-tuburan','ginsey-sibonga']){
  const dom=new JSDOM(fs.readFileSync('public/index.html','utf8'),{url:'https://example.test',runScripts:'outside-only'}),w=dom.window;
  w.HTMLDialogElement.prototype.showModal=function(){this.open=true};w.HTMLDialogElement.prototype.close=function(){this.open=false};w.AbortSignal=AbortSignal;
  w.STORE_ACTIVITY_CONFIG={enabled:true,apiBase:'https://example.test/api'};let calls=[];
