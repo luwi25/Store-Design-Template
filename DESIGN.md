@@ -158,3 +158,9 @@ Ginsey Template #1 Back adds five editable category headings and 25 product card
 Template #1 Front preserves the supplied red/white artwork, header, footer and QR. Nine editable cards start with blank photos and unset prices. Store ownership uses welmart-inayawan and welmart-inayawan-front. The store is included in visibility, publishing, backup/restore, activity and approvals; its Supabase secret/migration is required for hosted sign-in. Sales automation is unchanged.
 
 Welmart Template #1 Back has five editable category headings and 25 editable product cards. It shares the Front template's store ownership and Template #1 visibility group. Preserve the red/white artwork and footer; initial photos remain blank and unset prices show a dash.
+
+
+## Full-page landscape template
+Template #2 - ALKEIA TALAMBAN - BACK uses internal Template Version 2: one A4 landscape page, 297 x 210 mm, 3508 x 2480 pixels at 300 DPI. Preserve the full source composition, including both independently editable 25-product panels and the map/QR panel. Display the design name only. Version 2 locks paper/fit controls to A4 and one full page, preserves store print approvals, and uses landscape review previews. Version 1 retains the existing print and export behavior. Print CSS is scoped and removed after printing or replaced on the next print job. Runtime ownership: template-versions.js for version routing, alkeia-v2-back.js for artwork, existing editor controls for editing. No UI palette/token changes.
+
+The landscape preview starts at 200% zoom, with independent Version 1/2 zoom values during the editor session. Version 1 remains at its existing 100% default. Landscape allows up to 300%; Fit resets the active layout to 100%. Overflow scrolls within the stage with the left edge accessible. Zoom affects preview only, never print/export dimensions.

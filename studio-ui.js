@@ -104,8 +104,11 @@ function setupStudioUI(){
  const template=document.createElement('select');template.id='studioTemplate';template.setAttribute('aria-label','Selected design template');template.onchange=()=>{const cards=$('templateList').querySelectorAll('.template-card');cards[Number(template.value)]?.click()};document.querySelector('.brand').after(template);template.after($('saveStatus'));
 
  const zoom=document.createElement('div');zoom.className='studio-zoom';zoom.innerHTML='<button type="button" class="btn btn-sm" aria-label="Zoom out">−</button><output aria-live="polite">100%</output><button type="button" class="btn btn-sm" aria-label="Zoom in">+</button><button type="button" class="btn btn-sm">Fit</button>';
- document.querySelector('.stage-top').append(zoom);let scale=1;const buttons=zoom.querySelectorAll('button');const apply=()=>{const stage=document.querySelector('.stage'),width=Math.min(500,stage.clientWidth-48);document.querySelector('.poster-wrap').style.width=Math.max(200,width*scale)+'px';zoom.querySelector('output').textContent=Math.round(scale*100)+'%'};
- buttons[0].onclick=()=>{scale=Math.max(.5,scale-.1);apply()};buttons[1].onclick=()=>{scale=Math.min(2,scale+.1);apply()};buttons[2].onclick=()=>{scale=1;apply()};window.addEventListener('resize',apply);apply();setupAdminCatalog();
+ document.querySelector('.stage-top').append(zoom);
+ const scales={1:1,2:2},buttons=zoom.querySelectorAll('button');
+ const version=()=>typeof templateVersion==='function'?templateVersion().version:1;
+ const apply=()=>{const stage=document.querySelector('.stage'),width=Math.min(500,stage.clientWidth-48),v=version(),scale=scales[v];stage.classList.toggle('landscape-preview-stage',v===2);document.querySelector('.poster-wrap').style.width=Math.max(200,width*scale)+'px';zoom.querySelector('output').textContent=Math.round(scale*100)+'%'};
+ buttons[0].onclick=()=>{const v=version();scales[v]=Math.max(.5,scales[v]-.1);apply()};buttons[1].onclick=()=>{const v=version();scales[v]=Math.min(v===2?3:2,scales[v]+.1);apply()};buttons[2].onclick=()=>{scales[version()]=1;apply()};window.addEventListener('resize',apply);window.addEventListener('template-preview-layout',apply);apply();setupAdminCatalog();
 }
 
 function syncStoreDownloadMenu(){

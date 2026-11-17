@@ -13,6 +13,8 @@ const html=fs.readFileSync('public/index.html','utf8');
  // This scenario exercises Home Express Back. A published backup can open any
  // template, so select the scenario explicitly instead of inheriting that choice.
  source.templateId='home-back';
+ // Exercise hiding from an explicitly visible baseline, independent of Admin's published choices.
+ source.templateVisibility={};delete source.sharedCatalogDraft;
  w.StoreDatabase={load:async()=>structuredClone(source),save:async s=>{saved=JSON.parse(JSON.stringify(s))},preserveLegacy:async()=>{}};
  w.eval([...w.document.querySelectorAll('script')].find(s=>s.textContent.includes('function renderPoster')).textContent.replace('window.flashSaleActions={','window.__visibilityTest={setStoreFilter,getState:()=>state,renderAll};window.flashSaleActions={'));
  await new Promise(r=>setTimeout(r,700));assert.equal(errors.length,0,errors.join('\n'));
@@ -21,11 +23,11 @@ const html=fs.readFileSync('public/index.html','utf8');
  w.eval(fs.readFileSync('shared-catalog-ui.js','utf8'));
  let mode='all',canApply=true;api.setStoreFilter(mode);
  w.catalogPublisher=w.setupSharedCatalogPublishing({getState:api.getState,getMode:()=>mode,save:()=>{},render:api.renderAll,canApplyVisibility:()=>canApply});
- assert.equal(w.document.querySelectorAll('.template-card').length,36);
+ assert.equal(w.document.querySelectorAll('.template-card').length,37);
  w.document.getElementById('templateVisibilityButton').click();
  const form=w.document.querySelector('#templateVisibilityDialog form');
- // One checkbox per Template # series (18 series across 36 designs), not one per design.
- const choices=form.querySelectorAll('input[data-templates]');assert.equal(choices.length,18);
+ // One checkbox per Template # series (19 series across 37 designs), not one per design.
+ const choices=form.querySelectorAll('input[data-templates]');assert.equal(choices.length,19);
  const homeTemplate1=[...choices].find(input=>JSON.parse(input.dataset.templates).some(t=>t.id==='home-back'));
  assert.deepEqual(JSON.parse(homeTemplate1.dataset.templates).map(t=>t.id).sort(),['home-back','home-everyday'],'Template #1 groups Home Express Front and Back together');
  homeTemplate1.checked=false;
@@ -58,6 +60,6 @@ const html=fs.readFileSync('public/index.html','utf8');
  w.publishedTemplateVisibility={};w.dispatchEvent(new w.Event('published-template-visibility'));
  assert.equal(w.document.querySelectorAll('#studioTemplate option').length,4);
  assert.equal(w.document.getElementById('templateVisibilityEmpty').hidden,true);
- mode='all';api.setStoreFilter(mode);assert.equal(w.document.querySelectorAll('#studioTemplate option').length,36);
+ mode='all';api.setStoreFilter(mode);assert.equal(w.document.querySelectorAll('#studioTemplate option').length,37);
  assert.equal(errors.length,0,errors.join('\n'));dom.window.close();console.log('PASS: Admin controls, pending visibility, publishing summary, store filtering, empty state, print guard and restoration.');
 })().catch(e=>{console.error(e);process.exitCode=1});

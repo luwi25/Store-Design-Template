@@ -112,7 +112,7 @@ begin
    when v_tid in ('welmart-inayawan-front','welmart-inayawan-back') then 'welmart-inayawan'
    when v_tid in ('ginsey-oslob-front','ginsey-oslob-back') then 'ginsey-oslob'
    when v_tid in ('felcon-bato-back','felcon-bato-front') then 'felcon-bato'
-   when v_tid in ('alkeia-talamban-front','alkeia-talamban-back') then 'alkeia-talamban'
+   when v_tid in ('alkeia-talamban-front','alkeia-talamban-back','alkeia-talamban-v2-back') then 'alkeia-talamban'
    when v_tid in ('peso-plus','peso-back','peso-collection-front','peso-collection-back') then 'pesoplus' else null end;
   if v_owner is null or (v_store<>'all' and v_owner<>v_store) then
    return jsonb_build_object('error','This template is not available for your store.','status',403);
