@@ -570,11 +570,18 @@ function discountPct(product,slot){return product.price?Math.max(0,Math.min(100,
 function productFor(slot){const p=state.products.find(p=>p.id===slot.productId);return p?{...p,...slot.details}:null}
 let databaseSaving=false,databaseQueued=false,databaseConflict=false;
 function save(){clearTimeout(saveTimer);databaseQueued=true;$('saveStatus').dataset.state='saving';$('saveStatus').textContent='Saving to local database...';saveTimer=setTimeout(flushDatabaseSave,250)}
-async function flushDatabaseSave(){
- clearTimeout(saveTimer);saveTimer=null;if(databaseSaving)return false;if(databaseConflict){showNotice('Download a backup of your edits, then reload to load the latest database save.');return false}databaseSaving=true;
- try{while(databaseQueued){databaseQueued=false;const snapshot=structuredClone(state);await StoreDatabase.save(snapshot);try{window.storeActivity?.saved(snapshot)}catch(error){console.warn("Activity logging could not queue this save.")}}$('saveStatus').dataset.state='saved';$('saveStatus').textContent='Saved to local database';$('retryDatabaseSave').hidden=true;return true}
- catch(error){databaseQueued=true;databaseConflict=error.status===409;$('saveStatus').dataset.state='error';$('saveStatus').textContent=error.message;$('retryDatabaseSave').hidden=databaseConflict;showNotice(error.message);return false}
- finally{databaseSaving=false}
+let databaseSaveTask=null,databaseSaveError='';
+function flushDatabaseSave(){
+ clearTimeout(saveTimer);saveTimer=null;
+ // Join the active drain: an overlapping save is pending, not a failure.
+ if(databaseSaveTask)return databaseSaveTask;
+ if(databaseConflict){databaseSaveError='Another tab saved newer changes. Download a backup of your edits, then reload.';showNotice(databaseSaveError);return Promise.resolve(false)}
+ databaseSaving=true;databaseSaveError='';
+ databaseSaveTask=Promise.resolve().then(async()=>{
+  try{while(databaseQueued){databaseQueued=false;const snapshot=structuredClone(state);await StoreDatabase.save(snapshot);try{window.storeActivity?.saved(snapshot)}catch(error){console.warn('Activity logging could not queue this save.')}}$('saveStatus').dataset.state='saved';$('saveStatus').textContent='Saved to local database';$('retryDatabaseSave').hidden=true;return true}
+  catch(error){databaseQueued=true;databaseConflict=error.status===409;databaseSaveError=error.message||'Browser storage could not save your changes.';$('saveStatus').dataset.state='error';$('saveStatus').textContent=databaseSaveError;$('retryDatabaseSave').hidden=databaseConflict;showNotice(databaseSaveError);return false}
+ }).finally(()=>{databaseSaving=false;databaseSaveTask=null});
+ return databaseSaveTask;
 }
 $('retryDatabaseSave').addEventListener('click',flushDatabaseSave);
 $('downloadDatabaseBackup').addEventListener('click',()=>downloadStateBackup(state));
@@ -1007,7 +1014,7 @@ async function commitProductEdit(draft){
   Object.assign(draft.target,structuredClone(draft.slot));
   if(!Object.hasOwn(draft.slot,'textSizes'))delete draft.target.textSizes;
   save();const ok=await flushDatabaseSave();
-  if(!ok){showNotice('Product could not be saved. Your edits are still here; click Save product to retry.');return}
+  if(!ok){showNotice((databaseSaveError||'Product could not be saved.')+' Your edits are still here; click Save product to retry.');return}
   productEditDraft=null;renderCatalog();renderPoster();renderSlotEditor();showNotice('Product saved.');
  }catch(error){showNotice(error.message||'Could not save this product. Please retry.')}
  finally{draft.saving=false;slotEditor.inert=wasInert;refreshProductEditActions()}

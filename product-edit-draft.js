@@ -52,7 +52,7 @@ async function commitProductEdit(draft){
   Object.assign(draft.target,structuredClone(draft.slot));
   if(!Object.hasOwn(draft.slot,'textSizes'))delete draft.target.textSizes;
   save();const ok=await flushDatabaseSave();
-  if(!ok){showNotice('Product could not be saved. Your edits are still here; click Save product to retry.');return}
+  if(!ok){showNotice((databaseSaveError||'Product could not be saved.')+' Your edits are still here; click Save product to retry.');return}
   productEditDraft=null;renderCatalog();renderPoster();renderSlotEditor();showNotice('Product saved.');
  }catch(error){showNotice(error.message||'Could not save this product. Please retry.')}
  finally{draft.saving=false;slotEditor.inert=wasInert;refreshProductEditActions()}
