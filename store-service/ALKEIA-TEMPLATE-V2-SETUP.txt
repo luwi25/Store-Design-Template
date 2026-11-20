@@ -1,6 +1,6 @@
 Alkeia Talamban Template #2 setup
 
-Run the complete add-alkeia-template-v2.sql in Supabase SQL Editor to allow print requests for alkeia-talamban-v2-back.
+Run the complete add-alkeia-template-v2.sql in Supabase SQL Editor to allow print requests for alkeia-talamban-v2-back and alkeia-talamban-v2-front.
 Keep the existing Alkeia Talamban username/password. No new secret is needed.
 The store service already handles the existing store; this template does not require a new Edge Function role.
 Do not run older store setup SQL afterward: it may restore an older template ownership list.

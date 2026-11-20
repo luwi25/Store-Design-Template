@@ -135,8 +135,11 @@ def collection_source(root: Path) -> str:
     alkeia_v2_art = 'defaults/images/' + hashlib.sha256((root / 'template-artwork/alkeia-talamban-v2-back.jpg').read_bytes()).hexdigest() + '.jpg'
     alkeia_v2_seeds = json.loads((root / 'template-artwork/alkeia-talamban-v2-back-products.json').read_text(encoding='utf-8'))
     alkeia_v2 = (root / 'alkeia-v2-back.js').read_text(encoding='utf-8').replace('__ALKEIA_V2_BACK_ART__',json.dumps(alkeia_v2_art)).replace('__ALKEIA_V2_BACK_SEEDS__',json.dumps(alkeia_v2_seeds))
+    front_v2_art = 'defaults/images/' + hashlib.sha256((root / 'template-artwork/alkeia-talamban-v2-front.jpg').read_bytes()).hexdigest() + '.jpg'
+    front_v2_seeds = json.loads((root / 'template-artwork/alkeia-talamban-v2-front-products.json').read_text(encoding='utf-8'))
+    front_v2 = (root / 'alkeia-v2-front.js').read_text(encoding='utf-8').replace('__ALKEIA_V2_FRONT_ART__',json.dumps(front_v2_art)).replace('__ALKEIA_V2_FRONT_SEEDS__',json.dumps(front_v2_seeds))
     version_logic = (root / 'template-versions.js').read_text(encoding='utf-8')
-    return back + "\n" + front + "\n" + peso + "\n" + peso_back + "\n" + alkeia + "\n" + alkeia_back + "\n" + felcon + "\n" + felcon_front + "\n" + ginsey + "\n" + ginsey_back + "\n" + welmart + "\n" + welmart_back + "\n" + tayud + "\n" + tayud_back + "\n" + kazumi + "\n" + kazumi_back + "\n" + oneplus + "\n" + oneplus_back + "\n" + weldon + "\n" + weldon_back + "\n" + sheldon + "\n" + sheldon_back + "\n" + mandarin + "\n" + mandarin_back + "\n" + dalaguete + "\n" + dalaguete_back + "\n" + bestco_back + "\n" + bestco + "\n" + sibonga + "\n" + sibonga_back + "\n" + unico + "\n" + unico_back + "\n" + alkeia_v2 + "\n" + version_logic
+    return back + "\n" + front + "\n" + peso + "\n" + peso_back + "\n" + alkeia + "\n" + alkeia_back + "\n" + felcon + "\n" + felcon_front + "\n" + ginsey + "\n" + ginsey_back + "\n" + welmart + "\n" + welmart_back + "\n" + tayud + "\n" + tayud_back + "\n" + kazumi + "\n" + kazumi_back + "\n" + oneplus + "\n" + oneplus_back + "\n" + weldon + "\n" + weldon_back + "\n" + sheldon + "\n" + sheldon_back + "\n" + mandarin + "\n" + mandarin_back + "\n" + dalaguete + "\n" + dalaguete_back + "\n" + bestco_back + "\n" + bestco + "\n" + sibonga + "\n" + sibonga_back + "\n" + unico + "\n" + unico_back + "\n" + alkeia_v2 + "\n" + front_v2 + "\n" + version_logic
 
 
 def embed_collection(html: str, root: Path) -> str:

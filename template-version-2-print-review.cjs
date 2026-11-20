@@ -1,6 +1,11 @@
-﻿const fs=require('fs'),assert=require('assert/strict'),{JSDOM}=require('jsdom');
+const fs=require('fs'),assert=require('assert/strict'),{JSDOM}=require('jsdom');
 const mobile=process.argv.includes('--mobile');
 const html=fs.readFileSync('public/index.html','utf8');
+// Direct browser printing includes the L5290 safe area without changing exports.
+assert(html.includes('.landscape-print-page{box-sizing:border-box!important;width:297mm;height:210mm;padding:3mm!important;'));
+assert(html.includes('.landscape-print-art{display:block!important;width:100%!important;height:100%!important;'));
+assert(html.includes('object-position:center center'));
+
 (async()=>{
  const dom=new JSDOM(html,{url:'https://example.test/',runScripts:'outside-only',pretendToBeVisual:true});const w=dom.window;const errors=[],draws=[];let saved=null;
  w.console.error=(...args)=>errors.push(args.map(String).join(' '));w.console.warn=()=>{};

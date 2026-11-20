@@ -1,7 +1,7 @@
 ﻿// Internal print contracts; version names are never user-facing labels.
 const TEMPLATE_VERSION_1 = Object.freeze({version:1,name:'Template Version 1'});
 const TEMPLATE_VERSION_2 = Object.freeze({version:2,name:'Template Version 2',paper:[297,210],width:3508,height:2480});
-function templateVersion(id=state.templateId){return id===ALKEIA_V2_BACK_ID?TEMPLATE_VERSION_2:TEMPLATE_VERSION_1}
+function templateVersion(id=state.templateId){return [ALKEIA_V2_FRONT_ID,ALKEIA_V2_BACK_ID].includes(id)?TEMPLATE_VERSION_2:TEMPLATE_VERSION_1}
 function isTemplateVersion2(){return templateVersion().version===2}
 function syncTemplateVersionUI(){
  const landscape=isTemplateVersion2();poster.classList.toggle('landscape-template',landscape);window.dispatchEvent(new Event('template-preview-layout'));
@@ -11,7 +11,7 @@ function syncTemplateVersionUI(){
  document.querySelector('.stage-top strong').textContent=landscape?'A4 landscape | One full page':'Sale design | 2 copies per sheet';
  for(const node of document.querySelectorAll('.helper')){
   if(!node.dataset.version1Help&&(/Prints two identical copies|PNG: 1650|Download a print-ready PDF/.test(node.textContent)))node.dataset.version1Help=node.textContent;
-  if(node.dataset.version1Help)node.textContent=landscape?'One full A4 landscape page (297 × 210 mm). PDF and PNG: 3508 × 2480 pixels at 300 DPI. Print at Actual size / 100%.':node.dataset.version1Help;
+  if(node.dataset.version1Help)node.textContent=landscape?'One full A4 landscape page (297 × 210 mm). PDF and PNG: 3508 × 2480 pixels at 300 DPI. Direct print: A4 landscape, margins None, scale 100%; a centered 3 mm safe border is included. For downloaded files, use Fit to printable area.':node.dataset.version1Help;
  }
 }
 function prepareTemplateVersion2Page(art){
@@ -36,7 +36,7 @@ async function exportTemplateVersion2(format='pdf',ready=true){
   const canvas=await exportPosterCanvas(TEMPLATE_VERSION_2);
   const blob=await(format==='pdf'?printSheetPDF(canvas,TEMPLATE_VERSION_2.paper):printQualityPNG(canvas));
   const url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download=(name.replace(/[<>:"/\\|?*\x00-\x1f]/g,'').trim()||'Store design')+(ready?' - print-ready':'')+'.'+format;document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);
-  showNotice('A4 landscape '+format.toUpperCase()+' downloaded. Print at Actual size / 100%.');
+  showNotice('A4 landscape '+format.toUpperCase()+' downloaded. Direct print: A4 landscape, margins None, scale 100%; a centered 3 mm safe border is included. For downloaded files, use Fit to printable area.');
  }catch(error){console.error(error);showNotice('Could not create the file. Wait for the artwork to load and try again.')}
  finally{btn.disabled=false;btn.removeAttribute('aria-busy');label.textContent=previous;syncProductActions()}
 }
