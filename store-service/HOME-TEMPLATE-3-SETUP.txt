@@ -1,0 +1,5 @@
+Home Express Basak Template #3 setup
+
+Run the complete add-home-template-3.sql in Supabase SQL Editor to allow print requests for home-v2-front and home-v2-back.
+Keep the existing Home Express Basak login. No new secret or Edge Function deployment is needed.
+The artwork is shipped with the website; deploy the website changes separately.

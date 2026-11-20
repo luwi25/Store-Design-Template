@@ -98,7 +98,7 @@ begin
  if p_action='logout' then delete from store_monitor.sessions where token_hash=p_token_hash; return '{"ok":true}'; end if;
 
  if v_tid<>'' then
-  v_owner:=case when v_tid in ('home-everyday','home-back','home-collection','home-collection-front') then 'home-express'
+  v_owner:=case when v_tid in ('home-everyday','home-back','home-collection','home-collection-front','home-v2-front','home-v2-back') then 'home-express'
    when v_tid in ('alkeia-tayud-front','alkeia-tayud-back') then 'alkeia-tayud'
    when v_tid in ('kazumi-linao-front','kazumi-linao-back') then 'kazumi-linao'
    when v_tid in ('oneplus-pardo-front','oneplus-pardo-back') then 'oneplus-pardo'

@@ -1,7 +1,7 @@
 ﻿// Internal print contracts; version names are never user-facing labels.
 const TEMPLATE_VERSION_1 = Object.freeze({version:1,name:'Template Version 1'});
 const TEMPLATE_VERSION_2 = Object.freeze({version:2,name:'Template Version 2',paper:[297,210],width:3508,height:2480});
-function templateVersion(id=state.templateId){return [ALKEIA_V2_FRONT_ID,ALKEIA_V2_BACK_ID].includes(id)?TEMPLATE_VERSION_2:TEMPLATE_VERSION_1}
+function templateVersion(id=state.templateId){return [HOME_V2_BACK_ID,HOME_V2_FRONT_ID,ALKEIA_V2_FRONT_ID,ALKEIA_V2_BACK_ID].includes(id)?TEMPLATE_VERSION_2:TEMPLATE_VERSION_1}
 function isTemplateVersion2(){return templateVersion().version===2}
 function syncTemplateVersionUI(){
  const landscape=isTemplateVersion2();poster.classList.toggle('landscape-template',landscape);window.dispatchEvent(new Event('template-preview-layout'));
