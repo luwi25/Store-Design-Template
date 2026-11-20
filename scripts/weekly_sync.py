@@ -30,6 +30,9 @@ Both stores' Template #2 designs are included in the same Monday run:
     best-seller front and five ranked-category back rows, using only its own
     sales. Pesoplus Template #2 has no protected Christmas Bundles row.
 
+Home Express Template #3 Front and Back rank departments independently of
+Template #1/#2 and each other. Front group 7 shows the top six eligible products.
+
 Then public/ is rebuilt, the test suite runs, and the result is
 committed and pushed only if everything passes.
 
@@ -79,6 +82,7 @@ STORES = {
         "front_template_id": "home-everyday", "back_template_id": "home-back",
         "back_fixed": {0: "Christmas Gift Bundles"},
         "back_cross_category_positions": (1, 2), "back_cross_category_total": 10,
+        "landscape_template_3": True,
         "collection_front_key": "homeCollectionFront",
         "collection_back_key": "homeCollection",
         "collection_front_template_id": "home-collection-front",
@@ -694,6 +698,57 @@ def apply_collection(repo, state, products_by_id, prefix, rows, front_key, back_
     return entries
 
 
+def apply_home_template_3(repo, state, products_by_id, prefix, rows):
+    """Rank each landscape side independently; Front group 7 is a top-six showcase.
+
+    Preserve typography/geometry, clear obsolete item overrides and empty any
+    positions not supported by this week's sales. Other template layouts are untouched.
+    """
+    specs = [('homeV2Front', 'home-v2-front', [5]*7+[6]),
+             ('homeV2Back', 'home-v2-back', [5]*10)]
+    # Validate both sides before changing either one.
+    for key, template_id, counts in specs:
+        template = state.get(key, {})
+        slots = template.get('slots', [])
+        if (len(slots) != sum(counts) or
+                [sum(slot.get('group') == i for slot in slots) for i in range(len(counts))] != counts or
+                len(template.get('groupNames', [])) != len(counts)):
+            raise RuntimeError(f'Template #3 ({template_id}) is missing or has unexpected groups.')
+    unique = {}
+    for row in rows:
+        code = stock_key(row['stockno'])
+        if not code or row['units'] <= 0 or row['department'] in EXCLUDED_DEPARTMENTS:
+            continue
+        if code not in unique or row['units'] > unique[code]['units']:
+            unique[code] = row
+    ranked = sorted(unique.values(), key=lambda row: (-row['units'], stock_key(row['stockno'])))
+    entries = []
+    for key, template_id, counts in specs:
+        template = state[key]
+        featured = 7 if key == 'homeV2Front' else None
+        assignments = assign_dynamic_departments(ranked, counts, {featured} if featured is not None else set())
+        for group in range(len(counts)):
+            if group == featured:
+                label, items = 'Best sellers', ranked[:counts[group]]
+            else:
+                department, items = assignments.get(group, ('No sales this week', []))
+                label = DEPARTMENT_LABEL_OVERRIDES.get(department, department)
+                template['groupNames'][group] = label
+            indices = [i for i, slot in enumerate(template['slots']) if slot['group'] == group]
+            for offset, index in enumerate(indices):
+                slot = template['slots'][index]
+                replacement = {k:v for k,v in slot.items() if k not in ('productId', 'image', 'details', 'discountPercent')}
+                replacement.update(productId=None, discountPercent=0)
+                if offset < len(items):
+                    item = items[offset]
+                    pid, status = upsert_product(repo, state, products_by_id, prefix,
+                        item['stockno'], item['name'], item['retail_price'], item['image_url'], template_id)
+                    replacement.update(productId=pid, details={'price': item['retail_price'] if item['retail_price'] is not None else 0})
+                    entries.append(('FRONT #3' if featured is not None else 'BACK #3', label, item['name'], item['units'], status))
+                template['slots'][index] = replacement
+    return entries
+
+
 def referenced_product_ids(value):
     """Include all saved template slots before pruning generated sales products."""
     if isinstance(value, dict):
@@ -799,6 +854,13 @@ def main():
                 cfg["collection_front_key"], cfg["collection_back_key"],
                 cfg["collection_front_template_id"], cfg["collection_back_template_id"])
             all_entries += [(store_id, *entry) for entry in collection_entries]
+
+        if cfg.get('landscape_template_3'):
+            if last_week.get('complete'):
+                entries = apply_home_template_3(REPO, state, products_by_id, cfg['prefix'], rows)
+                all_entries += [(store_id, *entry) for entry in entries]
+            else:
+                log(f'[{store_id}] no completed sales week; preserving Template #3.')
 
         # Catalog identities and approved photos outlive weekly template placements.
         # Never delete a product merely because it dropped out of the sales ranking.

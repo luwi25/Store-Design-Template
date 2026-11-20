@@ -126,5 +126,65 @@ class AlkeiaSyncReview(unittest.TestCase):
             self.assertFalse(sync.optional_store_available('url','key','alkeia-talamban'))
 
 
+class LandscapeTemplate3Review(unittest.TestCase):
+    def scenario(self):
+        state = json.loads((sync.REPO / 'defaults/project.json').read_text(encoding='utf-8'))['state']
+        rows = [dict(stockno=f'T3-{d}-{i}', name=f'Product {d}-{i}', units=1000-d*30-i,
+                     department=f'Dept {d}', category=f'Category {d}', retail_price=100+i,
+                     image_url='') for d in range(10) for i in range(7)]
+        for key in ('homeV2Front', 'homeV2Back'):
+            for slot in state[key]['slots']:
+                slot.update(textSizes={'name':120}, image='old-photo', details={'name':'Old item'}, discountPercent=20)
+        return state, rows
+
+    def apply(self, state, rows):
+        with patch.object(sync, 'upsert_product', side_effect=lambda repo, state, products, prefix, code, *args: (code, 'catalog-matched')) as upsert:
+            entries = sync.apply_home_template_3(sync.REPO, state, {}, 'sales-heb', rows)
+            self.assertTrue(all(c.args[3] == 'sales-heb' for c in upsert.call_args_list))
+            return entries
+
+    def test_rankings_featured_slots_and_isolation(self):
+        state, rows = self.scenario()
+        before = copy.deepcopy(state)
+        rows += [dict(rows[0]), dict(rows[0], stockno='EXCLUDED', department='Grocery', units=99999)]
+        self.assertTrue(sync.STORES['home-express-basak']['landscape_template_3'])
+        self.assertFalse(sync.STORES['pesoplus-mambaling'].get('landscape_template_3'))
+        entries = self.apply(state, rows)
+        self.assertEqual(len(entries), 91)
+        for key, groups in [('homeV2Front',7), ('homeV2Back',10)]:
+            self.assertEqual(state[key]['groupNames'][:groups], [f'Dept {i}' for i in range(groups)])
+            for group in range(groups):
+                slots = [s for s in state[key]['slots'] if s['group']==group]
+                self.assertEqual([s['productId'] for s in slots], [f'T3-{group}-{i}' for i in range(5)])
+                for i, slot in enumerate(slots):
+                    self.assertEqual(slot['textSizes'], {'name':120})
+                    self.assertNotIn('image', slot)
+                    self.assertEqual(slot['details'], {'price':100+i})
+                    self.assertEqual(slot['discountPercent'],0)
+        featured = state['homeV2Front']['slots'][35:]
+        self.assertEqual([s['productId'] for s in featured], [f'T3-0-{i}' for i in range(6)])
+        for key in before:
+            if key not in ('homeV2Front', 'homeV2Back'):
+                self.assertEqual(state[key], before[key], key)
+
+    def test_short_and_empty_rankings_clear_stale_items(self):
+        for size in (0, 2):
+            state, rows = self.scenario()
+            self.apply(state, rows[:size])
+            for key in ('homeV2Front', 'homeV2Back'):
+                slots = state[key]['slots']
+                self.assertEqual(sum(s['productId'] is not None for s in slots),size*(2 if key=='homeV2Front' else 1))
+                self.assertTrue(all('image' not in s and s['discountPercent']==0 for s in slots))
+                self.assertTrue(all(s['textSizes']=={'name':120} for s in slots))
+
+    def test_invalid_back_aborts_before_front_changes(self):
+        state, rows = self.scenario()
+        state['homeV2Back']['slots'].pop()
+        before = copy.deepcopy(state)
+        with self.assertRaisesRegex(RuntimeError, 'unexpected groups'):
+            self.apply(state, rows)
+        self.assertEqual(state, before)
+
+
 if __name__ == '__main__':
     unittest.main()
