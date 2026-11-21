@@ -1,0 +1,1 @@
+Run the complete add-bestco-template-v2.sql in Supabase SQL Editor to allow this template in store print requests. Keep the existing Bestco Tuburan login. No new secret or Edge Function deployment is needed. Deploy the website changes separately.

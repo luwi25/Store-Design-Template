@@ -23,11 +23,11 @@ const html=fs.readFileSync('public/index.html','utf8');
  w.eval(fs.readFileSync('shared-catalog-ui.js','utf8'));
  let mode='all',canApply=true;api.setStoreFilter(mode);
  w.catalogPublisher=w.setupSharedCatalogPublishing({getState:api.getState,getMode:()=>mode,save:()=>{},render:api.renderAll,canApplyVisibility:()=>canApply});
- assert.equal(w.document.querySelectorAll('.template-card').length,40);
+ assert.equal(w.document.querySelectorAll('.template-card').length,42);
  w.document.getElementById('templateVisibilityButton').click();
  const form=w.document.querySelector('#templateVisibilityDialog form');
- // One checkbox per Template # series (20 series across 40 designs), not one per design.
- const choices=form.querySelectorAll('input[data-templates]');assert.equal(choices.length,20);
+ // One checkbox per Template # series (21 series across 42 designs), not one per design.
+ const choices=form.querySelectorAll('input[data-templates]');assert.equal(choices.length,21);
  const homeTemplate1=[...choices].find(input=>JSON.parse(input.dataset.templates).some(t=>t.id==='home-back'));
  assert.deepEqual(JSON.parse(homeTemplate1.dataset.templates).map(t=>t.id).sort(),['home-back','home-everyday'],'Template #1 groups Home Express Front and Back together');
  homeTemplate1.checked=false;
@@ -60,6 +60,6 @@ const html=fs.readFileSync('public/index.html','utf8');
  w.publishedTemplateVisibility={};w.dispatchEvent(new w.Event('published-template-visibility'));
  assert.equal(w.document.querySelectorAll('#studioTemplate option').length,6);
  assert.equal(w.document.getElementById('templateVisibilityEmpty').hidden,true);
- mode='all';api.setStoreFilter(mode);assert.equal(w.document.querySelectorAll('#studioTemplate option').length,40);
+ mode='all';api.setStoreFilter(mode);assert.equal(w.document.querySelectorAll('#studioTemplate option').length,42);
  assert.equal(errors.length,0,errors.join('\n'));dom.window.close();console.log('PASS: Admin controls, pending visibility, publishing summary, store filtering, empty state, print guard and restoration.');
 })().catch(e=>{console.error(e);process.exitCode=1});

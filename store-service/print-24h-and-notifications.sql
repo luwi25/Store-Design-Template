@@ -106,7 +106,7 @@ begin
    when v_tid in ('sheldon-pinamungajan-front','sheldon-pinamungajan-back') then 'sheldon-pinamungajan'
    when v_tid in ('mandarin-catmon-front','mandarin-catmon-back') then 'mandarin-catmon'
    when v_tid in ('mandarin-dalaguete-front','mandarin-dalaguete-back') then 'mandarin-dalaguete'
-   when v_tid in ('bestco-tuburan-front','bestco-tuburan-back') then 'bestco-tuburan'
+   when v_tid in ('bestco-tuburan-v2-back','bestco-tuburan-v2-front','bestco-tuburan-front','bestco-tuburan-back') then 'bestco-tuburan'
    when v_tid in ('ginsey-sibonga-front','ginsey-sibonga-back') then 'ginsey-sibonga'
    when v_tid in ('unico-talisay-front','unico-talisay-back') then 'unico-talisay'
    when v_tid in ('welmart-inayawan-front','welmart-inayawan-back') then 'welmart-inayawan'
