@@ -150,8 +150,20 @@ def collection_source(root: Path) -> str:
     bestco_v2_back_art = 'defaults/images/' + hashlib.sha256((root / 'template-artwork/bestco-tuburan-v2-back.jpg').read_bytes()).hexdigest() + '.jpg'
     bestco_v2_back_seeds = json.loads((root / 'template-artwork/bestco-tuburan-v2-back-products.json').read_text(encoding='utf-8'))
     bestco_v2_back = (root / 'bestco-v2-back.js').read_text(encoding='utf-8').replace('__BESTCO_V2_BACK_ART__',json.dumps(bestco_v2_back_art)).replace('__BESTCO_V2_BACK_SEEDS__',json.dumps(bestco_v2_back_seeds))
+    ginsey_v2_front_art = 'defaults/images/' + hashlib.sha256((root / 'template-artwork/ginsey-oslob-v2-front.jpg').read_bytes()).hexdigest() + '.jpg'
+    ginsey_v2_front_seeds = json.loads((root / 'template-artwork/ginsey-oslob-v2-front-products.json').read_text(encoding='utf-8'))
+    ginsey_v2_front = (root / 'ginsey-v2-front.js').read_text(encoding='utf-8').replace('__GINSEY_V2_FRONT_ART__',json.dumps(ginsey_v2_front_art)).replace('__GINSEY_V2_FRONT_SEEDS__',json.dumps(ginsey_v2_front_seeds))
+    welmart_v2_front_art = 'defaults/images/' + hashlib.sha256((root / 'template-artwork/welmart-inayawan-v2-front.jpg').read_bytes()).hexdigest() + '.jpg'
+    welmart_v2_front_seeds = json.loads((root / 'template-artwork/welmart-inayawan-v2-front-products.json').read_text(encoding='utf-8'))
+    welmart_v2_front = (root / 'welmart-v2-front.js').read_text(encoding='utf-8').replace('__WELMART_V2_FRONT_ART__',json.dumps(welmart_v2_front_art)).replace('__WELMART_V2_FRONT_SEEDS__',json.dumps(welmart_v2_front_seeds))
+    welmart_v2_back_art = 'defaults/images/' + hashlib.sha256((root / 'template-artwork/welmart-inayawan-v2-back.jpg').read_bytes()).hexdigest() + '.jpg'
+    welmart_v2_back_seeds = json.loads((root / 'template-artwork/welmart-inayawan-v2-back-products.json').read_text(encoding='utf-8'))
+    welmart_v2_back = (root / 'welmart-v2-back.js').read_text(encoding='utf-8').replace('__WELMART_V2_BACK_ART__',json.dumps(welmart_v2_back_art)).replace('__WELMART_V2_BACK_SEEDS__',json.dumps(welmart_v2_back_seeds))
+    unico_v2_front_art = 'defaults/images/' + hashlib.sha256((root / 'template-artwork/unico-talisay-v2-front.jpg').read_bytes()).hexdigest() + '.jpg'
+    unico_v2_front_seeds = json.loads((root / 'template-artwork/unico-talisay-v2-front-products.json').read_text(encoding='utf-8'))
+    unico_v2_front = (root / 'unico-v2-front.js').read_text(encoding='utf-8').replace('__UNICO_V2_FRONT_ART__',json.dumps(unico_v2_front_art)).replace('__UNICO_V2_FRONT_SEEDS__',json.dumps(unico_v2_front_seeds))
     version_logic = (root / 'template-versions.js').read_text(encoding='utf-8')
-    return back + "\n" + front + "\n" + peso + "\n" + peso_back + "\n" + alkeia + "\n" + alkeia_back + "\n" + felcon + "\n" + felcon_front + "\n" + ginsey + "\n" + ginsey_back + "\n" + welmart + "\n" + welmart_back + "\n" + tayud + "\n" + tayud_back + "\n" + kazumi + "\n" + kazumi_back + "\n" + oneplus + "\n" + oneplus_back + "\n" + weldon + "\n" + weldon_back + "\n" + sheldon + "\n" + sheldon_back + "\n" + mandarin + "\n" + mandarin_back + "\n" + dalaguete + "\n" + dalaguete_back + "\n" + bestco_back + "\n" + bestco + "\n" + sibonga + "\n" + sibonga_back + "\n" + unico + "\n" + unico_back + "\n" + alkeia_v2 + "\n" + front_v2 + "\n" + home_v2 + "\n" + home_v2_back + "\n" + bestco_v2_front + "\n" + bestco_v2_back + "\n" + version_logic
+    return back + "\n" + front + "\n" + peso + "\n" + peso_back + "\n" + alkeia + "\n" + alkeia_back + "\n" + felcon + "\n" + felcon_front + "\n" + ginsey + "\n" + ginsey_back + "\n" + welmart + "\n" + welmart_back + "\n" + tayud + "\n" + tayud_back + "\n" + kazumi + "\n" + kazumi_back + "\n" + oneplus + "\n" + oneplus_back + "\n" + weldon + "\n" + weldon_back + "\n" + sheldon + "\n" + sheldon_back + "\n" + mandarin + "\n" + mandarin_back + "\n" + dalaguete + "\n" + dalaguete_back + "\n" + bestco_back + "\n" + bestco + "\n" + sibonga + "\n" + sibonga_back + "\n" + unico + "\n" + unico_back + "\n" + alkeia_v2 + "\n" + front_v2 + "\n" + home_v2 + "\n" + home_v2_back + "\n" + bestco_v2_front + "\n" + bestco_v2_back + "\n" + ginsey_v2_front + "\n" + welmart_v2_front + "\n" + welmart_v2_back + "\n" + unico_v2_front + "\n" + version_logic
 
 
 def embed_collection(html: str, root: Path) -> str:

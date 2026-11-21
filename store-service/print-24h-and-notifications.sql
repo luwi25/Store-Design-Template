@@ -108,9 +108,9 @@ begin
    when v_tid in ('mandarin-dalaguete-front','mandarin-dalaguete-back') then 'mandarin-dalaguete'
    when v_tid in ('bestco-tuburan-v2-back','bestco-tuburan-v2-front','bestco-tuburan-front','bestco-tuburan-back') then 'bestco-tuburan'
    when v_tid in ('ginsey-sibonga-front','ginsey-sibonga-back') then 'ginsey-sibonga'
-   when v_tid in ('unico-talisay-front','unico-talisay-back') then 'unico-talisay'
-   when v_tid in ('welmart-inayawan-front','welmart-inayawan-back') then 'welmart-inayawan'
-   when v_tid in ('ginsey-oslob-front','ginsey-oslob-back') then 'ginsey-oslob'
+   when v_tid in ('unico-talisay-v2-front','unico-talisay-front','unico-talisay-back') then 'unico-talisay'
+   when v_tid in ('welmart-inayawan-v2-back','welmart-inayawan-v2-front','welmart-inayawan-front','welmart-inayawan-back') then 'welmart-inayawan'
+   when v_tid in ('ginsey-oslob-v2-front','ginsey-oslob-front','ginsey-oslob-back') then 'ginsey-oslob'
    when v_tid in ('felcon-bato-back','felcon-bato-front') then 'felcon-bato'
    when v_tid in ('alkeia-talamban-front','alkeia-talamban-back','alkeia-talamban-v2-back','alkeia-talamban-v2-front') then 'alkeia-talamban'
    when v_tid in ('peso-plus','peso-back','peso-collection-front','peso-collection-back') then 'pesoplus' else null end;
