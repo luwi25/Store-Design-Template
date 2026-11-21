@@ -1,0 +1,9 @@
+Home Express Tisa setup
+
+1. Run the entire add-home-express-tisa.sql file in the existing project Supabase SQL Editor.
+2. In Edge Functions > Secrets, add HOME_EXPRESS_TISA_PASSWORD with a unique store password. Do not put the password in source code.
+3. Update the existing quick-handler Edge Function with store-service/index.ts and deploy it. Keep existing secrets and configuration.
+4. Publish the application changes to GitHub, then refresh the app and sign in as Home Express Tisa.
+
+The supplied front and back designs are registered as Version 2 with 35 and 50 editable positions and A4 landscape printing.
+SQL, secret creation, and Edge Function deployment have not been applied remotely by this local change.

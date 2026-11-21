@@ -1,0 +1,11 @@
+UBEST Opon setup
+
+1. Run all of add-ubest-opon.sql in your existing Supabase SQL Editor.
+2. Add Edge Function secret UBEST_OPON_PASSWORD with a unique store password.
+3. Update and deploy the existing quick-handler function using store-service/index.ts.
+4. Publish the application changes and sign in as UBEST Opon.
+
+Version 2 Front includes 37 editable positions; Back includes 50. Both print on A4 landscape. Front prices start at the supplied PHP 2,000; Back prices remain blank until entered.
+The supplied front artwork shows Tisa contact details, which differ from the back; the artwork is preserved as supplied.
+The SQL updates store permission constraints and functions; it does not delete existing rows or change saved products.
+No remote SQL, secrets, or deployment have been applied.
