@@ -798,12 +798,16 @@ def run_tests(repo):
 # ---------- Main ----------
 
 def main():
+    scope = os.environ.get('SALES_SYNC_SCOPE', 'all') or 'all'
+    if scope not in ('all', 'home-template-3'):
+        raise ValueError('Unsupported sales sync scope: ' + scope)
+    log('Sales sync scope: ' + scope)
     base_url, api_key = load_api_key()
 
     project_path = REPO / "defaults" / "project.json"
     project = json.loads(project_path.read_text(encoding="utf-8"))
     state = project["state"]
-    merge_report = merge_catalog_duplicates(state)
+    merge_report = merge_catalog_duplicates(state) if scope == 'all' else {'merged': [], 'conflicts': []}
     if merge_report['conflicts']:
         raise RuntimeError('Conflicting catalog identities need review: ' + json.dumps(merge_report['conflicts']))
     log(f"Merged {len(merge_report['merged'])} duplicate stock identities; retained catalog history.")
@@ -813,6 +817,8 @@ def main():
     all_entries = []
     last_weeks = {}
     for store_id, cfg in STORES.items():
+        if scope == 'home-template-3' and store_id != 'home-express-basak':
+            continue
         if cfg.get('optional_api_store') and not optional_store_available(base_url, api_key, store_id):
             continue
         try:
@@ -824,6 +830,12 @@ def main():
             continue
         rows = [r for r in rows if r["department"] not in EXCLUDED_DEPARTMENTS]
         last_weeks[store_id] = last_week
+        if scope == 'home-template-3':
+            if not last_week.get('complete') or len(rows) < 20:
+                raise RuntimeError('Template #3 needs a completed week with sufficient sales data; no changes published.')
+            entries = apply_home_template_3(REPO, state, products_by_id, cfg['prefix'], rows)
+            all_entries += [(store_id, *entry) for entry in entries]
+            continue
         if cfg.get('ranked_pair'):
             if not last_week.get('complete'):
                 log(f'[{store_id}] no completed sales week; preserving current templates.')

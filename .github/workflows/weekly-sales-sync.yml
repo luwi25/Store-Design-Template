@@ -4,6 +4,14 @@ on:
     # Sunday 21:00 UTC = Monday 05:00 Asia/Manila.
     - cron: '0 21 * * 0'
   workflow_dispatch:
+    inputs:
+      scope:
+        description: Templates to synchronize
+        type: choice
+        default: all
+        options:
+          - all
+          - home-template-3
 permissions:
   contents: write
 concurrency:
@@ -33,6 +41,7 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
       - name: Sync sales and publish repository update
         env:
+          SALES_SYNC_SCOPE: ${{ inputs.scope || 'all' }}
           UBEST_BASE_URL: ${{ secrets.UBEST_BASE_URL }}
           UBEST_API_KEY: ${{ secrets.UBEST_API_KEY }}
         run: python scripts/weekly_sync.py

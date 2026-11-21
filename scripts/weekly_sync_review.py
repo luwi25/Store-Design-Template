@@ -186,5 +186,31 @@ class LandscapeTemplate3Review(unittest.TestCase):
         self.assertEqual(state, before)
 
 
+class ManualScopeReview(unittest.TestCase):
+    def test_manual_scope_only_calls_home_template_3(self):
+        import os
+        import tempfile
+        from pathlib import Path
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            (root/'defaults').mkdir()
+            (root/'defaults/project.json').write_text(json.dumps({'sourceRevision':1, 'state':{'products':[]}}))
+            with patch.dict(os.environ, {'SALES_SYNC_SCOPE':'home-template-3'}), \
+                 patch.object(sync,'REPO',root), \
+                 patch.object(sync,'load_api_key',return_value=('test','test')), \
+                 patch.object(sync,'fetch_catalog_and_last_week',return_value=([{'department':'Kitchenware'}]*20, {'complete':True})) as fetch, \
+                 patch.object(sync,'apply_home_template_3',return_value=[]) as apply, \
+                 patch.object(sync,'apply_side',side_effect=AssertionError('Other templates must not run')), \
+                 patch.object(sync,'apply_collection',side_effect=AssertionError('Template 2 must not run')), \
+                 patch.object(sync,'apply_ranked_pair',side_effect=AssertionError('Other store must not run')), \
+                 patch.object(sync,'merge_catalog_duplicates',side_effect=AssertionError('No global merge')), \
+                 patch.object(sync,'run_tests',return_value=False), \
+                 patch.object(sync,'flush_log'):
+                with self.assertRaises(SystemExit):
+                    sync.main()  # Stop before Git operations.
+                fetch.assert_called_once_with('test','test','home-express-basak')
+                apply.assert_called_once()
+
+
 if __name__ == '__main__':
     unittest.main()
