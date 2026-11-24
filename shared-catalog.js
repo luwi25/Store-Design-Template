@@ -46,6 +46,7 @@
  }
  async function digest(bytes){return Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes)),b=>b.toString(16).padStart(2,'0')).join('')}
  function imageBytes(value){
+  if(typeof value==='string'&&value.startsWith('data:image/svg+xml;charset=utf-8,')){const bytes=new TextEncoder().encode(decodeURIComponent(value.split(',').slice(1).join(',')));return {bytes,mime:'image/svg+xml',ext:'svg',base64:btoa(Array.from(bytes,b=>String.fromCharCode(b)).join(''))}}
   const m=typeof value==='string'&&value.match(/^data:image\/(png|jpeg|webp|svg\+xml);base64,([A-Za-z0-9+/=\s]+)$/);
   if(!m)throw Error('Use an uploaded PNG, JPEG or WebP product photo.');
   const raw=atob(m[2]),bytes=Uint8Array.from(raw,c=>c.charCodeAt(0));
@@ -62,6 +63,26 @@
   return String(value);
  }
  async function same(field,a,b){return field==='image'?(await imageKey(a))===(await imageKey(b)):a===b}
+ async function publishPhoto(value){
+  if(typeof value!=='string'||!value.startsWith('data:image/'))return value;
+  const svg=value.startsWith('data:image/svg+xml');
+  let large=false;
+  if(!svg)large=imageBytes(value).bytes.length>5*1024*1024;
+  if(!svg&&!large)return value;
+  if(!root.document||!root.Image)throw Error('This photo needs conversion. Publish from the browser editor.');
+  const image=await new Promise((resolve,reject)=>{const im=new root.Image();im.onload=()=>resolve(im);im.onerror=()=>reject(Error('This photo could not be decoded. Replace it with a PNG, JPEG or WebP image.'));im.src=value});
+  const canvas=root.document.createElement('canvas');
+  let width=image.naturalWidth||image.width,height=image.naturalHeight||image.height;
+  const scale=Math.min(1,2400/Math.max(width,height));width=Math.max(1,Math.round(width*scale));height=Math.max(1,Math.round(height*scale));
+  for(let attempt=0;attempt<12;attempt++){
+   canvas.width=width;canvas.height=height;
+   canvas.getContext('2d').drawImage(image,0,0,width,height);
+   const png=canvas.toDataURL('image/png');
+   if(imageBytes(png).bytes.length<=5*1024*1024)return png;
+   width=Math.max(1,Math.floor(width*.8));height=Math.max(1,Math.floor(height*.8));
+  }
+  throw Error('This photo could not be reduced below 5 MB. Choose a smaller image.');
+ }
  async function encodeImage(value){
   if(value===null)return {value:null};
   const existing=typeof value==='string'&&value.match(/^(?:\.\/)?defaults\/(images\/[a-f0-9]{64}\.(png|jpg|webp|svg))$/);
@@ -88,8 +109,9 @@
   for(const change of changes.filter(change=>!['replacement','visibility','textSizes'].includes(change.kind))){
    if(!change.identity||!change.fields)throw Error('Invalid publishing draft.');
    const product=match(next.state.products,change.identity);
-   for(const [field,edit] of Object.entries(change.fields)){
+   for(let [field,edit] of Object.entries(change.fields)){
     if(!fields.includes(field))throw Error('Only names, original prices and photos can be published.');
+    if(field==='image'){try{edit={...edit,after:await publishPhoto(edit.after)}}catch(error){throw Error(product.name+': '+error.message)}}
     const key=product.id+':'+field;
     if(resolved.has(key)&&!await same(field,resolved.get(key),edit.after))throw Error('Two edits target the same product. Resolve the duplicate before publishing.');
     resolved.set(key,edit.after);
@@ -98,7 +120,7 @@
     if(await same(field,product[field]??null,edit.after))continue;
     if(!await same(field,product[field]??null,edit.before))throw Error(product.name+': the published '+field+' changed since this edit. Restore the latest published template and reapply your edit. Your pending changes are still saved here.');
     let value=edit.after;
-    if(field==='image'){const encoded=await encodeImage(value);value=encoded.value;if(encoded.path)images.set(encoded.path,encoded.content)}
+    if(field==='image'){try{const encoded=await encodeImage(value);value=encoded.value;if(encoded.path)images.set(encoded.path,encoded.content)}catch(error){throw Error(product.name+': '+error.message)}}
     apply(next.state,product,field,value);count++;
    }
   }
@@ -131,7 +153,7 @@
    if(!Array.isArray(list)||!Number.isSafeInteger(index)||index<0||index>=list.length||!change.fields||textPositions.has(key))throw Error('Invalid product text-size change.');
    textPositions.add(key);const slot=list[index];
    if(list.length!==change.slotCount||(slot.group??null)!==change.group||slot.productId!==change.productId)throw Error('The product in this template position changed. Reload the latest template before publishing text sizes.');
-   for(const [field,edit] of Object.entries(change.fields)){
+   for(let [field,edit] of Object.entries(change.fields)){
     if(!['name','sale','original','discount'].includes(field)||!edit||![edit.before,edit.after].every(v=>v===null||(typeof v==='number'&&Number.isFinite(v)&&v>=70&&v<=140)))throw Error('Invalid product text size.');
     const current=slot.textSizes?.[field]??null;
     if(current===edit.after)continue;
