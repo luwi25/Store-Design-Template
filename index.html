@@ -546,7 +546,18 @@ const starter=()=>({templateNames:{},textSizes:{name:100,discount:100,sale:100,o
 let state=starter(), saveTimer, noticeTimer, editingImage=null, hasStoredState=false;
 let browserSaved=null;
 try{const raw=localStorage.getItem(STORAGE);if(raw)browserSaved=JSON.parse(raw)}catch(e){console.warn('Browser save could not be read',e)}
-async function downloadStateBackup(value){value=structuredClone(value);const button=document.getElementById('downloadDatabaseBackup');if(button?.disabled)return false;if(button){button.disabled=true;button.setAttribute('aria-busy','true')}try{value=window.preparePortableBackup?await window.preparePortableBackup(value):value}catch(error){window.alert(error.message);return false}finally{if(button){button.disabled=false;button.removeAttribute('aria-busy')}}const blob=new Blob([JSON.stringify(value)],{type:'application/json'}),url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download='store-design-backup-'+new Date().toISOString().slice(0,10)+'.json';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);return true}
+async function downloadStateBackup(value){
+ const button=document.getElementById('downloadDatabaseBackup');if(button?.disabled)return false;
+ const label=button?.textContent;if(button){button.disabled=true;button.setAttribute('aria-busy','true');button.textContent='Preparing backup...'}
+ try{
+  value=structuredClone(value);
+  if(window.preparePortableBackup)value=await window.preparePortableBackup(value,(done,total)=>{if(button)button.textContent=`Preparing backup: ${done}/${total} images`});
+  if(button)button.textContent='Creating backup file...';
+  const blob=window.portableBackupBlob?window.portableBackupBlob(value):new Blob([JSON.stringify(value)],{type:'application/json'});
+  const url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download='store-design-backup-'+new Date().toISOString().slice(0,10)+'.json';document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);return true;
+ }catch(error){window.alert('Backup could not finish: '+error.message+'. Your saved project has not been changed.');return false}
+ finally{if(button){button.disabled=false;button.removeAttribute('aria-busy');button.textContent=label}}
+}
 try{
  if(!window.StoreDatabase)throw Error('The local database files are missing. Open Start Store Design Template.cmd from the project folder.');
  await window.StoreStartup?.ready;
