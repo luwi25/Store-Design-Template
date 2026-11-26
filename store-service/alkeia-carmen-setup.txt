@@ -1,0 +1,5 @@
+1. Run add-alkeia-carmen.sql in Supabase SQL Editor.
+2. Add Edge Function secret ALKEIA_CARMEN_PASSWORD with your chosen store password.
+3. Deploy store-service/index.ts to your existing quick-handler Edge Function.
+4. Publish the updated website.
+Existing store data is retained.

@@ -1,0 +1,5 @@
+1. Run add-weldon-babag.sql in the Supabase SQL Editor.
+2. Add Edge Function secret WELDON_BABAG_PASSWORD with the desired store password.
+3. Deploy store-service/index.ts to the existing quick-handler Edge Function.
+4. Publish the updated website.
+This script adds the store to existing constraints and ownership rules; it does not delete products or store data.
