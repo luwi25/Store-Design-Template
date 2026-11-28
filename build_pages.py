@@ -37,7 +37,8 @@ html=html.replace('</head>','''<link rel="manifest" href="manifest.webmanifest">
 <script src="install-app.js" defer></script>
 </head>''')
 html=html.replace('<script src="db-config.js"></script>','<script src="browser-background.js"></script>')
-html=html.replace('<script src="local-db.js"></script>','<script src="browser-db.js"></script><script src="default-project.js"></script>')
+html=html.replace('<script src="local-db.js"></script>','<script src="browser-db.js"></script>')
+html=html.replace('<script src="local-published-sync.js"></script>', '')
 html=html.replace('Local database','Device storage').replace('local database','device storage')
 html=html.replace('Connecting to your device storage...','Opening your browser’s device storage...')
 html=html.replace('The device storage files are missing. Open Start Store Design Template.cmd from the project folder.','Device storage could not load. Refresh this page and try again.')
@@ -90,6 +91,8 @@ def collect_published_images(value):
     elif isinstance(value,list):
         for item in value: collect_published_images(item)
 collect_published_images(published)
+# Renderer seed images must also remain available when a template is restored.
+published_images.update(re.findall(r"defaults/(images/[a-f0-9]{64}\.(?:png|jpg|webp|svg))", html))
 (OUT/'defaults/images').mkdir(parents=True,exist_ok=True)
 shutil.copy2(ROOT/'defaults/project.json',OUT/'defaults/project.json')
 for name in published_images:

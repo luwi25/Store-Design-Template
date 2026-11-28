@@ -2,7 +2,7 @@
 const UNICO_V2_FRONT_ID='unico-talisay-v2-front';
 const UNICO_V2_FRONT_ART=__UNICO_V2_FRONT_ART__;
 const unicoV2FrontSeeds=__UNICO_V2_FRONT_SEEDS__;
-const unicoV2FrontGroups=[{"name": "Kitchenware", "headerX": 225, "headerY": 390, "headerW": 750, "boxes": [[72, 508, 184, 207], [286, 508, 184, 207], [501, 508, 184, 207], [714, 508, 184, 207], [926, 508, 184, 207]]}, {"name": "Cookware", "headerX": 225, "headerY": 782, "headerW": 750, "boxes": [[72, 902, 184, 208], [286, 902, 184, 208], [501, 902, 184, 208], [714, 902, 184, 208], [926, 902, 184, 208]]}, {"name": "Plasticware", "headerX": 225, "headerY": 1175, "headerW": 750, "boxes": [[72, 1294, 184, 195], [286, 1294, 184, 195], [501, 1294, 184, 195], [714, 1294, 184, 195], [926, 1294, 184, 195]]}, {"name": "Storage", "headerX": 225, "headerY": 1545, "headerW": 750, "boxes": [[72, 1654, 184, 174], [286, 1654, 184, 174], [501, 1654, 184, 174], [714, 1654, 184, 174], [926, 1654, 184, 174]]}, {"name": "Houseware", "headerX": 225, "headerY": 1890, "headerW": 750, "boxes": [[72, 1994, 184, 176], [286, 1994, 184, 176], [501, 1994, 184, 176], [714, 1994, 184, 176], [926, 1994, 184, 176]]}, {"name": "Kitchenware", "headerX": 1470, "headerY": 1060, "headerW": 570, "boxes": [[1210, 1214, 173, 315], [1414, 1214, 173, 315], [1618, 1214, 173, 315], [1821, 1214, 173, 315], [2025, 1214, 173, 315]]}, {"name": "Cookware", "headerX": 1470, "headerY": 1640, "headerW": 570, "boxes": [[1210, 1790, 173, 315], [1414, 1790, 173, 315], [1618, 1790, 173, 315], [1821, 1790, 173, 315], [2025, 1790, 173, 315]]}, {"name": "Featured products", "boxes": [[2280, 1690, 373, 176], [2694, 1690, 373, 176], [3101, 1690, 373, 176], [2280, 1910, 373, 176], [2694, 1910, 373, 176], [3101, 1910, 373, 176]]}].map((group,index)=>({...group,items:unicoV2FrontSeeds.filter(p=>p.group===index).map(p=>[p.name,p.price])}));
+const unicoV2FrontGroups=[{"name": "Kitchenware", "headerX": 55, "headerY": 365, "headerW": 1050, "boxes": [[55, 465, 205, 280], [275, 465, 205, 280], [495, 465, 205, 280], [715, 465, 205, 280], [935, 465, 205, 280]], "photoHeights": [170, 170, 170, 170, 170]}, {"name": "Cookware", "headerX": 55, "headerY": 765, "headerW": 1050, "boxes": [[55, 865, 205, 255], [275, 865, 205, 255], [495, 865, 205, 255], [715, 865, 205, 255], [935, 865, 205, 255]], "photoHeights": [145, 145, 145, 145, 145]}, {"name": "Plasticware", "headerX": 55, "headerY": 1145, "headerW": 1050, "boxes": [[55, 1240, 205, 275], [275, 1240, 205, 275], [495, 1240, 205, 275], [715, 1240, 205, 275], [935, 1240, 205, 275]], "photoHeights": [165, 165, 165, 165, 165]}, {"name": "Storage", "headerX": 55, "headerY": 1540, "headerW": 1050, "boxes": [[55, 1630, 205, 270], [275, 1630, 205, 270], [495, 1630, 205, 270], [715, 1630, 205, 270], [935, 1630, 205, 270]], "photoHeights": [160, 160, 160, 160, 160]}, {"name": "Houseware", "headerX": 55, "headerY": 1910, "headerW": 1050, "boxes": [[55, 2010, 205, 240], [275, 2010, 205, 240], [495, 2010, 205, 240], [715, 2010, 205, 240], [935, 2010, 205, 240]], "photoHeights": [130, 130, 130, 130, 130]}, {"name": "Kitchenware", "headerX": 1350, "headerY": 970, "headerW": 830, "boxes": [[1200, 1135, 205, 370], [1425, 1135, 205, 370], [1650, 1135, 205, 370], [1875, 1135, 205, 370], [2100, 1135, 205, 370]], "photoHeights": [235, 235, 235, 235, 235]}, {"name": "Cookware", "headerX": 1350, "headerY": 1580, "headerW": 830, "boxes": [[1200, 1730, 205, 370], [1425, 1730, 205, 370], [1650, 1730, 205, 370], [1875, 1730, 205, 370], [2100, 1730, 205, 370]], "photoHeights": [235, 235, 235, 235, 235]}, {"name": "Featured products", "boxes": [[2350, 1580, 350, 220], [2730, 1580, 350, 220], [3110, 1580, 350, 220], [2350, 1810, 350, 220], [2730, 1810, 350, 220], [3110, 1810, 350, 220]]}].map((group,index)=>({...group,items:unicoV2FrontSeeds.filter(p=>p.group===index).map(p=>[p.name,p.price])}));
 let unicoV2FrontArtwork=null;
 function unicoV2FrontState(){
  if(!state.unicoV2Front)state.unicoV2Front={slots:unicoV2FrontSeeds.map((p,index)=>({productId:state.catalogAliases?.[p.id]||p.id,group:p.group,discountPercent:0}))};
@@ -39,11 +39,14 @@ async function unicoV2FrontCanvas({width=3508,height=2480}={}){
   for(let column=0;column<indices.length;column++){
    const index=indices[column],slot=slots[index],product=slot&&productFor(slot);
    const b=unicoV2FrontCard(index),large=false;
+   const seed=unicoV2FrontSeeds[index];
+   if(product&&seed&&slot.productId===(state.catalogAliases?.[seed.id]||seed.id)&&product.name===seed.name&&Number(product.price)===Number(seed.price)&&!slot.image&&!product.image&&!slot.discountPercent&&!slot.name&&!slot.price&&textScale('name',slot)===1&&textScale('sale',slot)===1)continue;
    ctx.save();roundRect(ctx,b.x,b.y,b.w,b.h,24);ctx.clip();
    ctx.fillStyle='#fff';ctx.fillRect(b.x,b.y,b.w,b.h);
 
    if(slot&&groupIndex===7){
     const im=photos[index],textX=b.x+164,textW=b.w-174;
+    if(!im&&product?.id===unicoV2FrontSeeds[index]?.id){const sx=b.x+10,sy=b.y+15,sw=140,sh=b.h-30;ctx.drawImage(unicoV2FrontArtwork,sx,sy,sw,sh,b.x+8,b.y+10,145,b.h-20)}
     if(im){const scale=Math.min(145/im.width,(b.h-20)/im.height);ctx.drawImage(im,b.x+8+(145-im.width*scale)/2,b.y+(b.h-im.height*scale)/2,im.width*scale,im.height*scale)}
     const {size,lines,lineHeight}=homeCollectionNameLayout(ctx,product?.name||'Choose a product',textW,30*textScale('name',slot));
     ctx.textAlign='center';ctx.fillStyle='#080808';ctx.font=`800 ${size}px Outfit, Arial, sans-serif`;
@@ -54,6 +57,7 @@ async function unicoV2FrontCanvas({width=3508,height=2480}={}){
     const priceSize=(large?60:43)*textScale('sale',slot),priceBaseline=b.y+b.h-30;
     const nameBaseline=priceBaseline-priceSize-5-(lines.length-1)*lineHeight;
     const photoH=Math.max(1,nameBaseline-size-b.y-12),im=photos[index];
+    if(!im&&product?.id===unicoV2FrontSeeds[index]?.id){const sourceH=group.photoHeights[column]-35;ctx.drawImage(unicoV2FrontArtwork,b.x+12,b.y+10,b.w-24,sourceH,b.x+8,b.y+8,b.w-16,Math.min(sourceH,photoH))}
     if(im){
      const scale=Math.min((b.w-16)/im.width,photoH/im.height);
      ctx.save();roundRect(ctx,b.x+8,b.y+7,b.w-16,photoH,10);ctx.clip();

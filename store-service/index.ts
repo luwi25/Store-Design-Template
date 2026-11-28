@@ -41,6 +41,7 @@ const roles = {
  'unico-pinamungajan': 'UNICO_PINAMUNGAJAN_PASSWORD',
  'ubest-danao': 'UBEST_DANAO_PASSWORD',
  'unico-balamban': 'UNICO_BALAMBAN_PASSWORD',
+ 'weldon-bogo': 'WELDON_BOGO_PASSWORD','alkeia-balamban': 'ALKEIA_BALAMBAN_PASSWORD','wester-talibon': 'WESTER_TALIBON_PASSWORD','atomi-lutopan': 'ATOMI_LUTOPAN_PASSWORD','alpha-dumanjug': 'ALPHA_DUMANJUG_PASSWORD','kazumi-opon': 'KAZUMI_OPON_PASSWORD',
  'kazumi-linao': 'KAZUMI_LINAO_PASSWORD',
  'oneplus-pardo': 'ONEPLUS_PARDO_PASSWORD',
  'weldon-carcar': 'WELDON_CARCAR_PASSWORD',
@@ -168,7 +169,7 @@ Deno.serve(async (request: Request) => {
   async function notifyPrintAccount(id: string, approval = false, eventId?: string){
    try{
     const batch=await rpc(eventId?'claim_print':approval?'claim_approval':'claim',tokenHash,{id,...(eventId?{eventId}:{})},true);
-    const names:Record<string,string>={'home-express':'Home Express Basak',pesoplus:'Pesoplus Mambaling','alkeia-talamban':'Alkeia Talamban','alkeia-tayud':'Alkeia Tayud','home-express-tisa':'Home Express Tisa','ubest-opon':'UBEST Opon','weldon-babag':'Weldon Babag','alkeia-carmen':'Alkeia Carmen','unico-pinamungajan':'Unico Pinamungajan','ubest-danao':'UBest Danao','unico-balamban':'Unico Balamban','kazumi-linao':'Kazumi Linao','oneplus-pardo':'Oneplus Pardo','weldon-carcar':'Weldon Carcar','sheldon-pinamungajan':'Sheldon Pinamungajan','mandarin-catmon':'Mandarin Catmon','mandarin-dalaguete':'Mandarin Dalaguete','bestco-tuburan':'Bestco Tuburan','ginsey-sibonga':'Ginsey Sibonga','unico-talisay':'Unico Talisay','welmart-inayawan':'Welmart Inayawan','ginsey-oslob':'Ginsey Oslob','felcon-bato':'Felcon Bato'};
+    const names:Record<string,string>={'home-express':'Home Express Basak',pesoplus:'Pesoplus Mambaling','alkeia-talamban':'Alkeia Talamban','alkeia-tayud':'Alkeia Tayud','home-express-tisa':'Home Express Tisa','ubest-opon':'UBEST Opon','weldon-babag':'Weldon Babag','alkeia-carmen':'Alkeia Carmen','unico-pinamungajan':'Unico Pinamungajan','ubest-danao':'UBest Danao','unico-balamban':'Unico Balamban','weldon-bogo':'Weldon Bogo','alkeia-balamban':'Alkeia Balamban','wester-talibon':'Wester Talibon','atomi-lutopan':'Atomi Lutopan','alpha-dumanjug':'Alpha Dumanjug','kazumi-opon':'Kazumi Opon','kazumi-linao':'Kazumi Linao','oneplus-pardo':'Oneplus Pardo','weldon-carcar':'Weldon Carcar','sheldon-pinamungajan':'Sheldon Pinamungajan','mandarin-catmon':'Mandarin Catmon','mandarin-dalaguete':'Mandarin Dalaguete','bestco-tuburan':'Bestco Tuburan','ginsey-sibonga':'Ginsey Sibonga','unico-talisay':'Unico Talisay','welmart-inayawan':'Welmart Inayawan','ginsey-oslob':'Ginsey Oslob','felcon-bato':'Felcon Bato'};
     const storeName=names[batch.store]||'Store';
     const payload=JSON.stringify({requestId:batch.requestId,store:storeName,template:batch.template,type:eventId?'print_initiated':approval?'approved':'requested',eventId:batch.eventId});
     // Admin-facing only (new request / store started printing); approvals notify the store, not Lark.

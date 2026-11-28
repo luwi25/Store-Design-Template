@@ -231,8 +231,71 @@ def collection_source(root: Path) -> str:
     catmon_v2_front_art = 'defaults/images/' + hashlib.sha256((root / 'template-artwork/mandarin-catmon-v2-front.jpg').read_bytes()).hexdigest() + '.jpg'
     catmon_v2_front_seeds = json.loads((root / 'template-artwork/mandarin-catmon-v2-front-products.json').read_text(encoding='utf-8'))
     catmon_v2_front = (root / 'catmon-v2-front.js').read_text(encoding='utf-8').replace('__CATMON_V2_FRONT_ART__',json.dumps(catmon_v2_front_art)).replace('__CATMON_V2_FRONT_SEEDS__',json.dumps(catmon_v2_front_seeds))
+    opon_v2_back_art = 'defaults/images/' + hashlib.sha256((root / 'template-artwork/kazumi-opon-v2-back.jpg').read_bytes()).hexdigest() + '.jpg'
+    opon_v2_back_seeds = json.loads((root / 'template-artwork/kazumi-opon-v2-back-products.json').read_text(encoding='utf-8'))
+    opon_v2_back = (root / 'opon-v2-back.js').read_text(encoding='utf-8').replace('__OPON_V2_BACK_ART__',json.dumps(opon_v2_back_art)).replace('__OPON_V2_BACK_SEEDS__',json.dumps(opon_v2_back_seeds))
+    opon_v2_front_art = 'defaults/images/' + hashlib.sha256((root / 'template-artwork/kazumi-opon-v2-front.jpg').read_bytes()).hexdigest() + '.jpg'
+    opon_v2_front_seeds = json.loads((root / 'template-artwork/kazumi-opon-v2-front-products.json').read_text(encoding='utf-8'))
+    opon_v2_front = (root / 'opon-v2-front.js').read_text(encoding='utf-8').replace('__OPON_V2_FRONT_ART__',json.dumps(opon_v2_front_art)).replace('__OPON_V2_FRONT_SEEDS__',json.dumps(opon_v2_front_seeds))
+    talisay_v2_back_art = 'defaults/images/' + hashlib.sha256((root / 'template-artwork/unico-talisay-v2-back.jpg').read_bytes()).hexdigest() + '.jpg'
+    talisay_v2_back_seeds = json.loads((root / 'template-artwork/unico-talisay-v2-back-products.json').read_text(encoding='utf-8'))
+    talisay_v2_back = (root / 'talisay-v2-back.js').read_text(encoding='utf-8').replace('__TALISAY_V2_BACK_ART__',json.dumps(talisay_v2_back_art)).replace('__TALISAY_V2_BACK_SEEDS__',json.dumps(talisay_v2_back_seeds))
+    tayud_v2_back_art = 'defaults/images/' + hashlib.sha256((root / 'template-artwork/alkeia-tayud-v2-back.jpg').read_bytes()).hexdigest() + '.jpg'
+    tayud_v2_back_seeds = json.loads((root / 'template-artwork/alkeia-tayud-v2-back-products.json').read_text(encoding='utf-8'))
+    tayud_v2_back = (root / 'tayud-v2-back.js').read_text(encoding='utf-8').replace('__TAYUD_V2_BACK_ART__',json.dumps(tayud_v2_back_art)).replace('__TAYUD_V2_BACK_SEEDS__',json.dumps(tayud_v2_back_seeds))
+    tayud_v2_front_art = 'defaults/images/' + hashlib.sha256((root / 'template-artwork/alkeia-tayud-v2-front.jpg').read_bytes()).hexdigest() + '.jpg'
+    tayud_v2_front_seeds = json.loads((root / 'template-artwork/alkeia-tayud-v2-front-products.json').read_text(encoding='utf-8'))
+    tayud_v2_front = (root / 'tayud-v2-front.js').read_text(encoding='utf-8').replace('__TAYUD_V2_FRONT_ART__',json.dumps(tayud_v2_front_art)).replace('__TAYUD_V2_FRONT_SEEDS__',json.dumps(tayud_v2_front_seeds))
+    carcar_v2_back_art = 'defaults/images/' + hashlib.sha256((root / 'template-artwork/weldon-carcar-v2-back.jpg').read_bytes()).hexdigest() + '.jpg'
+    carcar_v2_back_seeds = json.loads((root / 'template-artwork/weldon-carcar-v2-back-products.json').read_text(encoding='utf-8'))
+    carcar_v2_back = (root / 'carcar-v2-back.js').read_text(encoding='utf-8').replace('__CARCAR_V2_BACK_ART__',json.dumps(carcar_v2_back_art)).replace('__CARCAR_V2_BACK_SEEDS__',json.dumps(carcar_v2_back_seeds))
+    carcar_v2_front_art = 'defaults/images/' + hashlib.sha256((root / 'template-artwork/weldon-carcar-v2-front.jpg').read_bytes()).hexdigest() + '.jpg'
+    carcar_v2_front_seeds = json.loads((root / 'template-artwork/weldon-carcar-v2-front-products.json').read_text(encoding='utf-8'))
+    carcar_v2_front = (root / 'carcar-v2-front.js').read_text(encoding='utf-8').replace('__CARCAR_V2_FRONT_ART__',json.dumps(carcar_v2_front_art)).replace('__CARCAR_V2_FRONT_SEEDS__',json.dumps(carcar_v2_front_seeds))
+    sheldon_v2_back_art = 'defaults/images/' + hashlib.sha256((root / 'template-artwork/sheldon-pinamungajan-v2-back.jpg').read_bytes()).hexdigest() + '.jpg'
+    sheldon_v2_back_seeds = json.loads((root / 'template-artwork/sheldon-pinamungajan-v2-back-products.json').read_text(encoding='utf-8'))
+    sheldon_v2_back = (root / 'sheldon-v2-back.js').read_text(encoding='utf-8').replace('__SHELDON_V2_BACK_ART__',json.dumps(sheldon_v2_back_art)).replace('__SHELDON_V2_BACK_SEEDS__',json.dumps(sheldon_v2_back_seeds))
+    sheldon_v2_front_art = 'defaults/images/' + hashlib.sha256((root / 'template-artwork/sheldon-pinamungajan-v2-front.jpg').read_bytes()).hexdigest() + '.jpg'
+    sheldon_v2_front_seeds = json.loads((root / 'template-artwork/sheldon-pinamungajan-v2-front-products.json').read_text(encoding='utf-8'))
+    sheldon_v2_front = (root / 'sheldon-v2-front.js').read_text(encoding='utf-8').replace('__SHELDON_V2_FRONT_ART__',json.dumps(sheldon_v2_front_art)).replace('__SHELDON_V2_FRONT_SEEDS__',json.dumps(sheldon_v2_front_seeds))
+    alpha_v2_back_art = 'defaults/images/' + hashlib.sha256((root / 'template-artwork/alpha-dumanjug-v2-back.jpg').read_bytes()).hexdigest() + '.jpg'
+    alpha_v2_back_seeds = json.loads((root / 'template-artwork/alpha-dumanjug-v2-back-products.json').read_text(encoding='utf-8'))
+    alpha_v2_back = (root / 'alpha-v2-back.js').read_text(encoding='utf-8').replace('__ALPHA_V2_BACK_ART__',json.dumps(alpha_v2_back_art)).replace('__ALPHA_V2_BACK_SEEDS__',json.dumps(alpha_v2_back_seeds))
+    alpha_v2_front_art = 'defaults/images/' + hashlib.sha256((root / 'template-artwork/alpha-dumanjug-v2-front.jpg').read_bytes()).hexdigest() + '.jpg'
+    alpha_v2_front_seeds = json.loads((root / 'template-artwork/alpha-dumanjug-v2-front-products.json').read_text(encoding='utf-8'))
+    alpha_v2_front = (root / 'alpha-v2-front.js').read_text(encoding='utf-8').replace('__ALPHA_V2_FRONT_ART__',json.dumps(alpha_v2_front_art)).replace('__ALPHA_V2_FRONT_SEEDS__',json.dumps(alpha_v2_front_seeds))
+    atomi_v2_back_art = 'defaults/images/' + hashlib.sha256((root / 'template-artwork/atomi-lutopan-v2-back.jpg').read_bytes()).hexdigest() + '.jpg'
+    atomi_v2_back_seeds = json.loads((root / 'template-artwork/atomi-lutopan-v2-back-products.json').read_text(encoding='utf-8'))
+    atomi_v2_back = (root / 'atomi-v2-back.js').read_text(encoding='utf-8').replace('__ATOMI_V2_BACK_ART__',json.dumps(atomi_v2_back_art)).replace('__ATOMI_V2_BACK_SEEDS__',json.dumps(atomi_v2_back_seeds))
+    atomi_v2_front_art = 'defaults/images/' + hashlib.sha256((root / 'template-artwork/atomi-lutopan-v2-front.jpg').read_bytes()).hexdigest() + '.jpg'
+    atomi_v2_front_seeds = json.loads((root / 'template-artwork/atomi-lutopan-v2-front-products.json').read_text(encoding='utf-8'))
+    atomi_v2_front = (root / 'atomi-v2-front.js').read_text(encoding='utf-8').replace('__ATOMI_V2_FRONT_ART__',json.dumps(atomi_v2_front_art)).replace('__ATOMI_V2_FRONT_SEEDS__',json.dumps(atomi_v2_front_seeds))
+    bogo_v2_back_art = 'defaults/images/' + hashlib.sha256((root / 'template-artwork/weldon-bogo-v2-back.jpg').read_bytes()).hexdigest() + '.jpg'
+    bogo_v2_back_seeds = json.loads((root / 'template-artwork/weldon-bogo-v2-back-products.json').read_text(encoding='utf-8'))
+    bogo_v2_back = (root / 'bogo-v2-back.js').read_text(encoding='utf-8').replace('__BOGO_V2_BACK_ART__',json.dumps(bogo_v2_back_art)).replace('__BOGO_V2_BACK_SEEDS__',json.dumps(bogo_v2_back_seeds))
+    bogo_v2_front_art = 'defaults/images/' + hashlib.sha256((root / 'template-artwork/weldon-bogo-v2-front.jpg').read_bytes()).hexdigest() + '.jpg'
+    bogo_v2_front_seeds = json.loads((root / 'template-artwork/weldon-bogo-v2-front-products.json').read_text(encoding='utf-8'))
+    bogo_v2_front = (root / 'bogo-v2-front.js').read_text(encoding='utf-8').replace('__BOGO_V2_FRONT_ART__',json.dumps(bogo_v2_front_art)).replace('__BOGO_V2_FRONT_SEEDS__',json.dumps(bogo_v2_front_seeds))
+    albal_v2_back_art = 'defaults/images/' + hashlib.sha256((root / 'template-artwork/alkeia-balamban-v2-back.jpg').read_bytes()).hexdigest() + '.jpg'
+    albal_v2_back_seeds = json.loads((root / 'template-artwork/alkeia-balamban-v2-back-products.json').read_text(encoding='utf-8'))
+    albal_v2_back = (root / 'albal-v2-back.js').read_text(encoding='utf-8').replace('__ALBAL_V2_BACK_ART__',json.dumps(albal_v2_back_art)).replace('__ALBAL_V2_BACK_SEEDS__',json.dumps(albal_v2_back_seeds))
+    albal_v2_front_art = 'defaults/images/' + hashlib.sha256((root / 'template-artwork/alkeia-balamban-v2-front.jpg').read_bytes()).hexdigest() + '.jpg'
+    albal_v2_front_seeds = json.loads((root / 'template-artwork/alkeia-balamban-v2-front-products.json').read_text(encoding='utf-8'))
+    albal_v2_front = (root / 'albal-v2-front.js').read_text(encoding='utf-8').replace('__ALBAL_V2_FRONT_ART__',json.dumps(albal_v2_front_art)).replace('__ALBAL_V2_FRONT_SEEDS__',json.dumps(albal_v2_front_seeds))
+    sibonga_v2_front_art = 'defaults/images/' + hashlib.sha256((root / 'template-artwork/ginsey-sibonga-v2-front.jpg').read_bytes()).hexdigest() + '.jpg'
+    sibonga_v2_front_seeds = json.loads((root / 'template-artwork/ginsey-sibonga-v2-front-products.json').read_text(encoding='utf-8'))
+    sibonga_v2_front = (root / 'sibonga-v2-front.js').read_text(encoding='utf-8').replace('__SIBONGA_V2_FRONT_ART__',json.dumps(sibonga_v2_front_art)).replace('__SIBONGA_V2_FRONT_SEEDS__',json.dumps(sibonga_v2_front_seeds))
+    sibonga_v2_back_art = 'defaults/images/' + hashlib.sha256((root / 'template-artwork/ginsey-sibonga-v2-back.jpg').read_bytes()).hexdigest() + '.jpg'
+    sibonga_v2_back_seeds = json.loads((root / 'template-artwork/ginsey-sibonga-v2-back-products.json').read_text(encoding='utf-8'))
+    sibonga_v2_back = (root / 'sibonga-v2-back.js').read_text(encoding='utf-8').replace('__SIBONGA_V2_BACK_ART__',json.dumps(sibonga_v2_back_art)).replace('__SIBONGA_V2_BACK_SEEDS__',json.dumps(sibonga_v2_back_seeds))
+    wester_v2_back_art = 'defaults/images/' + hashlib.sha256((root / 'template-artwork/wester-talibon-v2-back.jpg').read_bytes()).hexdigest() + '.jpg'
+    wester_v2_back_seeds = json.loads((root / 'template-artwork/wester-talibon-v2-back-products.json').read_text(encoding='utf-8'))
+    wester_v2_back = (root / 'wester-v2-back.js').read_text(encoding='utf-8').replace('__WESTER_V2_BACK_ART__',json.dumps(wester_v2_back_art)).replace('__WESTER_V2_BACK_SEEDS__',json.dumps(wester_v2_back_seeds))
+    wester_v2_front_art = 'defaults/images/' + hashlib.sha256((root / 'template-artwork/wester-talibon-v2-front.jpg').read_bytes()).hexdigest() + '.jpg'
+    wester_v2_front_seeds = json.loads((root / 'template-artwork/wester-talibon-v2-front-products.json').read_text(encoding='utf-8'))
+    wester_v2_front = (root / 'wester-v2-front.js').read_text(encoding='utf-8').replace('__WESTER_V2_FRONT_ART__',json.dumps(wester_v2_front_art)).replace('__WESTER_V2_FRONT_SEEDS__',json.dumps(wester_v2_front_seeds))
     version_logic = (root / 'template-versions.js').read_text(encoding='utf-8')
-    return back + "\n" + front + "\n" + peso + "\n" + peso_back + "\n" + alkeia + "\n" + alkeia_back + "\n" + felcon + "\n" + felcon_front + "\n" + ginsey + "\n" + ginsey_back + "\n" + welmart + "\n" + welmart_back + "\n" + tayud + "\n" + tayud_back + "\n" + kazumi + "\n" + kazumi_back + "\n" + oneplus + "\n" + oneplus_back + "\n" + weldon + "\n" + weldon_back + "\n" + sheldon + "\n" + sheldon_back + "\n" + mandarin + "\n" + mandarin_back + "\n" + dalaguete + "\n" + dalaguete_back + "\n" + bestco_back + "\n" + bestco + "\n" + sibonga + "\n" + sibonga_back + "\n" + unico + "\n" + unico_back + "\n" + alkeia_v2 + "\n" + front_v2 + "\n" + home_v2 + "\n" + home_v2_back + "\n" + bestco_v2_front + "\n" + bestco_v2_back + "\n" + ginsey_v2_front + "\n" + welmart_v2_front + "\n" + welmart_v2_back + "\n" + unico_v2_front + "\n" + ginsey_v2_back + "\n" + oneplus_v2_front + "\n" + oneplus_v2_back + "\n" + kazumi_v2_front + "\n" + kazumi_v2_back + "\n" + tisa_v2_back + "\n" + tisa_v2_front + "\n" + ubest_v2_back + "\n" + ubest_v2_front + "\n" + peso_v2_front + "\n" + peso_v2_back + "\n" + babag_v2_front + "\n" + babag_v2_back + "\n" + carmen_v2_back + "\n" + carmen_v2_front + "\n" + pinam_v2_front + "\n" + pinam_v2_back + "\n" + danao_v2_back + "\n" + danao_v2_front + "\n" + balamban_v2_back + "\n" + balamban_v2_front + "\n" + catmon_v2_back + "\n" + catmon_v2_front + "\n" + version_logic
+    return back + "\n" + front + "\n" + peso + "\n" + peso_back + "\n" + alkeia + "\n" + alkeia_back + "\n" + felcon + "\n" + felcon_front + "\n" + ginsey + "\n" + ginsey_back + "\n" + welmart + "\n" + welmart_back + "\n" + tayud + "\n" + tayud_back + "\n" + kazumi + "\n" + kazumi_back + "\n" + oneplus + "\n" + oneplus_back + "\n" + weldon + "\n" + weldon_back + "\n" + sheldon + "\n" + sheldon_back + "\n" + mandarin + "\n" + mandarin_back + "\n" + dalaguete + "\n" + dalaguete_back + "\n" + bestco_back + "\n" + bestco + "\n" + sibonga + "\n" + sibonga_back + "\n" + unico + "\n" + unico_back + "\n" + alkeia_v2 + "\n" + front_v2 + "\n" + home_v2 + "\n" + home_v2_back + "\n" + bestco_v2_front + "\n" + bestco_v2_back + "\n" + ginsey_v2_front + "\n" + welmart_v2_front + "\n" + welmart_v2_back + "\n" + unico_v2_front + "\n" + ginsey_v2_back + "\n" + oneplus_v2_front + "\n" + oneplus_v2_back + "\n" + kazumi_v2_front + "\n" + kazumi_v2_back + "\n" + tisa_v2_back + "\n" + tisa_v2_front + "\n" + ubest_v2_back + "\n" + ubest_v2_front + "\n" + peso_v2_front + "\n" + peso_v2_back + "\n" + babag_v2_front + "\n" + babag_v2_back + "\n" + carmen_v2_back + "\n" + carmen_v2_front + "\n" + pinam_v2_front + "\n" + pinam_v2_back + "\n" + danao_v2_back + "\n" + danao_v2_front + "\n" + balamban_v2_back + "\n" + balamban_v2_front + "\n" + catmon_v2_back + "\n" + catmon_v2_front + "\n" + opon_v2_back + "\n" + opon_v2_front + "\n" + talisay_v2_back + "\n" + tayud_v2_back + "\n" + tayud_v2_front + "\n" + carcar_v2_back + "\n" + carcar_v2_front + "\n" + sheldon_v2_back + "\n" + sheldon_v2_front + "\n" + alpha_v2_back + "\n" + alpha_v2_front + "\n" + atomi_v2_back + "\n" + atomi_v2_front + "\n" + bogo_v2_back + "\n" + bogo_v2_front + "\n" + albal_v2_back + "\n" + albal_v2_front + "\n" + sibonga_v2_front + "\n" + sibonga_v2_back + "\n" + wester_v2_back + "\n" + wester_v2_front + "\n" + version_logic
 
 
 def embed_collection(html: str, root: Path) -> str:
