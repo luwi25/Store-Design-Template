@@ -2,11 +2,14 @@
 const WESTER_V2_BACK_ID='wester-talibon-v2-back';
 const WESTER_V2_BACK_ART=__WESTER_V2_BACK_ART__;
 const westerV2BackSeeds=__WESTER_V2_BACK_SEEDS__;
-const westerV2BackGroups=[{"name": "Storage Units", "headerX": 45, "headerY": 175, "headerW": 530, "boxes": [[50, 280, 195, 360], [280, 280, 195, 360], [505, 280, 195, 360], [725, 280, 195, 360], [945, 280, 195, 360]], "photoHeights": [185, 185, 185, 185, 185]}, {"name": "Houseware", "headerX": 45, "headerY": 690, "headerW": 530, "boxes": [[50, 790, 195, 355], [280, 790, 195, 355], [505, 790, 195, 355], [725, 790, 195, 355], [945, 790, 195, 355]], "photoHeights": [190, 190, 190, 190, 190]}, {"name": "Kitchenware & Tableware", "headerX": 45, "headerY": 1200, "headerW": 850, "boxes": [[50, 1300, 195, 290], [280, 1300, 195, 290], [505, 1300, 195, 290], [725, 1300, 195, 290], [945, 1300, 195, 290]], "photoHeights": [165, 165, 165, 165, 165]}, {"name": "Electric Fan", "headerX": 45, "headerY": 1640, "headerW": 530, "boxes": [[50, 1735, 195, 290], [280, 1735, 195, 290], [505, 1735, 195, 290], [725, 1735, 195, 290], [945, 1735, 195, 290]], "photoHeights": [170, 170, 170, 170, 170]}, {"name": "Plasticware", "headerX": 45, "headerY": 2070, "headerW": 530, "boxes": [[50, 2160, 195, 255], [280, 2160, 195, 255], [505, 2160, 195, 255], [725, 2160, 195, 255], [945, 2160, 195, 255]], "photoHeights": [130, 130, 130, 130, 130]}, {"name": "Storage Units", "headerX": 1215, "headerY": 175, "headerW": 530, "boxes": [[1220, 280, 195, 360], [1450, 280, 195, 360], [1675, 280, 195, 360], [1895, 280, 195, 360], [2115, 280, 195, 360]], "photoHeights": [185, 185, 185, 185, 185]}, {"name": "Houseware", "headerX": 1215, "headerY": 690, "headerW": 530, "boxes": [[1220, 790, 195, 355], [1450, 790, 195, 355], [1675, 790, 195, 355], [1895, 790, 195, 355], [2115, 790, 195, 355]], "photoHeights": [190, 190, 190, 190, 190]}, {"name": "Kitchenware & Tableware", "headerX": 1215, "headerY": 1200, "headerW": 850, "boxes": [[1220, 1300, 195, 290], [1450, 1300, 195, 290], [1675, 1300, 195, 290], [1895, 1300, 195, 290], [2115, 1300, 195, 290]], "photoHeights": [165, 165, 165, 165, 165]}, {"name": "Electric Fan", "headerX": 1215, "headerY": 1640, "headerW": 530, "boxes": [[1220, 1735, 195, 290], [1450, 1735, 195, 290], [1675, 1735, 195, 290], [1895, 1735, 195, 290], [2115, 1735, 195, 290]], "photoHeights": [170, 170, 170, 170, 170]}, {"name": "Plasticware", "headerX": 1215, "headerY": 2070, "headerW": 530, "boxes": [[1220, 2160, 195, 255], [1450, 2160, 195, 255], [1675, 2160, 195, 255], [1895, 2160, 195, 255], [2115, 2160, 195, 255]], "photoHeights": [130, 130, 130, 130, 130]}].map((group,index)=>({...group,items:westerV2BackSeeds.filter(p=>p.group===index).map(p=>[p.name,p.price])}));
+const westerV2BackGroups=[{"name": "Storage Units", "headerX": 45, "headerY": 175, "headerW": 530, "boxes": [[50, 280, 195, 360], [280, 280, 195, 360], [505, 280, 195, 360], [725, 280, 195, 360], [945, 280, 195, 360]], "photoHeights": [185, 185, 185, 185, 185]}, {"name": "Houseware", "headerX": 45, "headerY": 690, "headerW": 530, "boxes": [[50, 790, 195, 355], [280, 790, 195, 355], [505, 790, 195, 355], [725, 790, 195, 355], [945, 790, 195, 355]], "photoHeights": [190, 190, 190, 190, 190]}, {"name": "Kitchenware & Tableware", "headerX": 45, "headerY": 1200, "headerW": 850, "boxes": [[50, 1300, 195, 290], [280, 1300, 195, 290], [505, 1300, 195, 290], [725, 1300, 195, 290], [945, 1300, 195, 290]], "photoHeights": [165, 165, 165, 165, 165]}, {"name": "Electric Fan", "headerX": 45, "headerY": 1640, "headerW": 530, "boxes": [[50, 1735, 195, 290], [280, 1735, 195, 290], [505, 1735, 195, 290], [725, 1735, 195, 290], [945, 1735, 195, 290]], "photoHeights": [170, 170, 170, 170, 170]}, {"name": "Plasticware", "headerX": 45, "headerY": 2070, "headerW": 530, "boxes": [[50, 2160, 195, 255], [280, 2160, 195, 255], [505, 2160, 195, 255], [725, 2160, 195, 255], [945, 2160, 195, 255]], "photoHeights": [130, 130, 130, 130, 130]}].map((group,index)=>({...group,items:westerV2BackSeeds.filter(p=>p.group===index).map(p=>[p.name,p.price])}));
 let westerV2BackArtwork=null;
 function westerV2BackState(){
  if(!state.westerV2Back)state.westerV2Back={slots:westerV2BackSeeds.map((p,index)=>({productId:state.catalogAliases?.[p.id]||p.id,group:p.group,discountPercent:0}))};
  if(!Array.isArray(state.westerV2Back.groupNames))state.westerV2Back.groupNames=westerV2BackGroups.map(g=>g.name);
+ // Retain edits to the left panel when upgrading the previous two-panel design.
+ state.westerV2Back.slots=state.westerV2Back.slots.filter(slot=>slot.group<5);
+ state.westerV2Back.groupNames=state.westerV2Back.groupNames.slice(0,5);
  return state.westerV2Back;
 }
 
@@ -78,7 +81,7 @@ function syncWesterV2BackControls(){
  if(!panel){
   panel=document.createElement('section');panel.id='westerV2BackCategoryControls';panel.className='panel';panel.hidden=true;
   const title=document.createElement('h2');title.textContent='Section headings';panel.append(title);
-  westerV2BackGroups.slice(0,10).forEach((group,index)=>{
+  westerV2BackGroups.slice(0,5).forEach((group,index)=>{
    const field=document.createElement('div');field.className='field';const label=document.createElement('label');label.htmlFor='westerV2BackLabel-'+index;label.textContent='Section '+(index+1)+' heading';
    const input=document.createElement('input');input.id=label.htmlFor;input.type='text';input.maxLength=48;input.placeholder=group.name;
    input.addEventListener('input',()=>{westerV2BackState().groupNames[index]=input.value;renderPoster();save()});field.append(label,input);panel.append(field);
@@ -87,5 +90,5 @@ function syncWesterV2BackControls(){
   $('homeBackCategoryControls').after(panel);
  }
  panel.hidden=state.templateId!==WESTER_V2_BACK_ID;
- if(!panel.hidden)westerV2BackGroups.slice(0,10).forEach((group,index)=>{const input=$('westerV2BackLabel-'+index);if(document.activeElement!==input)input.value=westerV2BackState().groupNames[index]??group.name});
+ if(!panel.hidden)westerV2BackGroups.slice(0,5).forEach((group,index)=>{const input=$('westerV2BackLabel-'+index);if(document.activeElement!==input)input.value=westerV2BackState().groupNames[index]??group.name});
 }

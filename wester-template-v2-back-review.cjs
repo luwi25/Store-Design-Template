@@ -1,6 +1,6 @@
 ﻿const fs=require('fs'),assert=require('assert/strict'),{JSDOM}=require('jsdom');
 const mobile=process.argv.includes('--mobile'),back=false;
-const section='westerV2Back',count=50;
+const section='westerV2Back',count=25;
 const html=fs.readFileSync('public/index.html','utf8');
 (async()=>{
  const dom=new JSDOM(html,{url:'https://example.test/',runScripts:'outside-only',pretendToBeVisual:true});const w=dom.window;const errors=[],draws=[];let saved=null;
@@ -14,6 +14,9 @@ const html=fs.readFileSync('public/index.html','utf8');
  // This scenario exercises Home Express Back. A published backup can open any
  // template, so select the scenario explicitly instead of inheriting that choice.
  source.templateId='wester-talibon-v2-back';
+ // Existing browser projects may still contain the removed center product panel.
+ source[section].slots.push(...source[section].slots.map(slot=>({...slot,group:slot.group+5})));
+ source[section].groupNames.push(...source[section].groupNames);
  w.localStorage.setItem('flashSaleStoreFilter','wester-talibon');
  w.StoreDatabase={load:async()=>structuredClone(source),save:async s=>{saved=JSON.parse(JSON.stringify(s))},preserveLegacy:async()=>{}};
  w.eval([...w.document.querySelectorAll('script')].find(s=>s.textContent.includes('function renderPoster')).textContent);
@@ -34,7 +37,7 @@ const html=fs.readFileSync('public/index.html','utf8');
  const price=w.document.getElementById('slotOriginalPrice');price.value='150';price.dispatchEvent(new w.Event('input'));
  const text=w.document.getElementById('slotText-name');text.value='140';text.dispatchEvent(new w.Event('input'));
  w.document.getElementById('saveProductEdit').click();await new Promise(r=>setTimeout(r,400));
- assert.equal(saved[section].slots.length,count);assert.equal(saved.products.find(p=>p.id===source[section].slots[24].productId).price,source.products.find(p=>p.id===source[section].slots[24].productId).price,'Editing the second panel must not change the matching first-panel product');assert.equal(saved[section].slots[count-1].textSizes.name,140);
+ assert.equal(saved[section].slots.length,count);assert.equal(saved[section].groupNames.length,5);assert.equal(saved.products.find(p=>p.id===source[section].slots[0].productId).price,source.products.find(p=>p.id===source[section].slots[0].productId).price,'Editing the last product must not change the first product');assert.equal(saved[section].slots[count-1].textSizes.name,140);
  for(const oldId of Object.keys(source.catalogAliases||{}))assert(!saved.products.some(p=>p.id===oldId),'Merged seed product was recreated: '+oldId);
  assert.equal(saved.products.find(p=>p.id===saved[section].slots[count-1].productId).price,150);
  if(back){const heading=w.document.getElementById('pesoCollectionBackLabel-1');assert(heading);heading.value='Kitchen favorites';heading.dispatchEvent(new w.Event('input'));await new Promise(r=>setTimeout(r,400));assert.equal(saved[section].groupNames[1],'Kitchen favorites');}
