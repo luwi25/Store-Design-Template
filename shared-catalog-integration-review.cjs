@@ -31,6 +31,16 @@ const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
   w.eval(fs.readFileSync('shared-catalog.js','utf8'));w.eval(fs.readFileSync('shared-catalog-ui.js','utf8'));
   w.eval([...w.document.querySelectorAll('script')].find(script=>script.textContent.includes('function renderPoster')).textContent);
   await delay(700);assert.equal(errors.length,0,errors.join('\n'));assert(w.catalogPublisher);
+  const categoryPanel=[...w.document.querySelectorAll('[id$="CategoryControls"]')].find(panel=>!panel.hidden&&panel.querySelector('input:not([type]),input[type="text"]'));
+  if(categoryPanel){
+   const heading=categoryPanel.querySelector('input:not([type]),input[type="text"]'),original=state[section].groupNames[0];
+   heading.value='Published category heading';heading.dispatchEvent(new w.Event('input',{bubbles:true}));await delay(450);
+   const categoryEdit=saved.sharedCatalogDraft.changes.find(edit=>edit.kind==='categoryName');
+   assert(categoryEdit,'Real category control adds a pending change');assert.equal(categoryEdit.after,'Published category heading');
+   w.document.getElementById('publishCatalog').click();assert.match(w.document.querySelector('[data-changes]').textContent,/Published category heading/);w.document.getElementById('publishCatalogDialog').close();
+   heading.value=original;heading.dispatchEvent(new w.Event('input',{bubbles:true}));await delay(450);
+   assert(!saved.sharedCatalogDraft.changes.some(edit=>edit.kind==='categoryName'),'Restoring the original removes the pending category edit');
+  }
   w.flashSaleActions.openSlot(0);
   const beforeEdit=structuredClone(saved);
   const name=w.document.getElementById('slotName');name.value='Shared Catalog Name';name.dispatchEvent(new w.Event('input'));name.dispatchEvent(new w.Event('blur'));

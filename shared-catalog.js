@@ -112,7 +112,7 @@
  async function prepare(project,changes){
   if(project.version!==1||!Array.isArray(project.state?.products)||!Number.isSafeInteger(project.sourceRevision))throw Error('The published catalog format is invalid.');
   const next=clone(project),images=new Map(),resolved=new Map();let count=0;
-  for(const change of changes.filter(change=>!['replacement','visibility','textSizes'].includes(change.kind))){
+  for(const change of changes.filter(change=>!['replacement','visibility','textSizes','categoryName'].includes(change.kind))){
    if(!change.identity||!change.fields)throw Error('Invalid publishing draft.');
    const product=match(next.state.products,change.identity);
    for(let [field,edit] of Object.entries(change.fields)){
@@ -170,6 +170,15 @@
     count++;
    }
   }
+  const categoryPositions=new Set();
+  for(const change of changes.filter(change=>change.kind==='categoryName')){
+   const names=categoryNames(next.state,change.templateId),index=change.groupIndex,key=change.templateId+':'+index;
+   if(!Array.isArray(names)||!Number.isSafeInteger(index)||index<0||index>=names.length||names.length!==change.groupCount||categoryPositions.has(key)||![change.before,change.after].every(v=>typeof v==='string'&&v.length<=160))throw Error('Invalid category-name change. Reload the template and edit the heading again.');
+   categoryPositions.add(key);
+   if(names[index]===change.after)continue;
+   if(names[index]!==change.before)throw Error('The published category name changed since your edit. Reload the latest template and reapply your edit.');
+   names[index]=change.after;count++;
+  }
   const visibilityIds=new Set();
   for(const change of changes.filter(change=>change.kind==='visibility')){
    const id=change.templateId;
@@ -225,7 +234,8 @@
    return {sha:saved.sha,url:'https://github.com/'+REPO+'/commit/'+saved.sha,revision:prepared.project.sourceRevision};
   }finally{token=''}
  }
- const api={prepare,publish,apply,match,imageKey,fields,templateSlots};
+ function categoryNames(state,id){return Object.hasOwn(templateSections,id)?state[templateSections[id]]?.groupNames:null}
+ const api={categoryNames,prepare,publish,apply,match,imageKey,fields,templateSlots};
  if(typeof module==='object'&&module.exports)module.exports=api;
  else root.SharedCatalog=api;
 })(globalThis);

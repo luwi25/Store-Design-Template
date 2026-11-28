@@ -20,7 +20,7 @@ window.setupSharedCatalogPublishing=function({getState,getMode,save,render,canAp
  document.addEventListener('pointerdown',event=>{if(!importWrap.contains(event.target))closeImport()});
  importWrap.addEventListener('focusout',()=>setTimeout(()=>{if(!importWrap.contains(document.activeElement))closeImport()},0));
  const dialog=document.createElement('dialog');dialog.id='publishCatalogDialog';dialog.className='catalog-publish-dialog';dialog.setAttribute('aria-labelledby','publishCatalogTitle');
- dialog.innerHTML='<form class="catalog-publish-form"><h2 id="publishCatalogTitle">Publish changes</h2><p>Share these product edits and template visibility choices with everyone after the website finishes deploying. The next sales sync will still get prices from UBEST.</p><ul data-changes></ul><p class="helper">Saved Admin catalog edits, product replacements, product text sizes and template visibility choices are included. Discounts and layouts stay separate.</p><label for="catalogPublishToken">Restricted GitHub token</label><input id="catalogPublishToken" type="password" autocomplete="off" spellcheck="false" required placeholder="Enter token for this publication"><p class="helper">Use a fine-grained token for luwi25/Store-Design-Template with Contents: Read and write. It is cleared after use and never saved in your project.</p><a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener noreferrer">Create a restricted token on GitHub</a><p data-status role="status" aria-live="polite"></p><div data-result></div><div class="catalog-publish-actions"><button type="button" class="btn" data-discard>Clear pending list</button><button type="button" class="btn" data-close>Cancel</button><button type="submit" class="btn btn-dark" data-submit>Publish changes</button></div></form>';
+ dialog.innerHTML='<form class="catalog-publish-form"><h2 id="publishCatalogTitle">Publish changes</h2><p>Share these product edits, category names and template visibility choices with everyone after the website finishes deploying. The next sales sync will still get prices from UBEST.</p><ul data-changes></ul><p class="helper">Saved Admin catalog edits, category names, product replacements, product text sizes and template visibility choices are included. Discounts and layouts stay separate.</p><label for="catalogPublishToken">Restricted GitHub token</label><input id="catalogPublishToken" type="password" autocomplete="off" spellcheck="false" required placeholder="Enter token for this publication"><p class="helper">Use a fine-grained token for luwi25/Store-Design-Template with Contents: Read and write. It is cleared after use and never saved in your project.</p><a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener noreferrer">Create a restricted token on GitHub</a><p data-status role="status" aria-live="polite"></p><div data-result></div><div class="catalog-publish-actions"><button type="button" class="btn" data-discard>Clear pending list</button><button type="button" class="btn" data-close>Cancel</button><button type="submit" class="btn btn-dark" data-submit>Publish changes</button></div></form>';
  document.body.append(dialog);
  const form=dialog.querySelector('form'),input=dialog.querySelector('input'),status=dialog.querySelector('[data-status]'),submit=dialog.querySelector('[data-submit]');
  let busy=false,trigger=null;
@@ -32,7 +32,7 @@ window.setupSharedCatalogPublishing=function({getState,getMode,save,render,canAp
   const state=getState();state.sharedCatalogDraft ||= {version:1,changes:[]};
   if(state.sharedCatalogDraft.version!==1||!Array.isArray(state.sharedCatalogDraft.changes))throw Error('Invalid publishing draft.');
   const list=state.sharedCatalogDraft.changes;
-  let entry=list.find(item=>!['replacement','visibility','textSizes'].includes(item.kind)&&item.identity?.id===product.id);
+  let entry=list.find(item=>!['replacement','visibility','textSizes','categoryName'].includes(item.kind)&&item.identity?.id===product.id);
   if(!entry){entry={identity:{id:product.id,name:product.name,code:product.code||'',templateId:product.templateId||'',sharedCatalog:product.sharedCatalog||false},fields:{}};list.push(entry)}
   const before=entry.fields[field]?entry.fields[field].before:structuredClone(product[field]??null);
   if(before===value)delete entry.fields[field];else entry.fields[field]={before,after:structuredClone(value)};
@@ -77,9 +77,47 @@ window.setupSharedCatalogPublishing=function({getState,getMode,save,render,canAp
   if(!Object.keys(entry.fields).length)list.splice(list.indexOf(entry),1);
   refresh();
  }
+ function recordCategoryNames(templateId,before,after){
+  if(getMode()!=='all'||!Array.isArray(before)||!Array.isArray(after)||before.length!==after.length)return;
+  const state=getState();
+  after.forEach((value,index)=>{
+   if(value===before[index])return;
+   state.sharedCatalogDraft ||= {version:1,changes:[]};
+   const draft=state.sharedCatalogDraft;
+   if(draft.version!==1||!Array.isArray(draft.changes))throw Error('Invalid publishing draft.');
+   const list=draft.changes;
+   let entry=list.find(c=>c.kind==='categoryName'&&c.templateId===templateId&&c.groupIndex===index);
+   if(!entry){entry={kind:'categoryName',templateId,templateName:state.templateNames?.[templateId]||templateId,groupIndex:index,groupCount:before.length,before:before[index]};list.push(entry)}
+   entry.after=value;
+   if(entry.before===entry.after)list.splice(list.indexOf(entry),1);
+  });
+  refresh();
+ }
+ // Capture the headings before existing input/reset handlers update the template.
+ // Delegation also covers panels created after switching templates.
+ const headingEdits=new WeakMap();
+ for(const type of ['input','click']){
+  document.addEventListener(type,event=>{
+   if(getMode()!=='all'||!event.target.closest?.('[id$="CategoryControls"]'))return;
+   if(type==='input'&&!event.target.matches('input:not([type]),input[type="text"]'))return;
+   if(type==='click'&&!event.target.closest('button'))return;
+   const id=getState().templateId,names=service.categoryNames(getState(),id);
+   if(Array.isArray(names))headingEdits.set(event,{id,before:[...names]});
+  },true);
+  document.addEventListener(type,event=>{
+   const edit=headingEdits.get(event);if(!edit)return;
+   const after=service.categoryNames(getState(),edit.id);
+   if(Array.isArray(after)&&after.some((name,index)=>name!==edit.before[index])){
+    recordCategoryNames(edit.id,edit.before,after);save();
+   }
+  });
+ }
  function summary(){
   const list=dialog.querySelector('[data-changes]');list.replaceChildren();
   for(const edit of changes()){
+   if(edit.kind==='categoryName'){
+    const item=document.createElement('li');item.textContent=(edit.templateName||edit.templateId)+' ? Category '+(edit.groupIndex+1)+': '+(edit.before||'Default heading')+' ? '+(edit.after||'Default heading');list.append(item);continue;
+   }
    if(edit.kind==='textSizes'){
     const item=document.createElement('li');item.textContent=(edit.templateName||edit.templateId)+' ? Product '+(edit.slotIndex+1)+' ('+edit.productName+'): '+Object.entries(edit.fields).map(([key,value])=>key+' text size: '+(value.before===null?'Template default':value.before+'%')+' ? '+(value.after===null?'Template default':value.after+'%')).join(', ');list.append(item);continue;
    }
@@ -102,7 +140,7 @@ window.setupSharedCatalogPublishing=function({getState,getMode,save,render,canAp
    list.append(item);
   }
   submit.disabled=!changes().length;
-  if(!changes().length)status.textContent='In Admin, edit a product or choose a replacement from the catalog, then click Save product. Saved changes will appear here.';
+  if(!changes().length)status.textContent='In Admin, edit a product or choose a replacement from the catalog, then click Save product. You can also rename a category heading. Saved changes will appear here.';
  }
  button.onclick=()=>{
   trigger=document.activeElement;input.value='';status.textContent='';dialog.querySelector('[data-result]').replaceChildren();summary();dialog.showModal();

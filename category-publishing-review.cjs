@@ -1,0 +1,25 @@
+﻿const assert=require('node:assert/strict'),fs=require('node:fs'),{JSDOM}=require('jsdom'),core=require('./shared-catalog.js');
+(async()=>{
+ const project={version:1,sourceRevision:4,state:{products:[],templateId:'wester-talibon-v2-front',westerV2Front:{groupNames:['Storage','Houseware'],slots:[]},westerV2Back:{groupNames:['Storage'],slots:[]}}};
+ const edit={kind:'categoryName',templateId:project.state.templateId,groupIndex:0,groupCount:2,before:'Storage',after:'Organizers'};
+ const result=await core.prepare(project,[edit]);
+ assert.equal(result.project.state.westerV2Front.groupNames[0],'Organizers');assert.equal(result.project.state.westerV2Back.groupNames[0],'Storage');assert.equal(project.state.westerV2Front.groupNames[0],'Storage');assert.equal(result.project.sourceRevision,5);
+ assert.equal((await core.prepare(result.project,[edit])).count,0);
+ await assert.rejects(core.prepare(result.project,[{...edit,after:'Different'}]),/changed since/);
+ for(const bad of [{groupIndex:-1},{groupCount:3},{templateId:'__proto__'},{after:42}])await assert.rejects(core.prepare(project,[{...edit,...bad}]),/Invalid category/);
+ await assert.rejects(core.prepare(project,[edit,edit]),/Invalid category/);
+ const dom=new JSDOM('<div class="top-actions"></div><section id="westerV2FrontCategoryControls"><input type="text"><button>Restore original headings</button></section>',{url:'https://example.test',runScripts:'outside-only'}),w=dom.window;
+ w.SharedCatalog=core;w.structuredClone=structuredClone;w.confirm=()=>true;w.HTMLDialogElement.prototype.showModal=function(){this.open=true};
+ let state=structuredClone(project.state),mode='all',saves=0;
+ w.eval(fs.readFileSync('shared-catalog-ui.js','utf8'));
+ w.setupSharedCatalogPublishing({getState:()=>state,getMode:()=>mode,save:()=>saves++,render:()=>{}});
+ const input=w.document.querySelector('section input'),reset=w.document.querySelector('section button');
+ input.addEventListener('input',()=>{state.westerV2Front.groupNames[0]=input.value});reset.addEventListener('click',()=>{state.westerV2Front.groupNames=['Storage','Houseware']});
+ const type=value=>{input.value=value;input.dispatchEvent(new w.Event('input',{bubbles:true}))};
+ type('Organizers');type('Home storage');assert.equal(state.sharedCatalogDraft.changes.length,1);assert.equal(state.sharedCatalogDraft.changes[0].before,'Storage');assert.equal(state.sharedCatalogDraft.changes[0].after,'Home storage');assert.equal(saves,2);
+ w.document.getElementById('publishCatalog').click();assert.match(w.document.querySelector('[data-changes]').textContent,/Category 1: Storage.*Home storage/);
+ const saved=JSON.parse(JSON.stringify(state));state=saved;type('Final name');assert.equal(state.sharedCatalogDraft.changes[0].before,'Storage');
+ reset.click();assert.equal(state.sharedCatalogDraft.changes.length,0);
+ mode='wester-talibon';type('Store only');assert.equal(state.sharedCatalogDraft.changes.length,0);
+ dom.window.close();console.log('PASS: category publication, isolation, conflicts, validation, pending summary, repeated edits, persisted drafts, reset and Admin-only tracking');
+})().catch(e=>{console.error(e);process.exitCode=1});
