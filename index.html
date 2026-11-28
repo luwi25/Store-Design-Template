@@ -8354,9 +8354,9 @@ async function westerV2BackCanvas({width=3508,height=2480}={}){
  const addressFill=ctx.createLinearGradient(0,2052,0,2120);
  addressFill.addColorStop(0,'#fffaf0');addressFill.addColorStop(1,'#fff0cf');
  ctx.fillStyle=addressFill;ctx.fillRect(1340,2052,580,68);
- ctx.fillStyle='#171717';ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='800 32px Outfit, Arial, sans-serif';
- ctx.fillText('410 Carlos P. Garcia Avenue',1630,2073,568);
- ctx.fillText('Poblacion Talibon,Bohol',1630,2103,568);
+ ctx.fillStyle='#171717';ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='800 38px Outfit, Arial, sans-serif';
+ ctx.fillText('410 Carlos P. Garcia Avenue',1630,2071,556);
+ ctx.fillText('Poblacion Talibon, Bohol',1630,2107,556);
  ctx.restore();
  const slots=westerV2BackState().slots;
  const photos=await Promise.all(slots.map(async slot=>{try{const src=slot.image||productFor(slot)?.image;return src?await loadCanvasImage(src):null}catch{return null}}));
